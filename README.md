@@ -7,6 +7,7 @@ Personal collection of Claude.ai skills for business automation and analysis.
 | Skill | Description |
 |-------|-------------|
 | [short-term-rental-analyzer](./short-term-rental-analyzer/) | Evaluate Airbnb investment opportunities with market data and ROI projections. Optimized for Milan, expandable to other cities. |
+| [property-acquisition-tracker](./property-acquisition-tracker/) | Automated property scouting for short-term rental investments in Milan. Scans Immobiliare.it, Idealista, Casa.it for apartments, applies investment scoring, and saves qualified properties to Notion. |
 
 ## Usage
 
