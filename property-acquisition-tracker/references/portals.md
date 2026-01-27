@@ -25,7 +25,8 @@ https://www.immobiliare.it/affitto-case/milano/
 - Address: Title usually contains street and neighborhood
 - Size: Look for `m²` or `mq` values in features section
 - Rooms: Look for `locali` count
-- Floor: Look for `piano` in features
+- Floor: Look for `piano` in features (e.g., "Piano terra", "1°", "2° su 5")
+- Elevator: Look for `ascensore` — if floor > 0 and no elevator, SKIP listing
 - Contract type: Look for `tipologia contratto` — accept only "4+4" or "Libero", skip "Transitorio", "Uso foresteria", "3+2"
 - Condo fees: Look for `spese condominio` or `spese condominiali`
 - Energy class: Look for `classe energetica` badge
@@ -57,6 +58,7 @@ https://www.idealista.it/affitto-case/milano-milano/
 - Size: Look for `m²` value
 - Rooms: Listed in features as `habitaciones` or `locali`
 - Floor: Look for `planta` or `piano`
+- Elevator: Look for `ascensor` or `ascensore` in features — if floor > 0 and no elevator, SKIP listing
 - Contract type: Look in listing details for "Tipo contratto" — accept only "4+4" or "Libero", skip "Transitorio", "Uso foresteria", "3+2"
 - Condo fees: May appear in expenses section
 - Energy class: Energy certificate section
@@ -123,3 +125,19 @@ Contract types to SKIP:
 - "Studenti" — student housing, seasonal and restricted
 
 When contract type is not specified in the listing, check the detail page. If still unclear, save with "Tipo Contratto" = null and flag for manual review in Notes.
+
+## Floor & Elevator Filtering
+
+**REQUIRED: Elevator mandatory for floors above ground level**
+
+Floor classification:
+- "Piano terra", "Piano rialzato", "T", "R" → Ground floor, elevator NOT required
+- "1°", "2°", "3°", etc. → Upper floors, elevator REQUIRED
+
+Elevator detection:
+- Look for "Ascensore: Sì" or "con ascensore" in features
+- If floor info shows "3° su 5 con ascensore" → OK
+- If floor info shows "3° su 5" without elevator mention → check features section
+- If floor > 0 and elevator not confirmed → SKIP listing
+
+Rationale: BnB guests arrive with luggage. Walking up stairs significantly impacts reviews and booking rates.

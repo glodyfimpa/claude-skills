@@ -24,6 +24,7 @@ Default search criteria for Milan bilocali:
 - Size: 50-65 m²
 - Price range: 800-1,500€/month (rent only, excluding condo fees)
 - Contract type: 4+4 (canone libero) — REQUIRED, skip transitorio/uso foresteria
+- Floor: Piano terra OK sempre; piani superiori RICHIEDONO ascensore
 - Zones: Within circonvallazione + strategic extensions (see `references/portals.md`)
 
 User can override any parameter. If user specifies different criteria, use those instead.
@@ -53,7 +54,8 @@ For each listing in search results, extract:
 | Rooms | "Locali" count | Yes |
 | Zone | Neighborhood from address | Yes |
 | Contract type | "Tipologia contratto" field | Yes |
-| Floor | "Piano" if available | No |
+| Floor | "Piano" from features | Yes |
+| Elevator | "Ascensore" presence | Yes (if floor > 0) |
 | Condo fees | "Spese condominiali" if listed | No |
 | Energy class | Energy certificate badge | No |
 
@@ -62,6 +64,7 @@ Skip listings that:
 - Exceed 1,500€ rent (before user applies stricter filters)
 - Are smaller than 45 m² or larger than 70 m²
 - Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2)
+- Are above ground floor (1° piano+) WITHOUT elevator — guests with luggage need easy access
 
 ### Step 4: Deduplicate
 
@@ -140,7 +143,7 @@ Scan completed:
 	∙	Idealista: 52 listings scanned
 	∙	Duplicates skipped: 12
 	∙	Saved to Notion: 18 (Hot: 5, Review: 13)
-	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10, wrong contract: 8)
+	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10, wrong contract: 8, no elevator: 5)
 ```
 
 ## Notion Database Schema Updates
