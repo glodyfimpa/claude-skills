@@ -23,6 +23,7 @@ Default search criteria for Milan bilocali:
 - Property type: Bilocale (2 locali)
 - Size: 50-65 m²
 - Price range: 800-1,500€/month (rent only, excluding condo fees)
+- Contract type: 4+4 (canone libero) — REQUIRED, skip transitorio/uso foresteria
 - Zones: Within circonvallazione + strategic extensions (see `references/portals.md`)
 
 User can override any parameter. If user specifies different criteria, use those instead.
@@ -51,6 +52,7 @@ For each listing in search results, extract:
 | Size (m²) | Property features | Yes |
 | Rooms | "Locali" count | Yes |
 | Zone | Neighborhood from address | Yes |
+| Contract type | "Tipologia contratto" field | Yes |
 | Floor | "Piano" if available | No |
 | Condo fees | "Spese condominiali" if listed | No |
 | Energy class | Energy certificate badge | No |
@@ -59,6 +61,7 @@ Skip listings that:
 - Are outside target zones (see zone list in `references/portals.md`)
 - Exceed 1,500€ rent (before user applies stricter filters)
 - Are smaller than 45 m² or larger than 70 m²
+- Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2)
 
 ### Step 4: Deduplicate
 
@@ -137,7 +140,7 @@ Scan completed:
 	∙	Idealista: 52 listings scanned
 	∙	Duplicates skipped: 12
 	∙	Saved to Notion: 18 (Hot: 5, Review: 13)
-	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10)
+	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10, wrong contract: 8)
 ```
 
 ## Notion Database Schema Updates
@@ -153,6 +156,7 @@ If the Notion database "(DB) Appartamenti BNB" lacks the structured fields, crea
 | Piano | Text | - |
 | Spese Condo | Number | Format: Euro |
 | Score | Number | Format: Number (1 decimal) |
+| Tipo Contratto | Select | 4+4, 3+2, Transitorio, Uso Foresteria |
 | Status Investimento | Select | Hot, Review, Skip |
 | Fonte | Select | Immobiliare, Idealista, Casa.it |
 | Data Scansione | Date | - |

@@ -18,6 +18,7 @@ https://www.immobiliare.it/affitto-case/milano/
 - `superficieMassima=X` - Maximum sqm
 - `locpiualiMin=2` - Minimum rooms (2 = bilocale)
 - `locpiualiMax=2` - Maximum rooms
+- `contratto=libero` - Contract type 4+4 (canone libero)
 
 **Data extraction from listing page:**
 - Price: Look for element with class `in-price__price` or similar price container
@@ -25,6 +26,7 @@ https://www.immobiliare.it/affitto-case/milano/
 - Size: Look for `m²` or `mq` values in features section
 - Rooms: Look for `locali` count
 - Floor: Look for `piano` in features
+- Contract type: Look for `tipologia contratto` — accept only "4+4" or "Libero", skip "Transitorio", "Uso foresteria", "3+2"
 - Condo fees: Look for `spese condominio` or `spese condominiali`
 - Energy class: Look for `classe energetica` badge
 
@@ -55,6 +57,7 @@ https://www.idealista.it/affitto-case/milano-milano/
 - Size: Look for `m²` value
 - Rooms: Listed in features as `habitaciones` or `locali`
 - Floor: Look for `planta` or `piano`
+- Contract type: Look in listing details for "Tipo contratto" — accept only "4+4" or "Libero", skip "Transitorio", "Uso foresteria", "3+2"
 - Condo fees: May appear in expenses section
 - Energy class: Energy certificate section
 
@@ -105,3 +108,18 @@ Città Studi, Lambrate, Lodi-Brenta, Loreto, Turro
 
 **Exclude:**
 Rogoredo, Bisceglie, Baggio, Quarto Oggiaro, extreme periphery
+
+## Contract Type Filtering
+
+**REQUIRED: Only accept 4+4 contracts (canone libero)**
+
+Contract types to ACCEPT:
+- "4+4" or "Libero" or "Canone libero" — standard residential contract, 4 years + 4 years renewal
+
+Contract types to SKIP:
+- "Transitorio" — temporary contract (max 18 months), not suitable for stable BnB operation
+- "Uso foresteria" — corporate housing, typically restrictive on subletting
+- "3+2" or "Concordato" — regulated rent contract, often below market and with restrictions
+- "Studenti" — student housing, seasonal and restricted
+
+When contract type is not specified in the listing, check the detail page. If still unclear, save with "Tipo Contratto" = null and flag for manual review in Notes.
