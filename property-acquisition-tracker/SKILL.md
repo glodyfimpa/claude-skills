@@ -25,6 +25,7 @@ Default search criteria for Milan bilocali:
 - Price range: 800-1,500€/month (rent only, excluding condo fees)
 - Contract type: 4+4 (canone libero) — REQUIRED, skip transitorio/uso foresteria
 - Floor: Piano terra OK sempre; piani superiori RICHIEDONO ascensore
+- Subletting allowed: SKIP if listing mentions "no sublocazione", "no affitti brevi", "no Airbnb", etc.
 - Zones: Within circonvallazione + strategic extensions (see `references/portals.md`)
 
 User can override any parameter. If user specifies different criteria, use those instead.
@@ -56,6 +57,7 @@ For each listing in search results, extract:
 | Contract type | "Tipologia contratto" field | Yes |
 | Floor | "Piano" from features | Yes |
 | Elevator | "Ascensore" presence | Yes (if floor > 0) |
+| Subletting restrictions | Check full listing text | Yes |
 | Condo fees | "Spese condominiali" if listed | No |
 | Energy class | Energy certificate badge | No |
 
@@ -65,6 +67,7 @@ Skip listings that:
 - Are smaller than 45 m² or larger than 70 m²
 - Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2)
 - Are above ground floor (1° piano+) WITHOUT elevator — guests with luggage need easy access
+- Mention subletting/short-term rental restrictions anywhere in listing text (see `references/portals.md`)
 
 ### Step 4: Deduplicate
 
@@ -143,7 +146,7 @@ Scan completed:
 	∙	Idealista: 52 listings scanned
 	∙	Duplicates skipped: 12
 	∙	Saved to Notion: 18 (Hot: 5, Review: 13)
-	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10, wrong contract: 8, no elevator: 5)
+	∙	Skipped: 69 (low score: 41, wrong zone: 18, price: 10, wrong contract: 8, no elevator: 5, no subletting: 3)
 ```
 
 ## Notion Database Schema Updates

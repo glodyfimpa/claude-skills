@@ -141,3 +141,29 @@ Elevator detection:
 - If floor > 0 and elevator not confirmed → SKIP listing
 
 Rationale: BnB guests arrive with luggage. Walking up stairs significantly impacts reviews and booking rates.
+
+## Subletting Restrictions Detection
+
+**CRITICAL: SKIP any listing that prohibits subletting or short-term rentals**
+
+Scan the ENTIRE listing text (title, description, features, notes) for these keywords:
+
+**Italian phrases to detect (case-insensitive):**
+- "no sublocazione" / "non si accetta sublocazione" / "vietata sublocazione"
+- "no subaffitto" / "vietato subaffitto" / "subaffitto non consentito"
+- "no affitti brevi" / "affitti brevi non ammessi" / "no affitto breve"
+- "no Airbnb" / "vietato Airbnb" / "Airbnb non consentito"
+- "no B&B" / "no BnB" / "vietato uso B&B"
+- "solo residenziale" / "uso esclusivamente residenziale"
+- "no attività ricettiva" / "vietata attività ricettiva"
+- "divieto di sublocazione" / "clausola anti-sublocazione"
+- "no locazione turistica" / "locazione turistica vietata"
+
+**Also check for:**
+- Condominium rules mentioned ("regolamento condominiale vieta...")
+- Owner restrictions ("il proprietario non consente...")
+- Contract clauses ("contratto prevede divieto di...")
+
+**Action:** If ANY of these phrases appear → SKIP listing immediately, do not save to Notion.
+
+**In summary report:** Count as "no subletting allowed"
