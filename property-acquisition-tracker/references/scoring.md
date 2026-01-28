@@ -46,23 +46,25 @@ ratio = monthly_gross_revenue / monthly_rent
 | Maintenance | 500€/year |
 | Cedolare secca | 21% (first property), 26% (second) |
 | Average stay length | 3 nights |
-| Target occupancy | 70% |
+| Target occupancy | 67% (20 days/month) |
 
 ## Quick Estimation
 
 For rapid filtering without full calculation, use simplified scoring:
 
-**Quick Score = (estimated_monthly_revenue / monthly_rent) × 10**
+**Quick Score = (estimated_monthly_revenue / total_monthly_cost) × 10**
+
+Where `total_monthly_cost = rent + condo_fees`
 
 Interpretation:
-- Score ≥ 30: High potential, save to Notion
-- Score 25-29: Moderate potential, save with note
+- Score ≥ 30: High potential, save to Notion with status "Hot"
+- Score 25-29: Moderate potential, save with status "Review"
 - Score < 25: Skip unless exceptional location
 
 **Estimated monthly revenue formula:**
 
 ```
-estimated_revenue = zone_avg_nightly_rate × 21 days (70% of 30)
+estimated_revenue = zone_avg_nightly_rate × 20 days (67% occupancy)
 ```
 
 Zone average rates (2025 estimates):
@@ -77,3 +79,6 @@ Zone average rates (2025 estimates):
 - Size: 50-65 m²
 - Capacity: 4 guests (1 bedroom + sofa-bed in living room)
 - Budget: Target 1,300€/month total (rent + condo), max 1,500€
+- Contract: 4+4 (canone libero) ONLY — skip transitorio, uso foresteria, 3+2
+- Elevator: Required for floors above ground level (piano terra/rialzato OK without)
+- Subletting: SKIP if listing prohibits sublocazione, affitti brevi, or Airbnb

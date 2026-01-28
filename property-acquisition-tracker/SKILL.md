@@ -22,11 +22,13 @@ Before running, verify:
 Default search criteria for Milan bilocali:
 - Property type: Bilocale (2 locali)
 - Size: 50-65 m²
-- Price range: 800-1,500€/month (rent only, excluding condo fees)
+- Price range: 800-1,500€/month **total** (rent + condo fees combined)
 - Contract type: 4+4 (canone libero) — REQUIRED, skip transitorio/uso foresteria
 - Floor: Piano terra OK sempre; piani superiori RICHIEDONO ascensore
 - Subletting allowed: SKIP if listing mentions "no sublocazione", "no affitti brevi", "no Airbnb", etc.
 - Zones: Within circonvallazione + strategic extensions (see `references/portals.md`)
+
+See `references/scoring.md` for investment scoring formulas and cost parameters.
 
 User can override any parameter. If user specifies different criteria, use those instead.
 
@@ -63,7 +65,7 @@ For each listing in search results, extract:
 
 Skip listings that:
 - Are outside target zones (see zone list in `references/portals.md`)
-- Exceed 1,500€ rent (before user applies stricter filters)
+- Exceed 1,500€ **total** (rent + condo fees combined)
 - Are smaller than 45 m² or larger than 70 m²
 - Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2)
 - Are above ground floor (1° piano+) WITHOUT elevator — guests with luggage need easy access
@@ -82,22 +84,25 @@ Maintain a session list of processed addresses to avoid cross-portal duplicates.
 
 ### Step 5: Calculate Quick Score
 
-For each unique listing, calculate quick investment score:
+For each unique listing, calculate quick investment score using **total monthly cost** (rent + condo fees):
 
 ```
-quick_score = (zone_avg_nightly_rate × 21) / monthly_rent × 10
+total_monthly_cost = monthly_rent + condo_fees
+quick_score = (zone_avg_nightly_rate × 20) / total_monthly_cost × 10
 ```
 
-Zone average nightly rates (reference):
-- Centro/Brera/Duomo: 125€
-- Navigli/Isola: 107€
-- Porta Romana/Buenos Aires: 95€
-- Città Studi/Lambrate: 80€
+Zone average nightly rates (midpoint of ranges from scoring.md):
+- Centro storico/Brera/Duomo: 125€ (range: 110-140€)
+- Navigli/Isola: 107€ (range: 95-120€)
+- Porta Romana/Buenos Aires: 95€ (range: 85-105€)
+- Città Studi/Lambrate: 80€ (range: 70-90€)
 
 Score interpretation:
 - ≥30: High potential, save with status "Hot"
 - 25-29: Moderate potential, save with status "Review"
-- <25: Skip unless user explicitly requests saving all
+- <25: Skip unless exceptional location or user explicitly requests saving all
+
+See `references/scoring.md` for detailed ROI calculations and break-even analysis.
 
 ### Step 6: Update Notion Database
 
