@@ -91,16 +91,17 @@ total_monthly_cost = monthly_rent + condo_fees
 quick_score = (zone_avg_nightly_rate × 20) / total_monthly_cost × 10
 ```
 
-Zone average nightly rates (midpoint of ranges from scoring.md):
-- Centro storico/Brera/Duomo: 125€ (range: 110-140€)
-- Navigli/Isola: 107€ (range: 95-120€)
-- Porta Romana/Buenos Aires: 95€ (range: 85-105€)
-- Città Studi/Lambrate: 80€ (range: 70-90€)
+Zone average nightly rates (2026 market data, bilocale 4 ospiti):
+- Centro storico/Brera/Duomo: 155€ (range: 130-200€)
+- Navigli/Isola/Garibaldi: 125€ (range: 100-160€)
+- Porta Romana/Buenos Aires: 110€ (range: 90-140€)
+- Città Studi/Lambrate: 85€ (range: 65-110€)
 
 Score interpretation:
 - ≥30: High potential, save with status "Hot"
 - 25-29: Moderate potential, save with status "Review"
-- <25: Skip unless exceptional location or user explicitly requests saving all
+- 20-24: Worth monitoring, save with status "Watch"
+- <20: Skip unless exceptional location or user explicitly requests saving all
 
 See `references/scoring.md` for detailed ROI calculations and break-even analysis.
 
@@ -168,7 +169,7 @@ If the Notion database "(DB) Appartamenti BNB" lacks the structured fields, crea
 | Spese Condo | Number | Format: Euro |
 | Score | Number | Format: Number (1 decimal) |
 | Tipo Contratto | Select | 4+4, 3+2, Transitorio, Uso Foresteria |
-| Status Investimento | Select | Hot, Review, Skip |
+| Status Investimento | Select | Hot, Review, Watch, Skip |
 | Fonte | Select | Immobiliare, Idealista, Casa.it |
 | Data Scansione | Date | - |
 

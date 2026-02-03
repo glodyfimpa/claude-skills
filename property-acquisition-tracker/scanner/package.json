@@ -1,0 +1,17 @@
+{
+  "name": "property-acquisition-tracker",
+  "version": "1.0.0",
+  "description": "Automated property scouting for short-term rental investments in Milan",
+  "type": "module",
+  "scripts": {
+    "scan": "node scan.js",
+    "scan:headed": "HEADLESS=false node scan.js",
+    "scan:debug": "DEBUG=true HEADLESS=false node scan.js",
+    "scan:idealista": "node scan-idealista.js",
+    "scan:immobiliare": "HEADLESS=false MAX_PAGES=3 node scan.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^2.2.0",
+    "playwright": "^1.49.0"
+  }
+}

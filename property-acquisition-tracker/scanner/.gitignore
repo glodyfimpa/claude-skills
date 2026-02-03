@@ -1,0 +1,6 @@
+node_modules/
+.env
+.browser-profile/
+scan-results-*.json
+scan-results-*.csv
+idealista-results-*.json

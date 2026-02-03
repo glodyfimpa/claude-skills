@@ -59,7 +59,8 @@ Where `total_monthly_cost = rent + condo_fees`
 Interpretation:
 - Score ≥ 30: High potential, save to Notion with status "Hot"
 - Score 25-29: Moderate potential, save with status "Review"
-- Score < 25: Skip unless exceptional location
+- Score 20-24: Worth monitoring, save with status "Watch"
+- Score < 20: Skip unless exceptional location
 
 **Estimated monthly revenue formula:**
 
@@ -67,11 +68,11 @@ Interpretation:
 estimated_revenue = zone_avg_nightly_rate × 20 days (67% occupancy)
 ```
 
-Zone average rates (2025 estimates):
-- Centro storico: 110-140€/night
-- Navigli/Isola/Brera: 95-120€/night
-- Porta Romana/Buenos Aires: 85-105€/night
-- Città Studi/Lambrate: 70-90€/night
+Zone average rates (2026 market data, bilocale 4 ospiti):
+- Centro storico/Brera/Duomo: 130-200€/night (midpoint 155€)
+- Navigli/Isola/Garibaldi: 100-160€/night (midpoint 125€)
+- Porta Romana/Buenos Aires/Porta Venezia: 90-140€/night (midpoint 110€)
+- Città Studi/Lambrate/Nolo: 65-110€/night (midpoint 85€)
 
 ## Property Requirements
 
