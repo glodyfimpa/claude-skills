@@ -1,0 +1,9 @@
+# Claude Code local settings
+.claude/
+
+# Packaged skills
+*.skill
+*.zip
+
+# Publishing docs
+PUBLISH_SKILL.md
