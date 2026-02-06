@@ -8,10 +8,13 @@
     "scan:headed": "HEADLESS=false node scan.js",
     "scan:debug": "DEBUG=true HEADLESS=false node scan.js",
     "scan:idealista": "node scan-idealista.js",
-    "scan:immobiliare": "HEADLESS=false MAX_PAGES=3 node scan.js"
+    "scan:immobiliare": "HEADLESS=false MAX_PAGES=3 node scan.js",
+    "extension:server": "node extension-server.js",
+    "scan:rebrowser": "node scan-idealista-rebrowser.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.0",
-    "playwright": "^1.49.0"
+    "playwright": "^1.49.0",
+    "rebrowser-puppeteer": "^24.8.1"
   }
 }

@@ -76,10 +76,9 @@ Zone average rates (2026 market data, bilocale 4 ospiti):
 
 ## Property Requirements
 
-- Type: Bilocale (2 locali)
-- Size: 50-65 m²
+- Type: Bilocale (2 locali) - filtra per numero locali, non per m²
 - Capacity: 4 guests (1 bedroom + sofa-bed in living room)
 - Budget: Target 1,300€/month total (rent + condo), max 1,500€
-- Contract: 4+4 (canone libero) ONLY — skip transitorio, uso foresteria, 3+2
+- Contract: 4+4 (canone libero) ONLY — il 3+2 (canone concordato) non consente sublocazione per affitti brevi, quindi va scartato sempre. Skip anche: transitorio, uso foresteria, studenti
 - Elevator: Required for floors above ground level (piano terra/rialzato OK without)
 - Subletting: SKIP if listing prohibits sublocazione, affitti brevi, or Airbnb

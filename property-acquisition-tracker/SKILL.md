@@ -66,8 +66,7 @@ For each listing in search results, extract:
 Skip listings that:
 - Are outside target zones (see zone list in `references/portals.md`)
 - Exceed 1,500€ **total** (rent + condo fees combined)
-- Are smaller than 45 m² or larger than 70 m²
-- Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2)
+- Have contract type other than 4+4 (skip: transitorio, uso foresteria, concordato 3+2). **Motivo**: il contratto 3+2 (canone concordato) non consente sublocazione per affitti brevi. Solo il 4+4 (canone libero) lo permette.
 - Are above ground floor (1° piano+) WITHOUT elevator — guests with luggage need easy access
 - Mention subletting/short-term rental restrictions anywhere in listing text (see `references/portals.md`)
 

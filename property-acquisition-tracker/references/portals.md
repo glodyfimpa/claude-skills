@@ -121,7 +121,7 @@ Contract types to ACCEPT:
 Contract types to SKIP:
 - "Transitorio" — temporary contract (max 18 months), not suitable for stable BnB operation
 - "Uso foresteria" — corporate housing, typically restrictive on subletting
-- "3+2" or "Concordato" — regulated rent contract, often below market and with restrictions
+- "3+2" or "Concordato" — canone concordato, NON consente sublocazione per affitti brevi. Solo passando a 4+4 sarebbe possibile, ma il prezzo aumenterebbe (il concordato ha canone calmierato). Scartare sempre
 - "Studenti" — student housing, seasonal and restricted
 
 When contract type is not specified in the listing, check the detail page. If still unclear, save with "Tipo Contratto" = null and flag for manual review in Notes.

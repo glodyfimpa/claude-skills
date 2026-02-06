@@ -4,3 +4,5 @@ node_modules/
 scan-results-*.json
 scan-results-*.csv
 idealista-results-*.json
+idealista-rebrowser-*.json
+idealista-extension-*.json

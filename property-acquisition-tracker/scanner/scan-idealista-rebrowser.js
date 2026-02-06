@@ -1,21 +1,20 @@
 /**
- * Idealista Scanner - Uses your REAL Chrome browser via CDP.
+ * Idealista Scanner - Phase 3: rebrowser-puppeteer
  *
- * How it works:
- * 1. Launches YOUR Chrome (not Playwright's) with your actual profile
- * 2. Your cookies, extensions, history = 100% real browser fingerprint
- * 3. Idealista cannot distinguish this from your normal browsing
- * 4. If captcha appears, you solve it manually, then press ENTER
+ * Uses rebrowser-puppeteer which patches CDP Runtime.Enable detection.
+ * This is the primary detection vector used by DataDome/Idealista.
+ *
+ * Key differences from Playwright approach:
+ * - Patches Runtime.Enable CDP command (DataDome's main detection)
+ * - Uses addBinding mode for execution context creation
+ * - Combined with ghost-cursor for realistic mouse movement
  *
  * Usage:
- *   IMPORTANT: Close Chrome completely before running.
- *   npm run scan:idealista
+ *   npm run scan:rebrowser
  */
-import { chromium } from 'playwright';
+import puppeteer from 'rebrowser-puppeteer';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
 import { createInterface } from 'readline';
-import { homedir } from 'os';
 import { SEARCH_CONFIG, SUBLETTING_BLOCKERS, SKIP_CONTRACTS, EXCLUDED_ZONES } from './config.js';
 import { getZoneRate, quickScore, investmentStatus, fullROI } from './scoring.js';
 import { Deduplicator } from './dedup.js';
@@ -46,12 +45,10 @@ function prompt(msg) {
   });
 }
 
-/** Random delay between min and max ms */
-function humanDelay(min = 2000, max = 4000) {
+function humanDelay(min = 3000, max = 7000) {
   return delay(min + Math.random() * (max - min));
 }
 
-/** Simulate human scrolling */
 async function humanScroll(page) {
   const scrolls = 3 + Math.floor(Math.random() * 4);
   for (let i = 0; i < scrolls; i++) {
@@ -60,106 +57,76 @@ async function humanScroll(page) {
   }
 }
 
-/** Move mouse randomly to simulate human behavior */
 async function humanMouse(page) {
   const x = 200 + Math.floor(Math.random() * 800);
   const y = 200 + Math.floor(Math.random() * 400);
   await page.mouse.move(x, y, { steps: 5 + Math.floor(Math.random() * 10) });
 }
 
-// ─── CHROME DETECTION ────────────────────────────────────────────────────────
-
-function findChrome() {
-  const paths = [
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) return p;
-  }
-  return null;
-}
-
-function getChromeProfile() {
-  const defaultProfile = `${homedir()}/Library/Application Support/Google/Chrome`;
-  if (existsSync(defaultProfile)) return defaultProfile;
-  return null;
-}
-
-function isChromeRunning() {
-  try {
-    const result = execSync('pgrep -x "Google Chrome"', { encoding: 'utf-8' });
-    return result.trim().length > 0;
-  } catch { return false; }
-}
-
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════╗');
-  console.log('║  Idealista Scanner (Real Chrome mode)                  ║');
+  console.log('║  Idealista Scanner (rebrowser-puppeteer mode)          ║');
   console.log('╚══════════════════════════════════════════════════════════╝\n');
-
-  const chromePath = findChrome();
-  if (!chromePath) {
-    console.error('Chrome non trovato. Installa Google Chrome.');
-    process.exit(1);
-  }
-  console.log(`Chrome: ${chromePath}`);
-
-  const chromeProfile = getChromeProfile();
-  if (chromeProfile) {
-    console.log(`Profilo: ${chromeProfile}`);
-  }
 
   await notion.verifySchema();
   await notion.loadExistingEntries();
 
-  // Launch real Chrome executable with a lightweight dedicated profile.
-  // Uses your Chrome binary (real fingerprint) but a clean profile (fast startup).
-  // Cookies persist between scans in .browser-profile/
-  const profileDir = new URL('.browser-profile', import.meta.url).pathname;
-  console.log(`\nAvvio Chrome reale con profilo dedicato...\n`);
+  // Viewport sizes that look realistic
+  const viewports = [
+    { width: 1920, height: 1080 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 864 },
+    { width: 1280, height: 720 },
+  ];
+  const viewport = viewports[Math.floor(Math.random() * viewports.length)];
 
-  const context = await chromium.launchPersistentContext(profileDir, {
-    executablePath: chromePath,
+  console.log(`Viewport: ${viewport.width}x${viewport.height}`);
+  console.log('Launching browser with CDP patches...\n');
+
+  const browser = await puppeteer.launch({
     headless: false,
     args: [
+      `--window-size=${viewport.width},${viewport.height}`,
       '--no-first-run',
       '--no-default-browser-check',
       '--disable-sync',
-      '--disable-extensions',
+      '--lang=it-IT',
     ],
-    ignoreDefaultArgs: [
-      '--enable-automation',
-      '--disable-component-update',
-      '--disable-background-networking',
-      '--enable-features=CDPScreenshotNewSurface',
-    ],
-    viewport: { width: 1280, height: 900 },
-    locale: 'it-IT',
+    defaultViewport: viewport,
   });
 
-  const page = context.pages()[0] || await context.newPage();
+  const page = (await browser.pages())[0] || await browser.newPage();
+
+  // Set realistic headers
+  await page.setExtraHTTPHeaders({
+    'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+  });
 
   // Navigate to Idealista
   console.log('[1/3] Navigando su Idealista...');
-  await page.goto('https://www.idealista.it/affitto-case/milano-milano/', { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await humanDelay(3000, 5000);
+  await page.goto('https://www.idealista.it/affitto-case/milano-milano/', {
+    waitUntil: 'domcontentloaded',
+    timeout: 30000,
+  });
+  await humanDelay(3000, 6000);
 
   // Handle cookie consent
-  const cookieBtn = await page.$('#didomi-notice-agree-button');
-  if (cookieBtn) {
-    await humanDelay(500, 1500);
-    await cookieBtn.click().catch(() => {});
-    await humanDelay(1000, 2000);
-  }
+  try {
+    const cookieBtn = await page.$('#didomi-notice-agree-button');
+    if (cookieBtn) {
+      await humanDelay(500, 1500);
+      await cookieBtn.click();
+      await humanDelay(1000, 2000);
+    }
+  } catch {}
 
-  // Check for captcha/block
-  const bodyText = await page.textContent('body').catch(() => '');
-  if (bodyText.includes('non sei un robot') || bodyText.includes('captcha') || bodyText.includes('dispositivo')) {
-    await prompt('\n⚠️  Captcha o blocco rilevato. Risolvilo nel browser e premi INVIO... ');
+  // Check for block
+  const bodyText = await page.evaluate(() => document.body.textContent || '');
+  if (bodyText.includes('non sei un robot') || bodyText.includes('captcha') || bodyText.includes('uso improprio') || bodyText.includes('dispositivo')) {
+    console.log('\n⚠️  Blocco rilevato.');
+    await prompt('   Risolvilo nel browser e premi INVIO... ');
     await humanDelay(1000, 2000);
   }
 
@@ -167,13 +134,13 @@ async function main() {
   console.log('[2/3] Applicando filtri di ricerca...\n');
   const searchUrl = `https://www.idealista.it/affitto-case/milano-milano/con-prezzo-da_${SEARCH_CONFIG.minPrice},prezzo-fino_${SEARCH_CONFIG.maxPrice},dimensione-da_${SEARCH_CONFIG.minSize},dimensione-fino_${SEARCH_CONFIG.maxSize}/2-locali/`;
   await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await humanDelay(3000, 5000);
+  await humanDelay(3000, 6000);
   await humanScroll(page);
 
-  // Re-check for block after navigation
-  const bodyText2 = await page.textContent('body').catch(() => '');
-  if (bodyText2.includes('non sei un robot') || bodyText2.includes('captcha') || bodyText2.includes('dispositivo')) {
-    await prompt('\n⚠️  Blocco sulla pagina di ricerca. Risolvilo e premi INVIO... ');
+  // Re-check for block
+  const bodyText2 = await page.evaluate(() => document.body.textContent || '');
+  if (bodyText2.includes('non sei un robot') || bodyText2.includes('captcha') || bodyText2.includes('uso improprio') || bodyText2.includes('dispositivo')) {
+    await prompt('\n⚠️  Blocco sulla ricerca. Risolvilo e premi INVIO... ');
   }
 
   // Extract listings
@@ -184,28 +151,25 @@ async function main() {
     if (pageNum > 1) {
       const pageUrl = searchUrl + `pagina-${pageNum}.htm`;
       await humanMouse(page);
-      await humanDelay(1000, 2000);
-      await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await humanDelay(2000, 4000);
+      await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await humanDelay(3000, 6000);
       await humanScroll(page);
     }
 
-    // Extract listing URLs from current page
-    const listingUrls = await page.$$eval('a', anchors => {
+    const listingUrls = await page.evaluate(() => {
       const urls = new Set();
-      for (const a of anchors) {
+      document.querySelectorAll('a').forEach(a => {
         if (/\/immobile\/\d{5,}\/?/.test(a.href)) urls.add(a.href.split('?')[0]);
-      }
+      });
       return [...urls];
     });
 
     console.log(`[Idealista] Pagina ${pageNum}: ${listingUrls.length} annunci trovati`);
     if (listingUrls.length === 0) {
-      // Might be blocked
-      const bt = await page.textContent('body').catch(() => '');
-      if (bt.includes('non sei un robot') || bt.includes('dispositivo')) {
+      const bt = await page.evaluate(() => document.body.textContent || '');
+      if (bt.includes('non sei un robot') || bt.includes('dispositivo') || bt.includes('uso improprio')) {
         await prompt('⚠️  Blocco rilevato. Risolvilo e premi INVIO... ');
-        // Retry same page
         await page.reload({ waitUntil: 'domcontentloaded' });
         await humanDelay(2000, 3000);
         continue;
@@ -216,25 +180,26 @@ async function main() {
     for (const url of listingUrls) {
       totalScanned++;
       await humanMouse(page);
-      await humanDelay(2500, 5000); // slow, human-like
+      await humanDelay(3000, 7000);
       await processListing(page, url);
     }
   }
 
-  await context.close();
+  await browser.close();
 
   // Output
   const dateStr = new Date().toISOString().split('T')[0];
-  writeFileSync(`idealista-results-${dateStr}.json`, JSON.stringify(results.saved, null, 2));
+  writeFileSync(`idealista-rebrowser-${dateStr}.json`, JSON.stringify(results.saved, null, 2));
 
   const hot = results.saved.filter(l => l.status === 'Hot').length;
   const review = results.saved.filter(l => l.status === 'Review').length;
+  const watch = results.saved.filter(l => l.status === 'Watch').length;
   const skipTotal = Object.values(results.skipped).reduce((a, b) => a + b, 0);
 
   console.log('\n══════════════════════════════════════════════════════════');
   console.log(`Idealista scan completato: ${totalScanned} annunci scansionati`);
-  console.log(`  Salvati: ${results.saved.length} (Hot: ${hot}, Review: ${review})`);
-  console.log(`  Scartati: ${skipTotal} (score: ${results.skipped.lowScore}, zona: ${results.skipped.wrongZone}, prezzo: ${results.skipped.price}, contratto: ${results.skipped.wrongContract}, no asc: ${results.skipped.noElevator}, no subloc: ${results.skipped.noSubletting}, duplicati: ${results.skipped.duplicate})`);
+  console.log(`  Salvati: ${results.saved.length} (Hot: ${hot}, Review: ${review}, Watch: ${watch})`);
+  console.log(`  Scartati: ${skipTotal}`);
   notion.printStats();
   console.log('══════════════════════════════════════════════════════════');
 }
@@ -244,15 +209,15 @@ async function main() {
 async function processListing(page, url) {
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
-    await humanDelay(1500, 3000);
+    await humanDelay(2000, 4000);
 
-    const fullText = await page.textContent('body') || '';
+    const fullText = await page.evaluate(() => document.body.textContent || '');
     if (fullText.length < 200) return;
-    if (fullText.includes('non sei un robot') || fullText.includes('dispositivo')) {
+    if (fullText.includes('non sei un robot') || fullText.includes('dispositivo') || fullText.includes('uso improprio')) {
       await prompt('⚠️  Blocco su annuncio. Risolvilo e premi INVIO... ');
       await page.reload({ waitUntil: 'domcontentloaded' });
       await humanDelay(1000, 2000);
-      return; // skip this one
+      return;
     }
 
     const textLower = fullText.toLowerCase();
@@ -260,7 +225,7 @@ async function processListing(page, url) {
     const listing = {
       url,
       source: 'Idealista',
-      title: await extractText(page, 'h1, .main-info__title-main, [class*="title"]'),
+      title: await evalText(page, 'h1, .main-info__title-main, [class*="title"]'),
       price: extractPrice(fullText),
       sqm: extractNum(fullText, /(\d{2,3})\s*m²/i) || extractNum(fullText, /(\d{2,3})\s*mq/i),
       rooms: extractNum(fullText, /(\d)\s*local/i),
@@ -268,13 +233,12 @@ async function processListing(page, url) {
       elevator: /ascensore\s*[:.]?\s*s[iì]/i.test(fullText) || /con ascensore/i.test(fullText),
       condoFees: extractNum(fullText, /spese\s*(?:condo(?:miniali)?|condominio)\s*[:.]?\s*€?\s*(\d+)/i),
       contractType: extractContract(textLower),
-      address: await extractText(page, '.main-info__title-minor, [class*="location"], [class*="address"]'),
+      address: await evalText(page, '.main-info__title-minor, [class*="location"], [class*="address"]'),
       zone: '',
     };
 
     listing.zone = listing.address || listing.title || '';
 
-    // Filters
     if (listing.price === 0) return;
 
     const totalCost = listing.price + (listing.condoFees || 0);
@@ -298,9 +262,8 @@ async function processListing(page, url) {
     const dupCheck = dedup.check(listing);
     if (dupCheck.isDuplicate) { results.skipped.duplicate++; return; }
 
-    // Scoring
     const zoneInfo = getZoneRate(listing.zone) || getZoneRate(listing.title);
-    const nightlyRate = zoneInfo?.rate || 80;
+    const nightlyRate = zoneInfo?.rate || 85;
     const zoneName = zoneInfo?.zone || 'sconosciuta';
     const score = quickScore(listing.price, listing.condoFees, nightlyRate);
     const status = investmentStatus(score);
@@ -312,15 +275,15 @@ async function processListing(page, url) {
       ...listing, zoneName, nightlyRate, totalCost, score, status, roi,
       scanDate: new Date().toISOString().split('T')[0],
       notes: [
-        `Rent: ${listing.price}€ + Condo: ${listing.condoFees || 0}€ = Total: ${totalCost}€`,
-        `Size: ${listing.sqm || '?'} m² | Floor: ${listing.floor ?? '?'} | Elevator: ${listing.elevator ? 'Sì' : 'No'}`,
+        `Rent: ${listing.price}\u20AC + Condo: ${listing.condoFees || 0}\u20AC = Total: ${totalCost}\u20AC`,
+        `Size: ${listing.sqm || '?'} m\u00B2 | Floor: ${listing.floor ?? '?'} | Elevator: ${listing.elevator ? 'S\u00EC' : 'No'}`,
         `Quick Score: ${score} (${status}) | ROI: ${roi.roi}% | Break-even: ${roi.breakEvenDays}d`,
       ].join('\n'),
     };
 
     dedup.add(listing);
     results.saved.push(qualified);
-    console.log(`  ✓ [${status}] Score ${score} | ${totalCost}€ | ${zoneName} | ${listing.title?.substring(0, 55)}`);
+    console.log(`  \u2713 [${status}] Score ${score} | ${totalCost}\u20AC | ${zoneName} | ${listing.title?.substring(0, 55)}`);
     await notion.saveListing(qualified);
 
   } catch { /* skip failed listings silently */ }
@@ -328,11 +291,17 @@ async function processListing(page, url) {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-async function extractText(page, sel) {
-  try { const el = await page.$(sel); return el ? (await el.textContent())?.trim() || '' : ''; } catch { return ''; }
+async function evalText(page, sel) {
+  try {
+    return await page.evaluate((s) => {
+      const el = document.querySelector(s);
+      return el ? el.textContent.trim() : '';
+    }, sel);
+  } catch { return ''; }
 }
+
 function extractPrice(text) {
-  const matches = text.match(/€\s*([\d.]+)/g) || text.match(/([\d.]+)\s*€/g) || [];
+  const matches = text.match(/€\s*[\d.]+/g) || text.match(/[\d.]+\s*€/g) || [];
   for (const m of matches) { const v = parseInt(m.replace(/[€\s.]/g, '')); if (v >= 400 && v <= 5000) return v; }
   return 0;
 }

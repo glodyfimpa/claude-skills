@@ -24,7 +24,7 @@ loadEnv();
 
 const notion = new NotionSync(process.env.NOTION_TOKEN, process.env.NOTION_DATABASE_ID);
 const dedup = new Deduplicator();
-const results = { saved: [], skipped: { lowScore: 0, wrongZone: 0, price: 0, wrongContract: 0, noElevator: 0, noSubletting: 0, tooSmall: 0, tooBig: 0, duplicate: 0 } };
+const results = { saved: [], skipped: { lowScore: 0, wrongZone: 0, price: 0, wrongContract: 0, noElevator: 0, noSubletting: 0, duplicate: 0 } };
 const log = SEARCH_CONFIG.debug ? console.log : () => {};
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -249,8 +249,6 @@ async function processListing(page, url, source) {
     // ─── FILTERS ───
 
     if (listing.price === 0) { log(`  skip: no price`); return; }
-    if (listing.sqm && listing.sqm < 45) { results.skipped.tooSmall++; return; }
-    if (listing.sqm && listing.sqm > 70) { results.skipped.tooBig++; return; }
 
     const totalCost = listing.price + (listing.condoFees || 0);
     if (totalCost > SEARCH_CONFIG.maxPrice) { results.skipped.price++; return; }
