@@ -108,15 +108,19 @@ def create_business_plan_template(filename: str = "business_plan_template.xlsx")
     inputs_sheet['A22'].font = section_font
     
     inputs_sheet['A23'] = "Platform commission (Airbnb)"
-    inputs_sheet['B23'] = 0.15
+    inputs_sheet['B23'] = 0.03
     inputs_sheet['B23'].number_format = percent_format
+
+    inputs_sheet['A24'] = "Commission model note"
+    inputs_sheet['B24'] = "Split fee (3%) = individual host; Host-only (15.5%) = PMS/post Oct 2025"
+    inputs_sheet['B24'].font = Font(italic=True, size=9, color="666666")
     
-    inputs_sheet['A24'] = "Tax rate (cedolare secca)"
-    inputs_sheet['B24'] = 0.21
-    inputs_sheet['B24'].number_format = percent_format
-    
-    inputs_sheet['A25'] = "Avg stay length (nights)"
-    inputs_sheet['B25'] = 3
+    inputs_sheet['A25'] = "Tax rate (cedolare secca)"
+    inputs_sheet['B25'] = 0.21
+    inputs_sheet['B25'].number_format = percent_format
+
+    inputs_sheet['A26'] = "Avg stay length (nights)"
+    inputs_sheet['B26'] = 3
     
     # === CALCULATIONS SHEET ===
     calc_sheet.column_dimensions['A'].width = 30
@@ -133,7 +137,7 @@ def create_business_plan_template(filename: str = "business_plan_template.xlsx")
     calc_sheet['B4'].number_format = '0.0'
     
     calc_sheet['A5'] = "Number of stays"
-    calc_sheet['B5'] = "=B4/Inputs!B25"
+    calc_sheet['B5'] = "=B4/Inputs!B26"
     calc_sheet['B5'].number_format = '0.0'
     
     calc_sheet['A7'] = "Gross revenue"
@@ -160,12 +164,12 @@ def create_business_plan_template(filename: str = "business_plan_template.xlsx")
     calc_sheet['B13'] = "=B10+B11+B12"
     calc_sheet['B13'].number_format = currency_format
     
-    calc_sheet['A15'] = "Profit before tax"
-    calc_sheet['B15'] = "=B8-B13"
+    calc_sheet['A15'] = "Tax (cedolare secca on net revenue)"
+    calc_sheet['B15'] = "=B8*Inputs!B25"
     calc_sheet['B15'].number_format = currency_format
-    
-    calc_sheet['A16'] = "Net profit (after tax)"
-    calc_sheet['B16'] = "=B15*(1-Inputs!B24)"
+
+    calc_sheet['A16'] = "Net profit (after costs and tax)"
+    calc_sheet['B16'] = "=B8-B13-B15"
     calc_sheet['B16'].number_format = currency_format
     
     calc_sheet['A18'] = "Profit margin"
@@ -181,7 +185,7 @@ def create_business_plan_template(filename: str = "business_plan_template.xlsx")
     calc_sheet['B20'].number_format = percent_format
     
     calc_sheet['A22'] = "Break-even nights"
-    calc_sheet['B22'] = "=IF((Inputs!B9*(1-Inputs!B23)-(Inputs!B17/Inputs!B25))>0,B10/(Inputs!B9*(1-Inputs!B23)-(Inputs!B17/Inputs!B25)),30)"
+    calc_sheet['B22'] = "=IF((Inputs!B9*(1-Inputs!B23)-(Inputs!B17/Inputs!B26))>0,B10/(Inputs!B9*(1-Inputs!B23)-(Inputs!B17/Inputs!B26)),30)"
     calc_sheet['B22'].number_format = '0'
     
     # === SUMMARY SHEET ===
