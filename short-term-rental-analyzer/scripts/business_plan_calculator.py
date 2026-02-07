@@ -62,25 +62,31 @@ class BusinessPlanCalculator:
     # Average stay length (nights) - can be adjusted
     AVG_STAY_LENGTH = 3
     
-    # Platform commission (Airbnb charges ~3% to guests, ~14-16% to hosts)
-    PLATFORM_COMMISSION = 0.15
+    # Platform commission - Split fee: hosts pay ~3%, guests pay ~14-16%
+    # Host-only fee (PMS/post Oct 2025): hosts pay 15.5%, guests pay nothing
+    SPLIT_FEE_HOST_COMMISSION = 0.03
+    HOST_ONLY_COMMISSION = 0.155
+    DEFAULT_COMMISSION = SPLIT_FEE_HOST_COMMISSION
     
     # Default tax rate (Italy cedolare secca for first property)
     DEFAULT_TAX_RATE = 0.21
     
-    def __init__(self, costs: PropertyCosts, market: MarketData, tax_rate: float = None):
+    def __init__(self, costs: PropertyCosts, market: MarketData, tax_rate: float = None, commission_rate: float = None):
         """
         Initialize calculator.
-        
+
         Args:
             costs: Property cost structure
             market: Market data from zone analysis
             tax_rate: Tax rate to apply (default: 0.21 for cedolare secca first property)
                       Use 0.26 for second property under cedolare secca
+            commission_rate: Platform commission rate (default: 0.03 for split-fee model).
+                            Use 0.155 for host-only fee model (mandatory with PMS since Oct 2025).
         """
         self.costs = costs
         self.market = market
         self.tax_rate = tax_rate if tax_rate is not None else self.DEFAULT_TAX_RATE
+        self.commission_rate = commission_rate if commission_rate is not None else self.DEFAULT_COMMISSION
         
     def calculate_monthly_projection(self) -> BusinessProjection:
         """Calculate monthly business projection"""
@@ -93,7 +99,7 @@ class BusinessPlanCalculator:
         gross_revenue = occupied_nights * self.market.avg_price_per_night
         
         # Net revenue after platform commission
-        net_revenue = gross_revenue * (1 - self.PLATFORM_COMMISSION)
+        net_revenue = gross_revenue * (1 - self.commission_rate)
         
         # Variable costs (cleaning per stay)
         num_stays = occupied_nights / self.AVG_STAY_LENGTH
@@ -109,11 +115,13 @@ class BusinessPlanCalculator:
             property_mgmt_fee
         )
         
-        # Net profit before taxes
-        profit_before_tax = net_revenue - total_costs
-        
-        # Net profit after taxes
-        net_profit = profit_before_tax * (1 - self.tax_rate)
+        # ITALIAN TAX NOTE: Cedolare secca is a flat tax on gross rental income.
+        # Unlike ordinary IRPEF taxation, no expense deductions are allowed.
+        # Airbnb withholds and remits cedolare secca as sostituto d'imposta since 2024.
+        tax_amount = net_revenue * self.tax_rate
+
+        # Net profit after all costs and taxes
+        net_profit = net_revenue - total_costs - tax_amount
         
         # Profit margin
         profit_margin = net_profit / net_revenue if net_revenue > 0 else 0
@@ -124,7 +132,7 @@ class BusinessPlanCalculator:
         annual_roi = annual_profit / annual_investment if annual_investment > 0 else 0
         
         # Break-even calculation (nights needed to cover costs)
-        revenue_per_night = self.market.avg_price_per_night * (1 - self.PLATFORM_COMMISSION)
+        revenue_per_night = self.market.avg_price_per_night * (1 - self.commission_rate)
         cost_per_night = self.costs.cleaning_per_stay / self.AVG_STAY_LENGTH
         contribution_per_night = revenue_per_night - cost_per_night
         
@@ -162,6 +170,8 @@ class BusinessPlanCalculator:
         projection = self.calculate_monthly_projection()
         
         # Decision criteria (as defined in investment analysis)
+        # NOTE: These thresholds assume the default split-fee commission model (3%).
+        # With host-only fee (15.5%), fewer properties will pass these criteria.
         min_roi = 0.40  # 40% annual ROI minimum
         optimal_roi = 0.60  # 60% annual ROI optimal
         min_revenue_to_rent_ratio = 2.5  # Minimum revenue/rent ratio
@@ -170,7 +180,7 @@ class BusinessPlanCalculator:
         optimal_break_even = 8  # Optimal 8 days break even
         
         # Calculate revenue-to-rent ratio
-        monthly_revenue = projection.gross_revenue * (1 - self.PLATFORM_COMMISSION)
+        monthly_revenue = projection.gross_revenue * (1 - self.commission_rate)
         revenue_to_rent = monthly_revenue / self.costs.monthly_rent if self.costs.monthly_rent > 0 else 0
         
         score = 0

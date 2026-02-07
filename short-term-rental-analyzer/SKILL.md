@@ -49,12 +49,12 @@ market = MarketData(
     occupancy_rate=0.70
 )
 
-calculator = BusinessPlanCalculator(costs, market)
+calculator = BusinessPlanCalculator(costs, market)  # defaults to 3% split-fee commission
 projection = calculator.calculate_monthly_projection()
 recommendation = calculator.generate_decision_recommendation()
 ```
 
-Calculator applies Italian tax structure. Includes cedolare secca at 21 percent, Airbnb platform commission at 15 percent, standard stay length patterns averaging three nights per booking. Financial model accounts for fixed monthly costs separate from variable per-stay expenses like cleaning, calculates property management fees as percentage of net revenue after platform commission, projects both monthly profit and annualized ROI against initial investment proxy using annual rent total.
+Calculator applies Italian tax structure. Cedolare secca at 21 percent is applied to gross rental income (net of platform commission) — operating expenses are NOT deductible under cedolare secca. Platform commission defaults to 3 percent (split-fee model for individual hosts); use `commission_rate=0.155` for hosts with PMS or host-only pricing. Standard stay length patterns average three nights per booking. Financial model accounts for fixed monthly costs separate from variable per-stay expenses like cleaning, calculates property management fees as percentage of net revenue after platform commission, projects both monthly profit and annualized ROI against initial investment proxy using annual rent total.
 
 The recommendation engine scores properties against three thresholds with minimum and optimal levels:
 
@@ -91,6 +91,24 @@ Combine market analysis data with business plan projections into recommendation 
 
 Report format should address key stakeholder questions: Is the zone attractive for short-term rentals? Does the property's economics justify investment? What are the main risk factors? How sensitive is profitability to occupancy rate changes?
 
+## Commission Models
+
+Airbnb uses two commission models. The calculator supports both via the `commission_rate` parameter.
+
+**Split fee (default):** Individual hosts without a PMS. Host pays ~3%, guest pays ~14% separately. This is the default because primary users are individual hosts evaluating their first properties.
+
+```python
+calculator = BusinessPlanCalculator(costs, market)  # defaults to 3%
+```
+
+**Host-only fee:** Hosts with a PMS or who opted into host-only pricing. Host pays 15.5%, guest pays nothing. Mandatory for PMS-connected hosts since October 2025.
+
+```python
+calculator = BusinessPlanCalculator(costs, market, commission_rate=0.155)
+```
+
+The difference is significant: on €2,940 gross revenue, split-fee deducts €88 vs host-only deducting €456. Decision criteria thresholds assume the default split-fee model.
+
 ## Italian Tax Rules (Cedolare Secca)
 
 Short-term rentals in Italy follow a progressive tax structure based on number of properties. These rules may change annually; verify current legislation before making investment decisions.
@@ -116,8 +134,8 @@ When scaling beyond two properties, consult a commercialista for P.IVA regime ca
 The model incorporates these Italian market specifics built from real-world data patterns observed across multiple property analyses conducted during skill development and testing phases:
 
 - Average booking stay length: 3 nights
-- Airbnb commission: 15% of gross revenue
-- Tax rate: 21% cedolare secca (configurable, see Italian Tax Rules section)
+- Airbnb commission: 3% split-fee (default) or 15.5% host-only (configurable, see Commission Models section)
+- Tax rate: 21% cedolare secca on gross rental income, not profit (configurable, see Italian Tax Rules section)
 - Monthly occupancy calculated from 30-day period
 - Cleaning occurs once per stay, not per night
 
