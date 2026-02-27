@@ -9,13 +9,15 @@ Personal collection of Claude.ai skills for business automation and analysis.
 | [short-term-rental-analyzer](./short-term-rental-analyzer/) | Evaluate Airbnb investment opportunities with market data and ROI projections. Optimized for Milan, expandable to other cities. |
 | [property-acquisition-tracker](./property-acquisition-tracker/) | Automated property scouting for short-term rental investments in Milan. Scans Immobiliare.it, Idealista, Casa.it for apartments, applies investment scoring, and saves qualified properties to Notion. |
 | [planning-review-system](./planning-review-system/) | Weekly review and quarterly planning system based on GTD methodology. Notion MCP integration for inbox processing, project review, and quarterly tracking. |
+| [time-energy-manager](./time-energy-manager/) | Daily time and energy management system. Morning Plan, Mid-day Check, Pivot, and Evening Close phases. Adapts scheduling to energy levels (1-5) with break patterns and post-work logic. Complements planning-review-system. |
 | [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. Includes SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, and SonarQube metrics. |
 
 ## Usage
 
 Each folder contains a complete skill with:
 - `SKILL.md` - Main instructions and workflow
-- `scripts/` - Python automation scripts
+- `references/` - Templates, patterns, and supporting documentation
+- `scripts/` - Python automation scripts (if applicable)
 - `assets/` - Data files and templates (if applicable)
 
 To add a skill to Claude.ai:
