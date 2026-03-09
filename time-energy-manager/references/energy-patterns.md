@@ -1,89 +1,87 @@
-# Energy Patterns — Guida Interpretazione
+# Energy Patterns — Interpretation Guide
 
-Reference per il Time & Energy Manager. Claude usa questa guida per analizzare i dati energetici raccolti dai check-in giornalieri e produrre insight actionable.
+Reference for the Time & Energy Manager skill. Claude uses this guide to analyze energy data collected from daily check-ins and produce actionable insights.
 
-## Dati Raccolti
+## Data Collected
 
-Ogni pagina giornaliera contiene:
-- **Energia mattina:** 1-5 (da Morning Plan)
-- **Energia pomeriggio:** 1-5 (da Mid-day Check, opzionale)
-- **Energia sera:** 1-5 (da Evening Close)
-- **Nota contesto:** testo libero (opzionale)
-- **Giorno della settimana:** automatico dalla data
-- **Tipo settimana:** Sprint A / Sprint B
-- **Task completati vs. pianificati:** dal recap Evening Close
+Each daily plan page contains:
+- **Morning energy:** 1-5 (from Morning Plan)
+- **Afternoon energy:** 1-5 (from Mid-day Check, optional)
+- **Evening energy:** 1-5 (from Evening Close)
+- **Context note:** free text (optional)
+- **Day of week:** automatic from date
+- **Week type:** Sprint A / Sprint B (if sprint cycle enabled)
+- **Tasks completed vs. planned:** from Evening Close recap
 
-## Scala Energia
+## Energy Scale
 
-| Livello | Significato | Azione Morning Plan |
-|---------|-------------|---------------------|
-| 5 | Pieno di energia, lucido | Deep work creativo, task complessi, side business ambizioso |
-| 4 | Buona energia, focus ok | Deep work standard, task importanti |
-| 3 | Nella media, funzionale | Task importanti ma non creativi, alterna con pause |
-| 2 | Stanco, fatica a concentrarsi | Solo task essenziali, niente deep work, pausa extra |
-| 1 | Svuotato, difficolta a funzionare | Minimo indispensabile, proteggi energia, suggerisci staccare prima |
+| Level | Meaning | Morning Plan Action |
+|-------|---------|---------------------|
+| 5 | Full of energy, sharp | Creative deep work, complex tasks, ambitious personal projects |
+| 4 | Good energy, decent focus | Standard deep work, important tasks |
+| 3 | Average, functional | Important but non-creative tasks, alternate with breaks |
+| 2 | Tired, hard to focus | Essential tasks only, no deep work, extra breaks |
+| 1 | Drained, struggling to function | Bare minimum, protect energy, suggest stopping early |
 
-## Pattern da Rilevare (dopo 2+ settimane)
+## Patterns to Detect (after 2+ weeks)
 
-### Pattern Giornalieri
+### Daily Patterns
 
-Analizza le medie per giorno della settimana:
+Analyze averages by day of week:
 
-| Pattern | Cosa cercare | Suggerimento |
-|---------|-------------|-------------|
-| **Giorno debole** | Media < 2.5 per un giorno specifico | "Il [giorno] e il tuo punto debole. Solo task leggeri." |
-| **Giorno forte** | Media > 4 per un giorno specifico | "Il [giorno] e il tuo picco. Proteggi deep work." |
-| **Calo post-pranzo** | Media pomeriggio < media mattina - 2 | "Il calo post-pranzo e sistematico. Il rientro morbido e fondamentale." |
-| **Effetto palestra** | Energia media giorno dopo Lun/Gio > media altri giorni | "I giorni dopo la palestra rendi di piu." |
-| **Effetto sprint A** | Media settimana A < media settimana B | "Le settimane sprint ti scaricano. Calibra aspettative." |
+| Pattern | What to look for | Suggestion |
+|---------|-----------------|------------|
+| **Weak day** | Average < 2.5 for a specific day | "[Day] is your low point. Only light tasks." |
+| **Strong day** | Average > 4 for a specific day | "[Day] is your peak. Protect deep work." |
+| **Post-lunch dip** | Afternoon avg < morning avg - 2 | "The post-lunch dip is systematic. The soft re-entry is essential." |
+| **Exercise effect** | Energy avg day after gym > avg other days | "Days after gym you perform better." |
+| **Sprint A effect** | Sprint A week avg < Sprint B week avg | "Sprint weeks drain you. Calibrate expectations." |
 
-### Pattern Settimanali
+### Weekly Patterns
 
-| Pattern | Cosa cercare | Suggerimento |
-|---------|-------------|-------------|
-| **Trend discendente** | 3+ giorni di calo consecutivo | "Trend in calo. Hai bisogno di un giorno di recupero serio." |
-| **Costantemente basso** | Media settimanale < 2.5 | "Settimana difficile. Rivedi carico di lavoro nella prossima weekly review." |
-| **Completamento vs energia** | Alta correlazione tra energia 4-5 e task completati | Conferma: "Quando l'energia e alta, completi il 60% in piu. Proteggi quei momenti." |
+| Pattern | What to look for | Suggestion |
+|---------|-----------------|------------|
+| **Descending trend** | 3+ consecutive days of decline | "Downward trend. You need a serious recovery day." |
+| **Consistently low** | Weekly average < 2.5 | "Tough week. Review workload in next weekly review." |
+| **Completion vs energy** | High correlation between 4-5 energy and tasks completed | Confirm: "When energy is high, you complete 60% more. Protect those moments." |
 
-### Pattern Contestuali
+### Contextual Patterns
 
-| Pattern | Cosa cercare | Suggerimento |
-|---------|-------------|-------------|
-| **Meeting drain** | Energia bassa nei giorni con 3+ ore di meeting | "I giorni pesanti di meeting ti scaricano. Metti solo admin dopo." |
-| **Side business boost** | Energia piu alta dopo mattine di side business | "Lavorare sui tuoi progetti al mattino ti carica per il resto." |
-| **Weekend recovery** | Energia lunedi > energia venerdi | "Il weekend ti ricarica bene. Rispetta la domenica OFF." |
+| Pattern | What to look for | Suggestion |
+|---------|-----------------|------------|
+| **Meeting drain** | Low energy on days with 3+ hours of meetings | "Heavy meeting days drain you. Only admin after." |
+| **Personal project boost** | Higher energy after personal project mornings | "Working on your own projects in the morning energizes you for the rest." |
+| **Weekend recovery** | Monday energy > Friday energy | "The weekend recharges you well. Respect the day off." |
 
-## Come Presentare i Pattern
+## Output Format
 
-Nella weekly review (via PRS) o quando l'utente chiede "pattern energia" / "trend":
-
-### Formato Output
+In the weekly review (via PRS) or when the user asks about energy patterns/trends:
 
 ```
-## Energy Report — Settimana [data]
+## Energy Report — Week of [date]
 
-**Media settimanale:** X.X/5
-**Trend:** ↑ in salita / → stabile / ↓ in calo
-**Giorno migliore:** [giorno] (media X.X)
-**Giorno peggiore:** [giorno] (media X.X)
+**Weekly average:** X.X/5
+**Trend:** up / stable / down
+**Best day:** [day] (avg X.X)
+**Worst day:** [day] (avg X.X)
 
-### Insight
-- [Pattern rilevato 1 con suggerimento]
-- [Pattern rilevato 2 con suggerimento]
+### Insights
+- [Detected pattern 1 with suggestion]
+- [Detected pattern 2 with suggestion]
 
-### Suggerimento per la prossima settimana
-[1 azione concreta basata sui dati]
+### Suggestion for next week
+[1 concrete action based on data]
 ```
 
-## Quando NON Analizzare
+## When NOT to Analyze
 
-- Meno di 5 giorni di dati: "Non ho abbastanza dati. Continuiamo a raccogliere."
-- Meno di 2 settimane: solo medie giornaliere, nessun pattern
-- Dati incompleti (molti check-in saltati): "I dati sono frammentari. Cerca di fare almeno il Morning Plan e l'Evening Close."
+- Less than 5 days of data: "Not enough data yet. Let's keep collecting."
+- Less than 2 weeks: daily averages only, no patterns
+- Incomplete data (many skipped check-ins): "Data is fragmented. Try to do at least the Morning Plan and Evening Close."
 
-## Principi
+## Principles
 
-1. **Mai giudicare** — "Energia 1 non e un fallimento, e informazione"
-2. **Suggerimenti concreti** — non "riposa di piu" ma "il giovedi metti solo task leggeri"
-3. **Onesta sui limiti** — se i dati non bastano, dirlo
-4. **Collegamento azione** — ogni insight ha un suggerimento specifico per il Morning Plan
+1. **Never judge** — "Energy 1 is not failure, it's information"
+2. **Concrete suggestions** — not "rest more" but "on Thursdays only schedule light tasks"
+3. **Honest about limits** — if data isn't enough, say so
+4. **Action-linked** — every insight has a specific suggestion for the Morning Plan
