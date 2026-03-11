@@ -24,9 +24,12 @@ Five standalone skills covering GTD planning, energy-based scheduling, Airbnb in
 
 ### Standalone (single skill)
 
-Copy a skill folder to your Claude Code skills directory:
+Clone the repo and copy a skill folder to your Claude Code skills directory:
 
 ```bash
+git clone https://github.com/glodyfimpa/claude-skills.git
+cd claude-skills
+
 # Personal skills (available in all projects)
 cp -r planning-review-system ~/.claude/skills/
 
