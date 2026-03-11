@@ -30,7 +30,7 @@ Weekly review workflow (30 min) with GTD-based inbox processing and quarterly tr
    - Ask/confirm which tools the user wants to connect (auto-detected ones are pre-selected, user can add/remove)
    - For each confirmed tool, ask specifics:
      - Task DB (Notion/Airtable/Linear): database IDs (`tasks_db`, `projects_db`, `resources_db`), field mappings (`task_status_field`, `project_status_field`, etc.), output page URL
-     - Email: no extra config needed
+     - Email (Gmail/Outlook/other): which labels/folders to scan (default: INBOX), exclude patterns — senders or subjects to always skip (e.g., newsletters, automated notifications). Store as `email_scan_labels` (list, default: `["INBOX"]`) and `email_exclude_patterns` (list, default: `[]`).
    - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
 4. **Save** everything to `.claude/life-os.local.md` and proceed.
 
@@ -73,7 +73,17 @@ Apply these filters to ALL queries:
    - **If `task_tool = none`:** Ask the user: "Do you have any unprocessed notes, bookmarks, or resources from this week?"
 
 2. **Email:**
-   - **If `email_tool != none`:** Scan for unread emails, starred, or containing action keywords.
+   - **If `email_tool != none`:** Scan for unread emails, starred, or containing action keywords from the past 7 days. Use `email_scan_labels` and `email_exclude_patterns` from config (if configured). For each email found, read subject, sender, and first ~200 characters of body. Classify into:
+     - **Create task** — contains an action item that should become a task for next week
+     - **Reply needed** — requires a response that hasn't been sent
+     - **Archive** — already handled or no longer relevant
+     - **Ignore** — newsletters, notifications, no action needed
+   - Discard "Ignore" emails from the summary. Present actionable emails as a compact list:
+     > "[N] emails from this week still need attention:"
+     > 1. **[Sender]** — [Subject snippet] → Suggested: [create task "[description]" / reply / archive]
+     > 2. ...
+     > "Want to accept these suggestions, modify any, or skip?"
+   - Accepted "Create task" suggestions become inputs for Phase 3 (weekly priorities) and Phase 4 (next week planning).
    - **If `email_tool = none`:** Skip email scanning.
 
 Present count to user:
