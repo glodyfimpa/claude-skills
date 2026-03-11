@@ -24,26 +24,24 @@ Five standalone skills covering GTD planning, energy-based scheduling, Airbnb in
 
 ### Standalone (single skill)
 
-Skills work with Claude Code, Claude.ai, and Cowork. Pick any skill folder from this repo and follow the instructions for your platform.
-
-#### Claude Code
+Skills work with Claude Code, Claude Desktop, Claude.ai, and Cowork.
 
 ```bash
 git clone https://github.com/glodyfimpa/claude-skills.git
 cd claude-skills
-
-# Pick any skill folder. Two install options:
-
-# Option A — personal (available in all projects)
-cp -r planning-review-system ~/.claude/skills/
-
-# Option B — project-level (available only in that project)
-cp -r time-energy-manager /your/project/.claude/skills/
 ```
 
-#### Claude.ai / Cowork
+#### Automatic (Claude Code / Claude Desktop)
 
-1. Download and zip any skill folder from this repo
+```bash
+bash install.sh
+```
+
+The installer asks where to install (Claude Code or Claude Desktop), lets you pick one or more skills, and handles the rest.
+
+#### Manual (Claude.ai / Cowork)
+
+1. Zip any skill folder from the cloned repo
 2. Go to **Customize > Skills** → click **+** → **Upload a skill**
 3. Upload the ZIP file
 
@@ -96,10 +94,11 @@ claude-skills/
 │       └── business_plan_template.xlsx              pre-built Excel template
 ├── java-spring-clean-code/
 │   └── SKILL.md                                     clean code standards reference
+├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-5 skills, 10 automation scripts, 4 reference files, 1 template. No plugin infrastructure.
+5 skills, 10 automation scripts, 4 reference files, 1 template, 1 installer. No plugin infrastructure.
 
 ## License
 
