@@ -1,16 +1,24 @@
-# Claude Skills
+```
+  ____ _                 _        ____  _    _ _ _     
+ / ___| | __ _ _   _  __| | ___  / ___|| | _(_) | |___ 
+| |   | |/ _` | | | |/ _` |/ _ \ \___ \| |/ / | | / __|
+| |___| | (_| | |_| | (_| |  __/  ___) |   <| | | \__ \
+ \____|_|\__,_|\__,_|\__,_|\___| |____/|_|\_\_|_|_|___/
+```
 
-Personal collection of Claude Code skills for productivity and business automation.
+A collection of Claude Code skills for productivity and business automation.
+
+Five standalone skills covering GTD planning, energy-based scheduling, Airbnb investment analysis, property scouting, and Java code standards. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
-| Skill | Description |
-|-------|-------------|
-| [planning-review-system](./planning-review-system/) | Weekly review and quarterly planning based on GTD methodology. Tool-agnostic: works with any task database MCP (Notion, Airtable, Linear) or in chat-only mode. Auto-detects available tools and configures itself on first run. |
-| [time-energy-manager](./time-energy-manager/) | Daily time and energy management in 4 phases: Morning Plan, Mid-day Check, Pivot, Evening Close. Tool-agnostic: works with any task/calendar MCP or in chat-only mode. Adapts scheduling to energy levels (1-5). |
-| [short-term-rental-analyzer](./short-term-rental-analyzer/) | Evaluate Airbnb investment opportunities with market data and ROI projections. Optimized for Milan, expandable to other cities. |
-| [property-acquisition-tracker](./property-acquisition-tracker/) | Automated property scouting for short-term rental investments in Milan. Scans Immobiliare.it, Idealista, Casa.it for apartments, applies investment scoring, and saves qualified properties to Notion. |
-| [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. Includes SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, and SonarQube metrics. |
+| Skill | Does |
+|-------|------|
+| [planning-review-system](./planning-review-system/) | 6-phase GTD weekly review with quarterly planning. Works with any task database MCP (Notion, Airtable, Linear) or chat-only. |
+| [time-energy-manager](./time-energy-manager/) | Daily planning in 4 phases (Morning Plan, Mid-day Check, Pivot, Evening Close). Adapts scheduling to energy levels 1-5. Works with any task/calendar MCP or chat-only. |
+| [property-acquisition-tracker](./property-acquisition-tracker/) | Automated apartment scouting across Immobiliare.it, Idealista, Casa.it. Applies investment scoring, saves qualified properties to project tracker. Includes Node.js scanner scripts. |
+| [short-term-rental-analyzer](./short-term-rental-analyzer/) | Airbnb investment analysis with InsideAirbnb market data, ROI projections, and Excel business plan generation. Covers cedolare secca tax rules. Includes Python analysis scripts. |
+| [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, SonarQube metrics. |
 
 ## Usage
 
@@ -19,24 +27,66 @@ Personal collection of Claude Code skills for productivity and business automati
 Copy a skill folder to your Claude Code skills directory:
 
 ```bash
-# Copy to personal skills (available in all projects)
+# Personal skills (available in all projects)
 cp -r planning-review-system ~/.claude/skills/
 
-# Or to project-level skills (available only in that project)
+# Project-level skills (available only in that project)
 cp -r planning-review-system /your/project/.claude/skills/
 ```
 
-On first use, the skill will auto-detect your available MCP tools (Notion, Google Calendar, Gmail, etc.) and run a mini-setup to configure itself. If no tools are detected, it will ask you for the information it needs to function, or fall back to chat-only mode.
+On first use, the skill auto-detects available MCP tools (Notion, Google Calendar, Gmail) and runs a mini-setup to configure itself. No tools detected? It asks what you use and collects the info it needs. No tools at all? Chat-only mode.
 
 ### As part of the life-os plugin
 
-These skills are also available as part of the [life-os](https://github.com/glodyfimpa/life-os) Claude Code plugin, which adds slash commands, shared configuration, and coordinated workflows between skills.
+`planning-review-system` and `time-energy-manager` are also available through the [life-os](https://github.com/glodyfimpa/life-os) Claude Code plugin, which adds slash commands, shared configuration, and coordinated workflows.
 
 ## Structure
 
-Each skill folder contains:
-- `SKILL.md` - Main instructions and workflow
-- `references/` - Templates, patterns, and supporting documentation
+```
+claude-skills/
+├── planning-review-system/
+│   ├── SKILL.md                                     6-phase weekly review workflow
+│   └── references/
+│       └── weekly-template.md                       page template for review output
+├── time-energy-manager/
+│   ├── SKILL.md                                     4-phase daily management workflow
+│   └── references/
+│       └── energy-patterns.md                       pattern detection guide
+├── property-acquisition-tracker/
+│   ├── SKILL.md                                     portal scouting workflow
+│   ├── references/
+│   │   ├── portals.md                               URL patterns, filters, extraction rules
+│   │   └── scoring.md                               thresholds, formulas, zone rates
+│   └── scanner/                                     Node.js automation scripts
+│       ├── scan.js                                  main scanner entry point
+│       ├── scan-idealista.js                        Idealista-specific scraper
+│       ├── scoring.js                               investment score calculator
+│       ├── dedup.js                                 cross-portal deduplication
+│       ├── notion.js                                Notion API integration
+│       ├── find-db.js                               database discovery utility
+│       ├── inspect.js                               listing inspector
+│       ├── test-notion.js                           Notion connection test
+│       ├── config.js                                scanner configuration
+│       ├── package.json                             dependencies
+│       └── .env.example                             environment template
+├── short-term-rental-analyzer/
+│   ├── SKILL.md                                     zone analysis + business plan workflow
+│   ├── scripts/
+│   │   ├── market_analyzer.py                       InsideAirbnb data pull + zone stats
+│   │   ├── business_plan_calculator.py              ROI, break-even, scenario analysis
+│   │   └── create_template.py                       Excel business plan generator
+│   └── assets/
+│       └── business_plan_template.xlsx              pre-built Excel template
+├── java-spring-clean-code/
+│   └── SKILL.md                                     clean code standards reference
+└── README.md
+```
+
+5 skills, 10 automation scripts, 4 reference files, 1 template. No plugin infrastructure.
+
+## License
+
+MIT
 
 ## Author
 
