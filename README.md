@@ -6,7 +6,7 @@
  \____|_|\__,_|\__,_|\__,_|\___| |____/|_|\_\_|_|_|___/
 ```
 
-A collection of Claude Code skills for productivity and business automation.
+A collection of Claude skills for productivity and business automation.
 
 Five standalone skills covering GTD planning, energy-based scheduling, Airbnb investment analysis, property scouting, and Java code standards. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
@@ -24,20 +24,34 @@ Five standalone skills covering GTD planning, energy-based scheduling, Airbnb in
 
 ### Standalone (single skill)
 
-Clone the repo and copy a skill folder to your Claude Code skills directory:
+Skills work with Claude Code, Claude.ai, and Cowork. Pick any skill folder from this repo and follow the instructions for your platform.
+
+#### Claude Code
 
 ```bash
 git clone https://github.com/glodyfimpa/claude-skills.git
 cd claude-skills
 
-# Personal skills (available in all projects)
+# Pick any skill folder. Two install options:
+
+# Option A — personal (available in all projects)
 cp -r planning-review-system ~/.claude/skills/
 
-# Project-level skills (available only in that project)
-cp -r planning-review-system /your/project/.claude/skills/
+# Option B — project-level (available only in that project)
+cp -r time-energy-manager /your/project/.claude/skills/
 ```
 
-On first use, the skill auto-detects available MCP tools (Notion, Google Calendar, Gmail) and runs a mini-setup to configure itself. No tools detected? It asks what you use and collects the info it needs. No tools at all? Chat-only mode.
+#### Claude.ai / Cowork
+
+1. Download and zip any skill folder from this repo
+2. Go to **Customize > Skills** → click **+** → **Upload a skill**
+3. Upload the ZIP file
+
+Requires Code execution enabled in **Settings > Capabilities**. Skills added on Claude.ai are automatically available in Cowork.
+
+---
+
+On first use, the skill auto-detects available MCP tools (Notion, Google Calendar, Gmail) and configures itself. No tools detected? It asks what you use. No tools at all? Chat-only mode.
 
 ### As part of the life-os plugin
 
