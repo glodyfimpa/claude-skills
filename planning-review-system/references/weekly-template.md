@@ -5,44 +5,44 @@ Use this template when creating the Weekly Review summary page in Notion.
 ## Page Structure
 
 ```markdown
-# Weekly Review — [data in italiano, es. "9 Febbraio 2026"]
+# Weekly Review — [date formatted in user's configured language]
 
 ## Quick Capture
-- Risorse Notion processate: X
-- Email processate: Y (se Gmail connesso)
+- Notion resources processed: X
+- Emails processed: Y (if Gmail connected)
 
 ## Inbox Processed
-- ✅ N item processati totali
-- Eliminati: X
-- Schedulati: Y
-- Collegati a progetti: Z
+- N items processed total
+- Deleted: X
+- Scheduled: Y
+- Linked to projects: Z
 
 ## Projects Status
 | Status | Count |
 |--------|-------|
 | In Progress | X |
 | Stand By | Y |
-| Completati questa settimana | Z |
+| Completed this week | Z |
 
 ## Q[N] Progress
-- **Completamento:** X% (N/M progetti)
-- **Giorni rimanenti:** N
-- **Progetti bloccati:** [lista se presenti]
+- **Completion:** X% (N/M projects)
+- **Days remaining:** N
+- **Blocked projects:** [list if present]
 
-## Focus Settimana
-| Elemento | Valore |
-|----------|--------|
-| **Priorità** | [Nome task/progetto scelto] |
-| **Numero** | [Metrica da tracciare] |
-| **Perché** | [Motivazione personale] |
+## Weekly Focus
+| Element | Value |
+|---------|-------|
+| **Priority** | [Chosen task/project name] |
+| **Metric** | [Metric to track] |
+| **Why** | [Personal motivation] |
 
-## Note
-[Eventuali osservazioni, blocchi identificati, decisioni prese]
+## Notes
+[Observations, identified blockers, decisions made]
 ```
 
 ## Formatting Rules
 
-- Date in Italian format (es. "6 Febbraio 2026")
+- Format dates in the user's configured language (read `language` from `.claude/life-os.local.md`)
 - Use tables for structured data
-- Keep Focus Settimana section prominent
+- Keep Weekly Focus section prominent
 - Add links to relevant Notion pages where useful

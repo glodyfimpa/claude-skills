@@ -1,296 +1,351 @@
 ---
 name: time-energy-manager
 description: |
-  Daily time and energy management system with 4 phases: Morning Plan, Mid-day Check, Pivot, Evening Close. Complements the planning-review-system by translating weekly priorities into daily execution with energy-adaptive scheduling. Use this skill when: starting the day, checking energy levels, handling schedule changes, or closing the day. Triggers: "buongiorno", "morning plan", "pianifica la giornata", "come sto?", "energy check", "urgenza", "cambio piano", "ho finito", "posso rilassarmi?", "evening close", "ideal week", "settimana A o B?", "pattern energia". Requires Notion MCP connected.
+  Daily time and energy management system with 4 phases: Morning Plan, Mid-day Check, Pivot, Evening Close. Complements the planning-review-system by translating weekly priorities into daily execution with energy-adaptive scheduling. Use this skill when: starting the day, checking energy levels, handling schedule changes, or closing the day. Triggers are defined in the user's config file (.claude/life-os.local.md). Works with any task database and calendar MCP, or in chat-only mode without any tools.
 ---
 
 # Time & Energy Manager
 
-Sistema di gestione quotidiana tempo ed energia in 4 fasi. Complemento operativo del planning-review-system: il PRS guarda indietro e in alto (weekly review, quarter), il TEM guarda avanti e in basso (cosa fai oggi, con quanta energia).
+Daily time and energy management system in 4 phases. Operational complement to the planning-review-system: PRS looks back and up (weekly review, quarter), TEM looks forward and down (what you do today, with how much energy).
 
-**Principio:** Non fare di piu. Fare il giusto e poi vivere.
+**Principle:** Don't do more. Do what matters, then live.
+
+## Config Guard
+
+**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory.
+
+**If it exists** (plugin mode or previously configured standalone):
+- Read the file and parse:
+  - **Frontmatter (YAML):** connected tools, database IDs, field mappings, language, schedule settings
+  - **Body (Markdown):** triggers, fixed commitments, recurring meetings, ideal week
+- Read `task_tool`, `calendar_tool`, and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
+
+**If it does NOT exist** (first run — run mini-setup):
+1. **Auto-detect** available MCP tools in the current session:
+   - Notion tools available (notion-search, notion-fetch, etc.)? → propose `task_tool = notion`, `notes_tool = notion`
+   - Google Calendar tools available (gcal_list_events, etc.)? → propose `calendar_tool = google-calendar`
+   - Gmail tools available (gmail_search_messages, etc.)? → propose `email_tool = gmail`
+2. **Present findings** to the user:
+   - If tools detected: "I detected [tools]. I'll ask a few questions to configure this skill."
+   - If no tools detected: "No MCP tools detected. I'll ask you what tools you use so we can set everything up."
+3. **Mini-setup** (always runs, adapts to what's available):
+   - Ask language preference
+   - Ask/confirm which tools the user wants to connect (auto-detected ones are pre-selected, user can add/remove)
+   - For each confirmed tool, ask specifics:
+     - Task DB (Notion/Airtable/Linear): database IDs (`tasks_db`, `projects_db`), field mappings, output page URL
+     - Calendar: calendar ID
+     - Notes: output page URL (if different from task tool)
+   - Ask about work schedule: work days, work hours, lunch break
+   - Ask about fixed commitments that block the evening (gym, family, etc.)
+   - Ask about ideal week structure (or offer to generate one from the schedule info)
+   - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
+4. **Save** everything to `.claude/life-os.local.md` and proceed.
+
+All instructions below reference config values. Never use hardcoded database IDs, field names, or schedule times.
+
+## Language
+
+Respond in the language specified by the `language` field in the config. If no config exists yet (during mini-setup), detect language from the user's message. Format dates according to the configured language's conventions.
 
 ## Database References
 
-- **Tasks:** `collection://8e608c2b-6cbb-46a2-b233-fffc0b4f5e21`
-- **PROJECTS:** `collection://38d9dc09-59f1-4f94-b36b-f62ab9772ac6`
-- **Planning (board settimanale):** `collection://2dde510c-5e59-81a5-b80e-000bf6f27cce`
-- **SECOND BRAIN (parent per pagine giornaliere):** `https://www.notion.so/142e510c5e598039933ef8a447570ece`
+If `task_tool != none`, read all database IDs from config frontmatter:
 
-## Filtri Critici
+- **Tasks:** value of `tasks_db`
+- **Projects:** value of `projects_db`
+- **Planning board:** value of `planning_board_db` (may be empty)
+- **Output page:** value of `output_page_url`
 
-| Database | Filtro | Motivo |
+If `task_tool = none`, skip — data will be collected from the user directly.
+
+## Critical Filters
+
+Skip if `task_tool = none`.
+
+| Database | Filter | Reason |
 |----------|--------|--------|
-| PROJECTS | `Legacy = false` | Ignora progetti archiviati |
-| Tasks | `Status != Done` AND `Due Date = oggi` | Solo task attivi del giorno |
-| Planning | `Status = [giorno corrente]` | Task assegnati a oggi nel board settimanale |
+| Projects | `[project_legacy_field] = false` | Ignore archived projects |
+| Tasks | `[task_status_field] != [task_status_done]` AND `[task_due_date_field] = today` | Only active tasks for today |
+| Planning | Day-based filter (if planning board is configured) | Tasks assigned to today |
 
-## Fase 1 — Morning Plan (5 min)
+## Phase 1 — Morning Plan (5 min)
 
-**Trigger:** "buongiorno", "morning plan", "pianifica la giornata", "inizia la giornata"
+**Triggers:** Read from "Morning Plan" section in config trigger mapping.
 
-### Step 1: Leggi contesto (automatico)
+### Step 1: Read context (automatic)
 
-Query Notion in parallelo:
+Gather the following context. For each item, use the connected tool or fall back to asking the user.
 
-1. **Ultima Weekly Review:** Cerca in SECOND BRAIN la pagina piu recente con titolo "Weekly Review —". Estrai: priorita della settimana, numero/metrica, perche.
-2. **Task del giorno:** Da Tasks, filtra `Status != Done` AND (`Due Date = oggi` OR `Due Date` e scaduta). Da Planning board, filtra `Status = [giorno della settimana corrente in italiano, es. "Lunedi"]`.
-3. **Progetti trimestre:** Da PROJECTS, filtra `Quarter = Q[trimestre corrente]` AND `Status = In progress` AND `Legacy = false`.
-4. **Ideal Week:** Consulta `references/ideal-week.md` per il template del giorno corrente. Determina se e settimana Sprint A o B.
+1. **Latest Weekly Review:**
+   - If `notes_tool != none`: Search in output page for the most recent page with title starting "Weekly Review —". Extract: weekly priorities, metric, why.
+   - If `notes_tool = none`: Ask the user: "What was your main priority from your last weekly review?"
+
+2. **Today's tasks:**
+   - If `task_tool != none`: From Tasks database, filter `[task_status_field] != [task_status_done]` AND (`[task_due_date_field] = today` OR `[task_due_date_field]` is overdue). If planning board is configured, also query it for today's day.
+   - If `task_tool = none`: Ask the user: "What tasks do you have for today? Include anything overdue."
+
+3. **Quarter projects:**
+   - If `task_tool != none`: From Projects database, filter `[project_quarter_field] = Q[current quarter]` AND `[project_status_field] = In progress` AND `[project_legacy_field] = false`.
+   - If `task_tool = none`: Ask the user: "What are your main projects this quarter?"
+
+4. **Ideal Week:** Read the "Ideal Week" section from config body for today's day name. If sprint cycle is enabled, determine if it's Sprint Week A or B using the configured parity.
+
+5. **Calendar events:**
+   - If `calendar_tool != none`: Read today's calendar events using the calendar MCP (use `calendar_id` from config). Merge calendar events with the ideal week template: calendar events take priority over template blocks when they overlap. Show both scheduled meetings from calendar and planned deep work from ideal week.
+   - If `calendar_tool = none`: Use only the ideal week template from config.
 
 ### Step 2: Energy check-in (30 sec)
 
-Chiedi all'utente:
-> "Come ti senti stamattina? (1-5)"
+Ask the user:
+> "How are you feeling this morning? (1-5)"
 
-Se l'utente vuole aggiungere contesto (opzionale):
-> "Qualcosa di specifico che ti pesa o ti carica oggi?"
+If the user wants to add context (optional):
+> "Anything specific weighing on you or giving you energy today?"
 
-### Step 3: Genera piano adattivo
+### Step 3: Generate adaptive plan
 
-Basato su: priorita settimanali + task del giorno + energia + template ideal week del giorno.
+Based on: weekly priorities + today's tasks + energy + ideal week template for today (merged with calendar events if available).
 
-**Logica energia:**
+**Energy logic:**
 
-| Energia | Strategia |
-|---------|-----------|
-| 4-5 | Deep work creativo prima, admin dopo. Proponi task ambiziosi per il blocco 9:10-10:10. |
-| 3 | Task importanti ma non creativi. Alterna focus e pause. Blocco 9:10-10:10 per studio/review. |
-| 1-2 | Solo task essenziali e scadenze. Proteggi energia. Blocco 9:10-10:10 opzionale. Suggerisci pausa extra. |
+| Energy | Strategy |
+|--------|----------|
+| 4-5 | Creative deep work first, admin after. Propose ambitious tasks for the first focus block. |
+| 3 | Important but non-creative tasks. Alternate focus and breaks. First block for study/review. |
+| 1-2 | Essential tasks and deadlines only. Protect energy. First focus block optional. Suggest extra breaks. |
 
-**Struttura blocchi** (usa il template del giorno da ideal-week.md, adattando in base a energia):
+**Block structure:** Use today's template from the "Ideal Week" section in config, merged with calendar events when available. Adapt based on energy level. Use these icons:
 
-```
-### Blocchi del giorno
+- Deep focus: relevant icon
+- Light work: relevant icon
+- Break: relevant icon
+- Personal: relevant icon
+- Family/personal time: relevant icon
+- Meeting: relevant icon
 
-🔵 09:10-10:10 → [Side business/studio: task specifico]
-⚪ 10:15-10:30 → Daily standup
-🔵 10:30-12:00 → Deep work: [task specifico dal backlog]
-⚡ 12:00-12:15 → PAUSA — stacca, cammina
-🟡 12:15-13:00 → Admin / task leggeri
-🟠 13:00-13:30 → Pranzo con famiglia
-🟡 13:30-14:00 → Rientro morbido
-⚡ 14:00-14:15 → PAUSA
-🔵 14:15-15:45 → Deep work: [task specifico]
-⚡ 15:45-16:00 → PAUSA
-🟡 16:00-17:00 → Admin / chiusura
-⚡ 17:00-17:20 → Reset break
-🟢 17:20-17:50 → Sviluppo personale: [task specifico]
-📋 17:50-18:00 → Evening Close
-```
+**ALWAYS close with:**
+> "Today if you do [X], [Y], and [Z] — tonight you can disconnect."
 
-Icone: 🔵 focus | 🟡 leggero | ⚡ pausa | 🟢 personale | 🟠 famiglia | ⚪ meeting
+Where X, Y, Z are the 3 real priorities for the day (not all tasks, only the ones that matter).
 
-**Concludi SEMPRE con:**
-> "Oggi se fai [X], [Y] e [Z] → stasera puoi staccare tranquillo."
+### Step 4: User confirmation
 
-Dove X, Y, Z sono le 3 priorita reali della giornata (non tutti i task, solo quelli che contano).
+Present the plan and ask:
+> "Does this work or do you want to change something?"
 
-### Step 4: Conferma utente
+If the user modifies, adapt. If confirmed, proceed.
 
-Presenta il piano e chiedi:
-> "Va bene cosi o vuoi cambiare qualcosa?"
+### Step 5: Save plan
 
-Se l'utente modifica, adatta. Se conferma, procedi.
+- If `notes_tool != none`: Create a page under the output page (from config `output_page_url`) with:
 
-### Step 5: Salva su Notion
+  - **Title:** `Plan [date in configured language]`
+  - **Content:** the complete plan with blocks, energy, weekly priorities
 
-Crea una pagina in SECOND BRAIN con:
-- **Titolo:** `Piano [data in italiano, es. "24 Febbraio 2026"]`
-- **Contenuto:** il piano completo con blocchi, energia, priorita settimana
+  Page structure:
 
-Struttura pagina:
+  ```markdown
+  ## Plan [date]
 
-```markdown
-## Piano [data]
+  **Morning energy:** [N]/5
+  **Context:** [optional note or "—"]
+  **Weekly priority:** [from weekly review]
+  **Week type:** [Sprint A / Sprint B / Standard]
 
-**Energia mattina:** [N]/5
-**Contesto:** [nota opzionale o "—"]
-**Priorita settimana:** [da weekly review]
-**Tipo settimana:** Sprint A / Sprint B
+  ### Today's Blocks
+  [block list from generated plan]
 
-### Blocchi del giorno
-[lista blocchi con icone come sopra]
+  **Daily goal:** If you do [X], [Y], [Z] — tonight you can disconnect.
 
-**Obiettivo giornata:** Se fai [X], [Y], [Z] → stasera puoi staccare.
+  ---
+  ### Afternoon Check-in
+  [completed by Phase 2]
 
----
-### Check-in pomeridiano
-[completato dalla Fase 2]
+  ---
+  ### Evening Close
+  [completed by Phase 4]
+  ```
 
----
-### Evening Close
-[completato dalla Fase 4]
-```
+- If `notes_tool = none`: Present the complete plan in chat as formatted markdown. Tell the user: "Here's your daily plan. You can copy it wherever you'd like."
 
-## Fase 2 — Mid-day Check (1 min)
+## Phase 2 — Mid-day Check (1 min)
 
-**Trigger:** "come sto?", "energy check", "check pomeriggio", "energia"
+**Triggers:** Read from "Mid-day Check" section in config trigger mapping.
 
 ### Step 1: Energy rating
 
-> "Energia adesso? (1-5)"
+> "Energy right now? (1-5)"
 
-### Step 2: Confronta con mattina
+### Step 2: Compare with morning
 
-Leggi la pagina del Piano di oggi da Notion (cerca in SECOND BRAIN la pagina "Piano [data odierna]").
+- If `notes_tool != none`: Read today's Plan page (search for "Plan [today's date]").
+- If `notes_tool = none`: Ask the user: "What was your morning energy level, and what were your 3 priorities?"
 
-- Se calo > 2 punti rispetto alla mattina: "Calo significativo. Suggerisco di alleggerire il pomeriggio."
-- Se stabile o in salita: "Energia stabile, continua cosi."
+Then compare:
+
+- If drop > 2 points from morning: "Significant drop. I suggest lightening the afternoon."
+- If stable or rising: "Energy is stable, keep going."
 
 ### Step 3: Quick status
 
-> "Delle priorita di stamattina ([X], [Y], [Z]), cosa hai fatto?"
+> "Of this morning's priorities ([X], [Y], [Z]), what did you get done?"
 
-- Se in linea: "Stai andando bene. Il pomeriggio concentrati su [priorita rimanente]."
-- Se indietro: ricalibra senza giudizio. "Ok, [X] e ancora aperto. Vuoi metterlo nel blocco 14:15 o spostarlo a domani?"
+- If on track: "You're doing well. This afternoon focus on [remaining priority]."
+- If behind: recalibrate without judgment. "OK, [X] is still open. Want to put it in the afternoon focus block or move it to tomorrow?"
 
-### Step 4: Logica post-lavoro
+### Step 4: Post-work logic
 
-Se e un giorno con blocco post-lavoro disponibile (Mar, Ven — non Lun/Gio palestra, non Mer bimbo):
+Read "Fixed Commitments" from config body. Check if today has a commitment that blocks the evening. If today is NOT blocked:
 
-| Energia attuale | Suggerimento |
-|-----------------|-------------|
-| >= 3 | "Dopo le 17 hai il blocco 17:20-17:50. Reset break prima, poi [task personale]." |
-| 2 | "Energia bassa. Se vuoi, 20 min di qualcosa leggero dopo le 17. Niente coding." |
-| 1 | "Oggi hai dato abbastanza. Dopo le 17 vai diretto a relax. Zero senso di colpa." |
+| Current energy | Suggestion |
+|----------------|------------|
+| >= 3 | "After work you have the personal time window. Reset break first, then [personal task]." |
+| 2 | "Low energy. If you want, 20 min of something light after work. No coding." |
+| 1 | "You've given enough today. After work, go straight to relax. Zero guilt." |
 
-### Step 5: Aggiorna Notion
+If today IS blocked by a commitment:
+> "You have [commitment name] after work today. Plan is to wrap up and head there."
 
-Aggiorna la pagina del Piano di oggi, sezione "Check-in pomeridiano":
+### Step 5: Save check-in
 
-```markdown
-### Check-in pomeridiano
-**Energia:** [N]/5 | Completati: [lista] | Manca: [lista] → [azione]
-```
+- If `notes_tool != none`: Update today's Plan page, "Afternoon Check-in" section:
 
-## Fase 3 — Pivot (2 min)
+  ```markdown
+  ### Afternoon Check-in
+  **Energy:** [N]/5 | Completed: [list] | Remaining: [list] → [action]
+  ```
 
-**Trigger:** "e cambiato tutto", "urgenza", "devo spostare", "mi e arrivato...", "cambio piano"
+- If `notes_tool = none`: Present the check-in summary in chat as formatted markdown. Tell the user: "Here's your check-in summary. You can copy it wherever you'd like."
 
-### Step 1: Raccogli info
+## Phase 3 — Pivot (2 min)
 
-> "Cos'e successo? Descrivimi la nuova cosa."
+**Triggers:** Read from "Pivot" section in config trigger mapping.
 
-### Step 2: Valutazione onesta
+### Step 1: Gather info
 
-Leggi la pagina del Piano di oggi e le priorita settimanali dalla weekly review. Confronta:
+> "What happened? Describe the new thing."
 
-> "La priorita della settimana e [X]. Questa nuova cosa e piu importante? Vediamo."
+### Step 2: Honest evaluation
 
-**Matrice decisionale:**
+- If `notes_tool != none`: Read today's Plan page and weekly priorities from the weekly review.
+- If `notes_tool = none`: Ask the user what their current plan and weekly priority are.
 
-| La nuova cosa... | Azione |
-|-------------------|--------|
-| Ha scadenza oggi e impatta il cliente | "Si, e prioritaria. Togliamo [task meno urgente] dal piano." |
-| E importante ma non urgente | "Non e urgente. Suggerisco di schedularla per [giorno con spazio] e mantenere il piano." |
-| E una richiesta di altri ma non critica | "Qualcun altro puo aspettare. La tua priorita oggi e [X]. Rispondi dopo." |
-| E ansia/reattivita, non vera urgenza | "Fermati. Questa sembra urgente ma non lo e. Il piano di stamattina e ancora valido." |
+Compare:
 
-**Principio: MAI aggiungere senza togliere.** Se entra qualcosa nel piano, Claude chiede esplicitamente:
-> "Ok, aggiungiamo [nuova cosa]. Cosa togliamo? Le opzioni sono: [A], [B], [C]."
+> "The weekly priority is [X]. Is this new thing more important? Let's see."
 
-### Step 3: Conferma
+**Decision matrix:**
 
-> "Vuoi procedere con lo switch o mantenere il piano originale?"
+| The new thing... | Action |
+|------------------|--------|
+| Has a deadline today and impacts the client/stakeholder | "Yes, it's a priority. Let's remove [less urgent task] from the plan." |
+| Important but not urgent | "Not urgent. I suggest scheduling it for [day with space] and keeping the plan." |
+| Someone else's request, not critical | "Someone else can wait. Your priority today is [X]. Reply later." |
+| Anxiety/reactivity, not real urgency | "Stop. This feels urgent but it's not. This morning's plan is still valid." |
 
-### Step 4: Aggiorna Notion
+**Principle: NEVER add without removing.** If something enters the plan, explicitly ask:
+> "OK, we're adding [new thing]. What do we remove? Options: [A], [B], [C]."
 
-Se l'utente cambia piano, aggiorna la pagina giornaliera con i nuovi blocchi. Aggiungi nota:
-> "⚠️ Pivot alle [ora]: [motivo]. Tolto [X], aggiunto [Y]."
+### Step 3: Confirm
 
-## Fase 4 — Evening Close (2 min)
+> "Do you want to proceed with the switch or keep the original plan?"
 
-**Trigger:** "ho finito", "chiudo la giornata", "posso rilassarmi?", "evening close", "basta per oggi"
+### Step 4: Save pivot
 
-### Step 1: Leggi il piano
+If the user changes the plan:
 
-Recupera la pagina del Piano di oggi da Notion. Leggi le 3 priorita e i blocchi pianificati.
+- If `notes_tool != none`: Update the daily page with the new blocks. Add note:
+  > "Pivot at [time]: [reason]. Removed [X], added [Y]."
 
-### Step 2: Cosa hai completato?
+- If `notes_tool = none`: Present the updated plan in chat as formatted markdown, including the pivot note.
 
-> "Cosa hai completato oggi?"
+## Phase 4 — Evening Close (2 min)
 
-Oppure, se i task Notion sono aggiornati, deducilo dai cambi di status.
+**Triggers:** Read from "Evening Close" section in config trigger mapping.
 
-### Step 3: Energy rating finale
+### Step 1: Read the plan
 
-> "Energia di fine giornata? (1-5)"
+- If `notes_tool != none`: Retrieve today's Plan page. Read the 3 priorities and planned blocks.
+- If `notes_tool = none`: Ask the user: "What were your 3 priorities this morning?"
 
-### Step 4: Il verdetto
+### Step 2: What did you complete?
 
-Confronta priorita pianificate vs completate:
+> "What did you complete today?"
 
-| Situazione | Messaggio |
-|-----------|-----------|
-| Tutte le 3 priorita fatte | "Hai fatto quello che serviva. Rilassati, te lo sei guadagnato." |
-| 2 su 3 fatte, la terza non critica | "Giornata solida. [Task mancante] puo aspettare domani. Stacca." |
-| 1 su 3 o meno, ma con buon motivo (pivot, energia bassa) | "Giornata imperfetta ma hai protetto le priorita possibili. Va bene cosi." |
-| Giornata andata male | "Capita a tutti. Domani ricalibramo con il Morning Plan. Stasera stacca comunque — rimuginare non aiuta." |
+Or, if the task database is connected and tasks are updated, deduce it from status changes.
 
-**IMPORTANTE:** Il verdetto e SEMPRE orientato al permesso di staccare. Mai chiudere con "avresti dovuto fare di piu". Il senso di colpa non produce risultati, il riposo si.
+### Step 3: Final energy rating
 
-### Step 5: Nota per domani
+> "End-of-day energy? (1-5)"
 
-> "Qualcosa da ricordare per domani mattina?"
+### Step 4: The verdict
 
-Se si, annotalo. Se no, salta.
+Compare planned priorities vs completed:
 
-### Step 6: Aggiorna Notion
+| Situation | Message |
+|-----------|---------|
+| All 3 priorities done | "You did what mattered. Relax, you earned it." |
+| 2 of 3 done, the third not critical | "Solid day. [Missing task] can wait until tomorrow. Disconnect." |
+| 1 of 3 or less, but with good reason (pivot, low energy) | "Imperfect day but you protected what was possible. That's fine." |
+| Day went badly | "It happens to everyone. Tomorrow we recalibrate with the Morning Plan. Tonight disconnect anyway — ruminating doesn't produce results, rest does." |
 
-Aggiorna la pagina del Piano di oggi, sezione "Evening Close":
+**IMPORTANT:** The verdict is ALWAYS oriented toward permission to disconnect. Never close with "you should have done more." Guilt doesn't produce results, rest does.
 
-```markdown
-### Evening Close
-**Energia sera:** [N]/5
-**Completati:** [lista]
-**Non completati:** [lista + motivo breve]
-**Verdict:** [messaggio dal verdetto]
-**Nota per domani:** [testo o "—"]
-```
+### Step 5: Note for tomorrow
+
+> "Anything to remember for tomorrow morning?"
+
+If yes, note it. If no, skip.
+
+### Step 6: Save evening close
+
+- If `notes_tool != none`: Update today's Plan page, "Evening Close" section:
+
+  ```markdown
+  ### Evening Close
+  **Evening energy:** [N]/5
+  **Completed:** [list]
+  **Not completed:** [list + brief reason]
+  **Verdict:** [message from the verdict]
+  **Note for tomorrow:** [text or "—"]
+  ```
+
+- If `notes_tool = none`: Present the evening close summary in chat as formatted markdown. Tell the user: "Here's your evening close. You can copy it wherever you'd like."
 
 ## Trigger Mapping
 
-| L'utente dice | Esegui |
-|---------------|--------|
-| "buongiorno" / "morning plan" / "pianifica la giornata" / "inizia la giornata" | Fase 1 completa |
-| "come sto?" / "energy check" / "check pomeriggio" / "energia" | Fase 2 |
-| "e cambiato tutto" / "urgenza" / "devo spostare" / "mi e arrivato..." / "cambio piano" | Fase 3 |
-| "ho finito" / "chiudo la giornata" / "posso rilassarmi?" / "evening close" / "basta per oggi" | Fase 4 |
+Read triggers from the "Trigger Mapping" section in config body. Match user messages against the appropriate trigger list for each phase. Also use time-based defaults:
 
-## Comandi Extra
+| Time | Default |
+|------|---------|
+| Before 2 hours into the workday (and no Plan exists today — check notes tool or conversation history) | Suggest Phase 1 |
+| Middle of the workday | Suggest Phase 2 |
+| Last hour of workday or after | Suggest Phase 4 |
+| Urgency words at any time | Phase 3 always |
 
-| L'utente dice | Azione |
-|---------------|--------|
-| "settimana tipo" / "ideal week" / "mostrami la settimana" | Mostra il template da `references/ideal-week.md` per il giorno corrente |
-| "che settimana e?" / "settimana A o B?" | Calcola settimana ISO dalla data, pari = A, dispari = B (calibrare al primo uso) |
-| "pattern energia" / "come va la mia energia?" / "trend" | Analisi pattern da `references/energy-patterns.md` usando le pagine Piano delle ultime 2+ settimane |
-| "setup ideal week" / "personalizza settimana" | Sessione guidata per modificare `references/ideal-week.md` |
+## Extra Commands
 
-## Logica di Contesto Orario
-
-Se l'utente attiva lo skill senza un trigger specifico, usa l'ora per suggerire la fase:
-
-| Ora | Default |
-|-----|---------|
-| Prima delle 10:00 (e nessun Piano di oggi esiste su Notion) | Proponi Fase 1 |
-| 12:00-15:00 | Proponi Fase 2 |
-| Dopo le 17:00 | Proponi Fase 4 |
-| Parole di urgenza in qualsiasi momento | Fase 3 sempre |
+| User intent | Action |
+|-------------|--------|
+| "ideal week" / "show me the week" | Show the ideal week template from config body for the current day |
+| "what week is it?" / "sprint A or B?" | Calculate ISO week from date, apply configured parity |
+| "energy patterns" / "trend" | Analysis from `references/energy-patterns.md` in this skill's directory, using Plan pages from the last 2+ weeks |
+| "customize schedule" / "update my week" | Direct the user to run `/update-schedule` |
 
 ## Dependencies
 
-| Servizio | Richiesto | Scopo |
-|----------|-----------|-------|
-| Notion MCP | Si | Tutte le operazioni database + creazione pagine |
-| planning-review-system | No (ma consigliato) | Il Morning Plan legge la weekly review. Senza PRS, salta quel contesto. |
+| Service | Required | Purpose |
+|---------|----------|---------|
+| Task database MCP | Recommended | Notion, Airtable, Linear, or similar. Enables automatic task/project queries. Without it, the user provides information conversationally. |
+| Calendar MCP | No | Google Calendar, Outlook, or similar. Enhances Morning Plan with real calendar events. Without it, uses ideal week template only. |
+| planning-review-system | No (but recommended) | Morning Plan reads weekly review. Without PRS, that context is skipped. |
 
-## Principi (applica SEMPRE)
+## Principles (ALWAYS apply)
 
-1. **Zero sovraccarico** — ogni touchpoint < 5 min, solo il Morning Plan e consigliato, il resto e opzionale
-2. **Quarter > Week > Day** — la gerarchia delle priorita e sempre rispettata
-3. **Mai aggiungere senza togliere** — se entra qualcosa nel piano, esce qualcos'altro
-4. **Il permesso di staccare** — l'Evening Close esiste per dirti "hai fatto abbastanza"
-5. **Onesta radicale** — se qualcosa non e prioritario, lo skill lo dice chiaramente
-6. **Rispetta il ritmo** — mai proporre sveglia alle 6 o sacrificare famiglia/relax
-7. **Pause non negoziabili** — integrate nel piano, non opzionali
+1. **Zero overload** — every touchpoint < 5 min, only the Morning Plan is recommended, the rest is optional
+2. **Quarter > Week > Day** — the priority hierarchy is always respected
+3. **Never add without removing** — if something enters the plan, something else leaves
+4. **Permission to disconnect** — the Evening Close exists to tell you "you've done enough"
+5. **Radical honesty** — if something is not a priority, the skill says so clearly
+6. **Respect the rhythm** — never suggest waking up at 6 AM or sacrificing family/rest
+7. **Non-negotiable breaks** — built into the plan, not optional
