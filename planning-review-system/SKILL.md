@@ -10,15 +10,19 @@ Weekly review workflow (30 min) with GTD-based inbox processing and quarterly tr
 
 ## Config Guard
 
-**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory.
+**BEFORE ANYTHING ELSE:** Look for the config file in this order:
+1. `.claude/life-os.local.md` (project-level)
+2. `~/.claude/life-os.local.md` (global, portable across projects)
 
-**If it exists** (plugin mode or previously configured standalone):
+Use the first one found.
+
+**If a config file exists** (plugin mode or previously configured standalone):
 - Read the file and parse:
   - **Frontmatter (YAML):** connected tools (`task_tool`, `notes_tool`, `email_tool`), database IDs, field mappings, language
   - **Body (Markdown):** triggers, commitments, meetings, ideal week
 - Read `task_tool` and `notes_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
 
-**If it does NOT exist** (first run — run mini-setup):
+**If NO config file exists** (first run — run mini-setup):
 1. **Auto-detect** available MCP tools in the current session:
    - Notion tools available (notion-search, notion-fetch, etc.)? → propose `task_tool = notion`, `notes_tool = notion`
    - Gmail tools available (gmail_search_messages, etc.)? → propose `email_tool = gmail`
@@ -32,7 +36,7 @@ Weekly review workflow (30 min) with GTD-based inbox processing and quarterly tr
      - Task DB (Notion/Airtable/Linear): database IDs (`tasks_db`, `projects_db`, `resources_db`), field mappings (`task_status_field`, `project_status_field`, etc.), output page URL
      - Email (Gmail/Outlook/other): which labels/folders to scan (default: INBOX), exclude patterns — senders or subjects to always skip (e.g., newsletters, automated notifications). Store as `email_scan_labels` (list, default: `["INBOX"]`) and `email_exclude_patterns` (list, default: `[]`).
    - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
-4. **Save** everything to `.claude/life-os.local.md` and proceed.
+4. **Save** config to `~/.claude/life-os.local.md` (global, default) or `.claude/life-os.local.md` (project-level, if user prefers). Ask the user which location.
 
 All instructions below reference config values. Never use hardcoded database IDs or field names.
 
