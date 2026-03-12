@@ -175,12 +175,12 @@ Present the plan and ask:
 
 If the user modifies, adapt. If confirmed, proceed.
 
-### Step 4.5: Calendar export (optional)
+### Step 4.5: Calendar export
 
-After the user confirms the plan, offer to create the plan blocks as calendar events.
+**MANDATORY when `calendar_tool != none`.** Execute AFTER Step 4 confirmation and BEFORE Step 5 save. Do NOT skip this step.
 
 - If `calendar_tool = none`: Skip entirely.
-- If `calendar_tool != none`:
+- If `calendar_tool != none`: **Always ask the user:**
   > "Want me to add today's plan blocks to your calendar?"
 
   If the user says yes:
