@@ -12,15 +12,19 @@ Daily time and energy management system in 4 phases. Operational complement to t
 
 ## Config Guard
 
-**BEFORE ANYTHING ELSE:** Check if `.claude/life-os.local.md` exists in the current project directory.
+**BEFORE ANYTHING ELSE:** Look for the config file in this order:
+1. `.claude/life-os.local.md` (project-level)
+2. `~/.claude/life-os.local.md` (global, portable across projects)
 
-**If it exists** (plugin mode or previously configured standalone):
+Use the first one found.
+
+**If a config file exists** (plugin mode or previously configured standalone):
 - Read the file and parse:
   - **Frontmatter (YAML):** connected tools, database IDs, field mappings, language, schedule settings
   - **Body (Markdown):** triggers, fixed commitments, recurring meetings, ideal week
 - Read `task_tool`, `calendar_tool`, `notes_tool`, and `email_tool` from config. These determine whether to use MCP tools or conversational fallbacks.
 
-**If it does NOT exist** (first run — run mini-setup):
+**If NO config file exists** (first run — run mini-setup):
 1. **Auto-detect** available MCP tools in the current session:
    - Notion tools available (notion-search, notion-fetch, etc.)? → propose `task_tool = notion`, `notes_tool = notion`
    - Google Calendar tools available (gcal_list_events, etc.)? → propose `calendar_tool = google-calendar`
@@ -40,7 +44,7 @@ Daily time and energy management system in 4 phases. Operational complement to t
    - Ask about fixed commitments that block the evening (gym, family, etc.)
    - Ask about ideal week structure (or offer to generate one from the schedule info)
    - If user has NO tools and no info to provide: set all tool values to `none`, save minimal config (language only) → skill works in chat-only mode
-4. **Save** everything to `.claude/life-os.local.md` and proceed.
+4. **Save** config to `~/.claude/life-os.local.md` (global, default) or `.claude/life-os.local.md` (project-level, if user prefers). Ask the user which location.
 
 All instructions below reference config values. Never use hardcoded database IDs, field names, or schedule times.
 
