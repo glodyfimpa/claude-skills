@@ -14,3 +14,11 @@ load helpers/test_helper
   # At scaffold stage it already should be 0 since no rules fire.
   assert_status 0
 }
+
+@test "BP001: detects \${var,,} bash 4+ lowercase modification" {
+  run "$LINTER" "$FIXTURES/bp001_lowercase.sh"
+  assert_status 1
+  assert_output_contains "BP001"
+  assert_output_contains "[ERROR]"
+  assert_output_contains "bp001_lowercase.sh:6"
+}

@@ -49,16 +49,54 @@ ERROR_COUNT=0
 WARN_COUNT=0
 FILES_SCANNED=0
 
+# Emit a violation in text mode (JSON mode added later).
+# Args: file line severity rule_id rule_name suggestion
+emit() {
+  _file="$1"; _line="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
+  if [ "$_sev" = "ERROR" ]; then
+    ERROR_COUNT=$((ERROR_COUNT + 1))
+  else
+    WARN_COUNT=$((WARN_COUNT + 1))
+  fi
+  printf '%s:%s: [%s] %s: %s \xe2\x80\x94 %s\n' \
+    "$_file" "$_line" "$_sev" "$_rid" "$_rn" "$_sg"
+}
+
+# Run a grep -nE over the file, emitting one violation per hit.
+# Args: file pattern severity rule_id rule_name suggestion
+grep_rule() {
+  _f="$1"; _pat="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
+  _hits=$(grep -nE "$_pat" "$_f" 2>/dev/null || true)
+  [ -z "$_hits" ] && return 0
+  _old_IFS="$IFS"
+  IFS='
+'
+  for _hit in $_hits; do
+    _lineno=$(printf '%s' "$_hit" | sed -E 's/^([0-9]+):.*/\1/')
+    emit "$_f" "$_lineno" "$_sev" "$_rid" "$_rn" "$_sg"
+  done
+  IFS="$_old_IFS"
+}
+
 scan_file() {
+  _f="$1"
   FILES_SCANNED=$((FILES_SCANNED + 1))
-  # Rules will be added here, one per RED->GREEN cycle.
-  :
+
+  # BP001: ${var,,} or ${var^^} bash 4+ case modification
+  grep_rule "$_f" \
+    '\$\{[a-zA-Z_][a-zA-Z0-9_]*(,,|\^\^)\}' \
+    "ERROR" "BP001" \
+    "bash 4+ case modification (\${var,,} / \${var^^})" \
+    "Use tr '[:upper:]' '[:lower:]' or tr '[:lower:]' '[:upper:]'"
 }
 
 if [ -f "$TARGET" ]; then
   scan_file "$TARGET"
-else
+elif [ -d "$TARGET" ]; then
   echo "Directory scanning not implemented yet" >&2
+  exit 64
+else
+  echo "Not a file or directory: $TARGET" >&2
   exit 64
 fi
 
