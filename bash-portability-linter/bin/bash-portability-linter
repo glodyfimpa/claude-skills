@@ -1,0 +1,201 @@
+#!/usr/bin/env bash
+# bash-portability-linter
+# Scans shell scripts for constructs that break on macOS bash 3.2 / BSD
+# coreutils / Git Bash on Windows.
+#
+# Usage:
+#   bash-portability-linter <file-or-dir> [--json]
+#
+# Exit codes:
+#   0  clean
+#   1  at least one ERROR found
+#   2  only WARN found
+#
+# Rules are added incrementally via TDD. This is the empty scaffold.
+
+set -u
+
+JSON_MODE=0
+TARGET=""
+
+usage() {
+  echo "Usage: bash-portability-linter <file-or-dir> [--json]" >&2
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) JSON_MODE=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage; exit 64 ;;
+    *)
+      if [ -z "$TARGET" ]; then
+        TARGET="$1"
+      else
+        echo "Too many arguments" >&2; usage; exit 64
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$TARGET" ]; then
+  usage; exit 64
+fi
+if [ ! -e "$TARGET" ]; then
+  echo "No such file or directory: $TARGET" >&2; exit 64
+fi
+
+ERROR_COUNT=0
+WARN_COUNT=0
+FILES_SCANNED=0
+JSON_ROWS=""
+
+# Escape a string for safe inclusion inside a JSON double-quoted value.
+json_escape() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+# Emit a violation. In text mode prints immediately; in JSON mode
+# accumulates a row into JSON_ROWS.
+# Args: file line severity rule_id rule_name suggestion
+emit() {
+  _file="$1"; _line="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
+  if [ "$_sev" = "ERROR" ]; then
+    ERROR_COUNT=$((ERROR_COUNT + 1))
+  else
+    WARN_COUNT=$((WARN_COUNT + 1))
+  fi
+  if [ "$JSON_MODE" -eq 1 ]; then
+    _ef=$(json_escape "$_file")
+    _ern=$(json_escape "$_rn")
+    _esg=$(json_escape "$_sg")
+    _row="{\"file\":\"${_ef}\",\"line\":${_line},\"severity\":\"${_sev}\",\"rule_id\":\"${_rid}\",\"rule_name\":\"${_ern}\",\"message\":\"${_ern}\",\"suggestion\":\"${_esg}\"}"
+    if [ -z "$JSON_ROWS" ]; then
+      JSON_ROWS="$_row"
+    else
+      JSON_ROWS="${JSON_ROWS},${_row}"
+    fi
+  else
+    printf '%s:%s: [%s] %s: %s \xe2\x80\x94 %s\n' \
+      "$_file" "$_line" "$_sev" "$_rid" "$_rn" "$_sg"
+  fi
+}
+
+# Run a grep -nE over the file, emitting one violation per hit.
+# Skips pure-comment lines (first non-whitespace char is '#').
+# Args: file pattern severity rule_id rule_name suggestion
+grep_rule() {
+  _f="$1"; _pat="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
+  _hits=$(grep -nE "$_pat" "$_f" 2>/dev/null || true)
+  [ -z "$_hits" ] && return 0
+  _old_IFS="$IFS"
+  IFS='
+'
+  for _hit in $_hits; do
+    _lineno=$(printf '%s' "$_hit" | sed -E 's/^([0-9]+):.*/\1/')
+    _content=$(printf '%s' "$_hit" | sed -E 's/^[0-9]+://')
+    # Skip pure-comment lines.
+    _trimmed=$(printf '%s' "$_content" | sed -E 's/^[[:space:]]+//')
+    case "$_trimmed" in
+      '#'*) continue ;;
+    esac
+    emit "$_f" "$_lineno" "$_sev" "$_rid" "$_rn" "$_sg"
+  done
+  IFS="$_old_IFS"
+}
+
+scan_file() {
+  _f="$1"
+  FILES_SCANNED=$((FILES_SCANNED + 1))
+
+  # Rule strings below are carefully phrased so that the linter's own
+  # source does NOT match its own patterns. See SELF_CLEAN note in docs.
+
+  # BP001: bash 4+ case modification expansion (lowercase/uppercase).
+  grep_rule "$_f" \
+    '\$\{[a-zA-Z_][a-zA-Z0-9_]*(,,|\^\^)\}' \
+    "ERROR" "BP001" \
+    "bash 4+ case modification parameter expansion" \
+    "Pipe through tr to change case portably"
+
+  # BP002: associative arrays (bash 4+).
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])(declare|local)[[:space:]]+-A([[:space:]]|$)' \
+    "ERROR" "BP002" \
+    "bash 4+ associative array" \
+    "Use integer-indexed parallel key/value arrays, or a string encoding"
+
+  # BP003: mapfile / readarray (bash 4+ builtins).
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])(mapfile|readarray)([[:space:]]|$)' \
+    "ERROR" "BP003" \
+    "bash 4+ array read builtin" \
+    "Use: while IFS= read -r line; do ... done < file"
+
+  # BP004: non-portable in-place sed.
+  # Portable form uses an attached backup suffix (no space).
+  # Broken on BSD: bare in-place flag eats the next arg as suffix.
+  # Broken on GNU: empty-string suffix is BSD-only.
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])sed[[:space:]]+([^|;&]*[[:space:]])?-i[[:space:]]' \
+    "ERROR" "BP004" \
+    "non-portable in-place sed (BSD vs GNU)" \
+    "Use attached backup suffix then remove the .bak file afterwards"
+
+  # BP005: awk with multi-char record separator.
+  grep_rule "$_f" \
+    "(^|[^a-zA-Z_])awk[^#]*-v[[:space:]]+RS=('[^']{2,}'|\"[^\"]{2,}\")" \
+    "ERROR" "BP005" \
+    "awk with multi-char record separator (BSD awk is single-char only)" \
+    "Split the string manually in bash using a while loop"
+
+  # BP006: GNU-only readlink absolute-path flag.
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])readlink[[:space:]]+-f([[:space:]]|$)' \
+    "WARN" "BP006" \
+    "GNU-only readlink absolute path flag" \
+    "Use: cd dirname-of-file && pwd"
+
+  # BP007: GNU-only date long format flags.
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])date[[:space:]]+(--iso-8601|--rfc-3339)([[:space:]=]|$)' \
+    "WARN" "BP007" \
+    "GNU-only date long format flags" \
+    "Use the date format string for ISO 8601 UTC explicitly"
+}
+
+if [ -f "$TARGET" ]; then
+  scan_file "$TARGET"
+elif [ -d "$TARGET" ]; then
+  # Recursively find .sh and .bash files, skipping excluded paths.
+  # We need counters to stay in this shell, so iterate without a pipe.
+  _find_out=$(find "$TARGET" \( \
+      -path '*/.git' -o \
+      -path '*/.git/*' -o \
+      -path '*/node_modules' -o \
+      -path '*/node_modules/*' -o \
+      -path '*/tests/fixtures' -o \
+      -path '*/tests/fixtures/*' \
+    \) -prune -o \
+    -type f \( -name '*.sh' -o -name '*.bash' \) -print 2>/dev/null)
+  _old_IFS="$IFS"
+  IFS='
+'
+  for _fp in $_find_out; do
+    [ -z "$_fp" ] && continue
+    scan_file "$_fp"
+  done
+  IFS="$_old_IFS"
+else
+  echo "Not a file or directory: $TARGET" >&2
+  exit 64
+fi
+
+if [ "$JSON_MODE" -eq 1 ]; then
+  printf '{"files_scanned":%d,"violations":[%s],"error_count":%d,"warn_count":%d}\n' \
+    "$FILES_SCANNED" "$JSON_ROWS" "$ERROR_COUNT" "$WARN_COUNT"
+fi
+
+if [ "$ERROR_COUNT" -gt 0 ]; then exit 1; fi
+if [ "$WARN_COUNT" -gt 0 ]; then exit 2; fi
+exit 0
