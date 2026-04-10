@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Five standalone skills covering GTD planning, energy-based scheduling, Airbnb investment analysis, property scouting, and Java code standards. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Six standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, and bash portability linting. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -19,6 +19,7 @@ Five standalone skills covering GTD planning, energy-based scheduling, Airbnb in
 | [property-acquisition-tracker](./property-acquisition-tracker/) | Automated apartment scouting across Immobiliare.it, Idealista, Casa.it. Applies investment scoring, saves qualified properties to project tracker. Includes Node.js scanner scripts. |
 | [short-term-rental-analyzer](./short-term-rental-analyzer/) | Airbnb investment analysis with InsideAirbnb market data, ROI projections, and Excel business plan generation. Covers cedolare secca tax rules. Includes Python analysis scripts. |
 | [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, SonarQube metrics. |
+| [bash-portability-linter](./bash-portability-linter/) | Scans shell scripts for constructs that break on macOS bash 3.2, BSD coreutils, and Git Bash on Windows. Seven rules (BP001-BP007): bash 4+ case modification, associative arrays, `mapfile`, `sed -i` BSD/GNU split, `awk` multi-char RS, `readlink -f`, `date --iso-8601`. Default text output or `--json`. |
 
 ## Usage
 
@@ -94,11 +95,21 @@ claude-skills/
 │       └── business_plan_template.xlsx              pre-built Excel template
 ├── java-spring-clean-code/
 │   └── SKILL.md                                     clean code standards reference
+├── bash-portability-linter/
+│   ├── SKILL.md                                     shell linter for macOS bash 3.2 / BSD / Git Bash
+│   ├── README.md                                    rule table + usage + dev workflow
+│   ├── bin/
+│   │   └── bash-portability-linter                  executable linter (7 rules, bash 3.2 compatible)
+│   └── tests/
+│       ├── linter.bats                              19 TDD bats tests
+│       ├── helpers/
+│       │   └── test_helper.bash                     assertions and fixture helpers
+│       └── fixtures/                                one clean + 7 per-rule violation samples
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-5 skills, 10 automation scripts, 4 reference files, 1 template, 1 installer. No plugin infrastructure.
+6 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 bats tests. No plugin infrastructure.
 
 ## License
 
