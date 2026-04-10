@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# bash-portability-linter
+# Scans shell scripts for constructs that break on macOS bash 3.2 / BSD
+# coreutils / Git Bash on Windows.
+#
+# Usage:
+#   bash-portability-linter <file-or-dir> [--json]
+#
+# Exit codes:
+#   0  clean
+#   1  at least one ERROR found
+#   2  only WARN found
+#
+# Rules are added incrementally via TDD. This is the empty scaffold.
+
+set -u
+
+JSON_MODE=0
+TARGET=""
+
+usage() {
+  echo "Usage: bash-portability-linter <file-or-dir> [--json]" >&2
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) JSON_MODE=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage; exit 64 ;;
+    *)
+      if [ -z "$TARGET" ]; then
+        TARGET="$1"
+      else
+        echo "Too many arguments" >&2; usage; exit 64
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$TARGET" ]; then
+  usage; exit 64
+fi
+if [ ! -e "$TARGET" ]; then
+  echo "No such file or directory: $TARGET" >&2; exit 64
+fi
+
+ERROR_COUNT=0
+WARN_COUNT=0
+FILES_SCANNED=0
+
+scan_file() {
+  FILES_SCANNED=$((FILES_SCANNED + 1))
+  # Rules will be added here, one per RED->GREEN cycle.
+  :
+}
+
+if [ -f "$TARGET" ]; then
+  scan_file "$TARGET"
+else
+  echo "Directory scanning not implemented yet" >&2
+  exit 64
+fi
+
+if [ "$ERROR_COUNT" -gt 0 ]; then exit 1; fi
+if [ "$WARN_COUNT" -gt 0 ]; then exit 2; fi
+exit 0
