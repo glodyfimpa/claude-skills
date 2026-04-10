@@ -30,3 +30,11 @@ load helpers/test_helper
   assert_output_contains "[ERROR]"
   assert_output_contains "bp002_associative.sh:5"
 }
+
+@test "BP003: detects mapfile bash 4+ builtin" {
+  run "$LINTER" "$FIXTURES/bp003_mapfile.sh"
+  assert_status 1
+  assert_output_contains "BP003"
+  assert_output_contains "[ERROR]"
+  assert_output_contains "bp003_mapfile.sh:5"
+}
