@@ -54,3 +54,12 @@ load helpers/test_helper
   assert_output_contains "[ERROR]"
   assert_output_contains "bp005_awk_rs.sh:6"
 }
+
+@test "BP006: detects GNU-only 'readlink -f' as WARN" {
+  run "$LINTER" "$FIXTURES/bp006_readlink.sh"
+  # Only warnings => exit 2
+  assert_status 2
+  assert_output_contains "BP006"
+  assert_output_contains "[WARN]"
+  assert_output_contains "bp006_readlink.sh:5"
+}

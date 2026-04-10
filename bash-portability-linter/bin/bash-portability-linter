@@ -122,6 +122,13 @@ scan_file() {
     "ERROR" "BP005" \
     "awk -v RS='multi-char' (BSD awk is single-char only)" \
     "Split manually in bash: while [[ \"\$s\" == *DELIM* ]]; do ...; done"
+
+  # BP006: readlink -f is GNU-only. BSD readlink lacks -f.
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])readlink[[:space:]]+-f([[:space:]]|$)' \
+    "WARN" "BP006" \
+    "readlink -f is GNU-only" \
+    "Use: cd \"\$(dirname \"\$f\")\" && pwd"
 }
 
 if [ -f "$TARGET" ]; then
