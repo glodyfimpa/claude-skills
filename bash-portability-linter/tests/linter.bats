@@ -156,3 +156,9 @@ load helpers/test_helper
   assert_output_contains '"severity":"WARN"'
   echo "$output" | python3 -c 'import sys,json; json.loads(sys.stdin.read())'
 }
+
+@test "self-clean: the linter is clean under its own rules" {
+  run "$LINTER" "$LINTER"
+  assert_status 0
+  [ -z "$output" ]
+}
