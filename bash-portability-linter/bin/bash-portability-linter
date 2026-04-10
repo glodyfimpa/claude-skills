@@ -88,6 +88,14 @@ scan_file() {
     "ERROR" "BP001" \
     "bash 4+ case modification (\${var,,} / \${var^^})" \
     "Use tr '[:upper:]' '[:lower:]' or tr '[:lower:]' '[:upper:]'"
+
+  # BP002: declare -A or local -A (bash 4+ associative arrays).
+  # Match "declare -A" or "local -A" at word boundaries.
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])(declare|local)[[:space:]]+-A([[:space:]]|$)' \
+    "ERROR" "BP002" \
+    "bash 4+ associative array (declare -A / local -A)" \
+    "Use integer-indexed parallel key/value arrays, or a string encoding"
 }
 
 if [ -f "$TARGET" ]; then

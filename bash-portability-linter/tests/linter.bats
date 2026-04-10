@@ -22,3 +22,11 @@ load helpers/test_helper
   assert_output_contains "[ERROR]"
   assert_output_contains "bp001_lowercase.sh:6"
 }
+
+@test "BP002: detects 'declare -A' bash 4+ associative array" {
+  run "$LINTER" "$FIXTURES/bp002_associative.sh"
+  assert_status 1
+  assert_output_contains "BP002"
+  assert_output_contains "[ERROR]"
+  assert_output_contains "bp002_associative.sh:5"
+}
