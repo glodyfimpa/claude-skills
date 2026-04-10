@@ -48,8 +48,15 @@ fi
 ERROR_COUNT=0
 WARN_COUNT=0
 FILES_SCANNED=0
+JSON_ROWS=""
 
-# Emit a violation in text mode (JSON mode added later).
+# Escape a string for safe inclusion inside a JSON double-quoted value.
+json_escape() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+# Emit a violation. In text mode prints immediately; in JSON mode
+# accumulates a row into JSON_ROWS.
 # Args: file line severity rule_id rule_name suggestion
 emit() {
   _file="$1"; _line="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
@@ -58,11 +65,24 @@ emit() {
   else
     WARN_COUNT=$((WARN_COUNT + 1))
   fi
-  printf '%s:%s: [%s] %s: %s \xe2\x80\x94 %s\n' \
-    "$_file" "$_line" "$_sev" "$_rid" "$_rn" "$_sg"
+  if [ "$JSON_MODE" -eq 1 ]; then
+    _ef=$(json_escape "$_file")
+    _ern=$(json_escape "$_rn")
+    _esg=$(json_escape "$_sg")
+    _row="{\"file\":\"${_ef}\",\"line\":${_line},\"severity\":\"${_sev}\",\"rule_id\":\"${_rid}\",\"rule_name\":\"${_ern}\",\"message\":\"${_ern}\",\"suggestion\":\"${_esg}\"}"
+    if [ -z "$JSON_ROWS" ]; then
+      JSON_ROWS="$_row"
+    else
+      JSON_ROWS="${JSON_ROWS},${_row}"
+    fi
+  else
+    printf '%s:%s: [%s] %s: %s \xe2\x80\x94 %s\n' \
+      "$_file" "$_line" "$_sev" "$_rid" "$_rn" "$_sg"
+  fi
 }
 
 # Run a grep -nE over the file, emitting one violation per hit.
+# Skips pure-comment lines (first non-whitespace char is '#').
 # Args: file pattern severity rule_id rule_name suggestion
 grep_rule() {
   _f="$1"; _pat="$2"; _sev="$3"; _rid="$4"; _rn="$5"; _sg="$6"
@@ -73,6 +93,12 @@ grep_rule() {
 '
   for _hit in $_hits; do
     _lineno=$(printf '%s' "$_hit" | sed -E 's/^([0-9]+):.*/\1/')
+    _content=$(printf '%s' "$_hit" | sed -E 's/^[0-9]+://')
+    # Skip pure-comment lines.
+    _trimmed=$(printf '%s' "$_content" | sed -E 's/^[[:space:]]+//')
+    case "$_trimmed" in
+      '#'*) continue ;;
+    esac
     emit "$_f" "$_lineno" "$_sev" "$_rid" "$_rn" "$_sg"
   done
   IFS="$_old_IFS"
@@ -141,11 +167,33 @@ scan_file() {
 if [ -f "$TARGET" ]; then
   scan_file "$TARGET"
 elif [ -d "$TARGET" ]; then
-  echo "Directory scanning not implemented yet" >&2
-  exit 64
+  # Recursively find .sh and .bash files, skipping excluded paths.
+  # We need counters to stay in this shell, so iterate without a pipe.
+  _find_out=$(find "$TARGET" \( \
+      -path '*/.git' -o \
+      -path '*/.git/*' -o \
+      -path '*/node_modules' -o \
+      -path '*/node_modules/*' -o \
+      -path '*/tests/fixtures' -o \
+      -path '*/tests/fixtures/*' \
+    \) -prune -o \
+    -type f \( -name '*.sh' -o -name '*.bash' \) -print 2>/dev/null)
+  _old_IFS="$IFS"
+  IFS='
+'
+  for _fp in $_find_out; do
+    [ -z "$_fp" ] && continue
+    scan_file "$_fp"
+  done
+  IFS="$_old_IFS"
 else
   echo "Not a file or directory: $TARGET" >&2
   exit 64
+fi
+
+if [ "$JSON_MODE" -eq 1 ]; then
+  printf '{"files_scanned":%d,"violations":[%s],"error_count":%d,"warn_count":%d}\n' \
+    "$FILES_SCANNED" "$JSON_ROWS" "$ERROR_COUNT" "$WARN_COUNT"
 fi
 
 if [ "$ERROR_COUNT" -gt 0 ]; then exit 1; fi
