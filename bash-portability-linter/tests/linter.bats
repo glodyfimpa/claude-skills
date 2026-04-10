@@ -63,3 +63,11 @@ load helpers/test_helper
   assert_output_contains "[WARN]"
   assert_output_contains "bp006_readlink.sh:5"
 }
+
+@test "BP007: detects GNU-only 'date --iso-8601' as WARN" {
+  run "$LINTER" "$FIXTURES/bp007_date_iso.sh"
+  assert_status 2
+  assert_output_contains "BP007"
+  assert_output_contains "[WARN]"
+  assert_output_contains "bp007_date_iso.sh:5"
+}
