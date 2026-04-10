@@ -38,3 +38,11 @@ load helpers/test_helper
   assert_output_contains "[ERROR]"
   assert_output_contains "bp003_mapfile.sh:5"
 }
+
+@test "BP004: detects non-portable 'sed -i \\'\\''" {
+  run "$LINTER" "$FIXTURES/bp004_sed_i.sh"
+  assert_status 1
+  assert_output_contains "BP004"
+  assert_output_contains "[ERROR]"
+  assert_output_contains "bp004_sed_i.sh:7"
+}

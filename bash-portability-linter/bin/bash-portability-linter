@@ -103,6 +103,17 @@ scan_file() {
     "ERROR" "BP003" \
     "bash 4+ mapfile/readarray builtin" \
     "Use: while IFS= read -r line; do ... done < file"
+
+  # BP004: non-portable sed -i usage.
+  # Portable: sed -i.bak '...' file    (no space between -i and suffix)
+  # Broken on BSD: sed -i '...' file   (BSD treats next arg as suffix)
+  # Broken on GNU: sed -i '' '...' file (GNU has no empty-suffix form)
+  # We flag: "sed ... -i" immediately followed by whitespace (bare -i).
+  grep_rule "$_f" \
+    '(^|[^a-zA-Z_])sed[[:space:]]+([^|;&]*[[:space:]])?-i[[:space:]]' \
+    "ERROR" "BP004" \
+    "non-portable sed -i (BSD vs GNU)" \
+    "Use sed -i.bak '...' file && rm -f file.bak"
 }
 
 if [ -f "$TARGET" ]; then
