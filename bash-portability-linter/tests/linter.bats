@@ -46,3 +46,11 @@ load helpers/test_helper
   assert_output_contains "[ERROR]"
   assert_output_contains "bp004_sed_i.sh:7"
 }
+
+@test "BP005: detects 'awk -v RS=' with multi-char delimiter" {
+  run "$LINTER" "$FIXTURES/bp005_awk_rs.sh"
+  assert_status 1
+  assert_output_contains "BP005"
+  assert_output_contains "[ERROR]"
+  assert_output_contains "bp005_awk_rs.sh:6"
+}

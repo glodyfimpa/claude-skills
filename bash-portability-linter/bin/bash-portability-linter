@@ -114,6 +114,14 @@ scan_file() {
     "ERROR" "BP004" \
     "non-portable sed -i (BSD vs GNU)" \
     "Use sed -i.bak '...' file && rm -f file.bak"
+
+  # BP005: awk -v RS='multi-char'. BSD awk's RS is single-char only.
+  # Match awk ... -v RS='XX' or "XX" where XX has 2+ chars.
+  grep_rule "$_f" \
+    "(^|[^a-zA-Z_])awk[^#]*-v[[:space:]]+RS=('[^']{2,}'|\"[^\"]{2,}\")" \
+    "ERROR" "BP005" \
+    "awk -v RS='multi-char' (BSD awk is single-char only)" \
+    "Split manually in bash: while [[ \"\$s\" == *DELIM* ]]; do ...; done"
 }
 
 if [ -f "$TARGET" ]; then
