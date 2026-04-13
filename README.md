@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Six standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, and bash portability linting. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Seven standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, and session retrospective analysis. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -20,6 +20,7 @@ Six standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb 
 | [short-term-rental-analyzer](./short-term-rental-analyzer/) | Airbnb investment analysis with InsideAirbnb market data, ROI projections, and Excel business plan generation. Covers cedolare secca tax rules. Includes Python analysis scripts. |
 | [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, SonarQube metrics. |
 | [bash-portability-linter](./bash-portability-linter/) | Scans shell scripts for constructs that break on macOS bash 3.2, BSD coreutils, and Git Bash on Windows. Seven rules (BP001-BP007): bash 4+ case modification, associative arrays, `mapfile`, `sed -i` BSD/GNU split, `awk` multi-char RS, `readlink -f`, `date --iso-8601`. Default text output or `--json`. |
+| [session-retrospective](./session-retrospective/) | End-of-session analysis to identify repeatable patterns that could become skills, commands, or plugins. Cross-checks against Notion backlog to avoid duplicates and confirm recurring ideas. |
 
 ## Usage
 
@@ -105,11 +106,13 @@ claude-skills/
 │       ├── helpers/
 │       │   └── test_helper.bash                     assertions and fixture helpers
 │       └── fixtures/                                one clean + 7 per-rule violation samples
+├── session-retrospective/
+│   └── SKILL.md                                     end-of-session automation discovery
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-6 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 bats tests. No plugin infrastructure.
+7 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 bats tests. No plugin infrastructure.
 
 ## License
 
