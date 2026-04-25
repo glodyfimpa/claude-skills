@@ -49,40 +49,41 @@ create_skill_file() {
     echo "$out"
 }
 
+SELECTED_SKILLS=()
+
 select_skills() {
     local skills=("$@")
 
-    echo ""
-    echo -e "${BOLD}Available skills:${RESET}"
-    echo ""
+    echo "" >&2
+    echo -e "${BOLD}Available skills:${RESET}" >&2
+    echo "" >&2
 
     for i in "${!skills[@]}"; do
-        echo -e "  ${CYAN}$((i + 1))${RESET}  ${skills[$i]}"
+        echo -e "  ${CYAN}$((i + 1))${RESET}  ${skills[$i]}" >&2
     done
 
-    echo ""
-    echo -e "  ${CYAN}a${RESET}  Install all"
-    echo ""
+    echo "" >&2
+    echo -e "  ${CYAN}a${RESET}  Install all" >&2
+    echo "" >&2
 
     local choice
     read -rp "Pick skills (e.g. 1, 1 3 5, or a for all): " choice
 
+    SELECTED_SKILLS=()
+
     if [[ "$choice" == "a" || "$choice" == "A" ]]; then
-        echo "${skills[@]}"
+        SELECTED_SKILLS=("${skills[@]}")
         return
     fi
 
-    local result=()
     for num in $choice; do
         if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "${#skills[@]}" ]; then
-            result+=("${skills[$((num - 1))]}")
+            SELECTED_SKILLS+=("${skills[$((num - 1))]}")
         else
             echo -e "${RED}Invalid choice: $num${RESET}" >&2
             exit 1
         fi
     done
-
-    echo "${result[@]}"
 }
 
 install_claude_code() {
@@ -225,21 +226,17 @@ main() {
         exit 1
     fi
 
-    local selected_str
-    selected_str="$(select_skills "${skills[@]}")"
+    select_skills "${skills[@]}"
 
-    local selected=()
-    read -ra selected <<< "$selected_str"
-
-    if [ ${#selected[@]} -eq 0 ]; then
+    if [ ${#SELECTED_SKILLS[@]} -eq 0 ]; then
         echo -e "${RED}No skills selected.${RESET}"
         exit 1
     fi
 
     if [[ "$platform" == "1" ]]; then
-        install_claude_code "${selected[@]}"
+        install_claude_code "${SELECTED_SKILLS[@]}"
     else
-        install_claude_desktop "${selected[@]}"
+        install_claude_desktop "${SELECTED_SKILLS[@]}"
     fi
 }
 
