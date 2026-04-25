@@ -63,15 +63,15 @@ select_skills() {
     done
 
     echo "" >&2
-    echo -e "  ${CYAN}a${RESET}  Install all" >&2
+    echo -e "  ${CYAN}*${RESET}  Install all" >&2
     echo "" >&2
 
     local choice
-    read -rp "Pick skills (e.g. 1, 1 3 5, or a for all): " choice
+    read -rp "Pick skills (e.g. 1, 1 3 5, or * for all): " choice
 
     SELECTED_SKILLS=()
 
-    if [[ "$choice" == "a" || "$choice" == "A" ]]; then
+    if [[ "$choice" == "*" ]]; then
         SELECTED_SKILLS=("${skills[@]}")
         return
     fi
