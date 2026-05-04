@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Seven standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, and session retrospective analysis. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Eight standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, and agent-team orchestration. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -21,6 +21,7 @@ Seven standalone skills covering GTD planning, energy-adaptive scheduling, Airbn
 | [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, SonarQube metrics. |
 | [bash-portability-linter](./bash-portability-linter/) | Scans shell scripts for constructs that break on macOS bash 3.2, BSD coreutils, and Git Bash on Windows. Seven rules (BP001-BP007): bash 4+ case modification, associative arrays, `mapfile`, `sed -i` BSD/GNU split, `awk` multi-char RS, `readlink -f`, `date --iso-8601`. Default text output or `--json`. |
 | [session-retrospective](./session-retrospective/) | End-of-session analysis to identify repeatable patterns that could become skills, commands, or plugins. Cross-checks against Notion backlog to avoid duplicates and confirm recurring ideas. |
+| [agent-teams-playbook](./agent-teams-playbook/) | Operational reference for Claude Code agent teams (multiple coordinated sessions with shared task list and mailbox). Decision matrix vs subagents/Explore/single session, sizing rules (3–5 teammates, 5–6 tasks each), spawn prompt template, plan-approval gate for risky work, anti-patterns, cleanup discipline, and a lessons-learned section that grows with each team executed (rule-of-three promotion). |
 
 ## Usage
 
