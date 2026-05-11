@@ -34,14 +34,14 @@ Ripercorri l'intera conversazione e cataloga:
 3. **Decisioni prese dall'utente**: scelte che indicano preferenze ricorrenti
 4. **Correzioni e aggiustamenti**: dove l'utente ha corretto il corso indica un pattern da codificare
 
-### Fase 1.5: Cross-check with existing backlog
+### Fase 1.5: Cross-check con il backlog esistente
 
-Before identifying new candidates, check the Notion page "Skills & Sub-agents per Claude" (search Notion for it). Read the "Status Implementazione" table to see:
-- Which skills are already published (status ✅)
-- Which are already registered as ideas (status 💡 IDEA)
-- Any "Idee da sessione" sections from previous retrospectives
+Prima di identificare nuovi candidati, controlla la pagina Notion "Skills & Sub-agents per Claude" (cercala su Notion). Leggi la tabella "Status Implementazione" per vedere:
+- Quali skill sono già pubblicati (status ✅)
+- Quali sono già registrati come idee (status 💡 IDEA)
+- Eventuali sezioni "Idee da sessione" da retrospettive precedenti
 
-If a candidate from this session matches an existing IDEA, mark it as **"confirmed by repetition"** instead of proposing it as new. Multiple independent occurrences of the same pattern across sessions is a strong signal to prioritize building it.
+Se un candidato di questa sessione corrisponde a un IDEA esistente, marcalo come **"confirmed by repetition"** invece di proporlo come nuovo. Più occorrenze indipendenti dello stesso pattern attraverso sessioni diverse sono un segnale forte per dare priorità alla costruzione.
 
 ### Fase 1.7: Cross-check con skill installati (/find-skills)
 
@@ -68,7 +68,7 @@ Per ogni sequenza o pattern identificato che ha superato le fasi precedenti, val
 
 **Esiste già come skill?** Questo viene verificato automaticamente in Fase 1.7 tramite `/find-skills` — non ripetere il controllo manualmente qui.
 
-**Esiste già come idea nel backlog?** Check the Notion backlog from Fase 1.5. If found, don't present it as a new discovery. Instead, note: "Already in backlog as [name] (IDEA, [date]). This session confirms the pattern — consider bumping priority."
+**Esiste già come idea nel backlog?** Verifica nel backlog Notion (Fase 1.5). Se presente, non presentarlo come scoperta nuova: nota "Già in backlog come [nome] (IDEA, [data]). Questa sessione conferma il pattern — valuta di alzare la priorità."
 
 Categorizza ogni candidato:
 
