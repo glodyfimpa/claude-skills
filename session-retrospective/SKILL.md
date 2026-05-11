@@ -43,15 +43,30 @@ Before identifying new candidates, check the Notion page "Skills & Sub-agents pe
 
 If a candidate from this session matches an existing IDEA, mark it as **"confirmed by repetition"** instead of proposing it as new. Multiple independent occurrences of the same pattern across sessions is a strong signal to prioritize building it.
 
+### Fase 1.7: Cross-check con skill installati (/find-skills)
+
+Per ogni candidato che ha superato il check Notion (Fase 1.5), invoca lo skill `/find-skills` cercando skill che coprono lo stesso caso d'uso.
+
+**Default: scarta silenziosamente** se `/find-skills` trova uno skill con copertura ≥90% del caso d'uso. Il candidato non appare nel report finale e non viene menzionato all'utente.
+
+**Segnala invece di scartare** nei quattro casi seguenti:
+
+- **Copertura parziale (50-89%)**: presenta il candidato come "miglioramento skill esistente" anziché skill nuovo. Indica esplicitamente i gap: cosa copre lo skill trovato e cosa manca rispetto al pattern osservato. Suggerisci di estendere lo skill esistente piuttosto che crearne uno nuovo.
+- **Pattern ad alta frequenza (≥3 occorrenze nella sessione)**: anche se il match supera ≥90% e il candidato viene scartato, aggiungi una nota separata con il dato di frequenza e un suggerimento d'azione concreto (es. "lancia quello skill" o "automatizza il trigger"). Non ripetere "già coperto" — aggiungi solo il valore della frequenza come segnale d'azione.
+- **Match nominale con dominio non pertinente**: se lo skill trovato ha un nome vagamente simile ma la sua descrizione copre un dominio diverso da quello del candidato, non scartare e non trattare come match parziale. Segnala l'ambiguità all'utente con le due opzioni esplicite: (a) il candidato è un nuovo skill separato, o (b) lo skill esistente va aggiornato per includere il nuovo dominio. Non prendere la decisione autonomamente.
+- **Skill esistente sembra obsoleto**: la descrizione dello skill trovato non menziona il caso d'uso specifico emerso nella sessione, pur avendo potenziale sovrapposizione. Segnala e lascia decidere all'utente.
+
+Se `/find-skills` non trova nulla di rilevante, il candidato passa a Fase 2 senza messaggi aggiuntivi sul cross-check. Il silenzio è il comportamento atteso per "tutto ok".
+
 ### Fase 2: Identificare i candidati
 
-Per ogni sequenza o pattern identificato, valuta:
+Per ogni sequenza o pattern identificato che ha superato le fasi precedenti, valuta:
 
 **È ripetibile?** Se è un'azione one-off specifica a questa situazione, non serve automatizzarla. Se potrebbe succedere di nuovo (anche in forma leggermente diversa), è un candidato.
 
 **È sufficientemente complesso?** Se sono 1-2 comandi banali, non vale la pena di uno skill. Se sono 3+ step con logica decisionale, sì.
 
-**Esiste già come skill?** Controlla gli skill disponibili. Se uno skill copre già il 90% del caso, suggerisci un miglioramento invece di uno skill nuovo.
+**Esiste già come skill?** Questo viene verificato automaticamente in Fase 1.7 tramite `/find-skills` — non ripetere il controllo manualmente qui.
 
 **Esiste già come idea nel backlog?** Check the Notion backlog from Fase 1.5. If found, don't present it as a new discovery. Instead, note: "Already in backlog as [name] (IDEA, [date]). This session confirms the pattern — consider bumping priority."
 
