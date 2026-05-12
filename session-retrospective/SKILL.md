@@ -1,121 +1,121 @@
 ---
 name: session-retrospective
 description: >
-  Analizza la sessione corrente per identificare pattern ripetitivi che potrebbero diventare skill, command o plugin.
-  Lancia questo command verso la fine di una sessione di lavoro, dopo aver completato i task principali. Trigger:
+  Analyzes the current session to identify repetitive patterns that could become skills, commands, or plugins.
+  Run this command toward the end of a work session, after the main tasks are complete. Triggers (Italian):
   "cosa posso automatizzare?", "session retrospective", "retrospettiva sessione", "c'è qualcosa da trasformare in skill?",
-  "analizza la sessione", "pattern da automatizzare", o qualsiasi richiesta di identificare opportunità di automazione
-  dal lavoro appena svolto. Funziona bene in combinazione con /claude-md-management:revise-claude-md (prima questo
-  per catturare automazioni, poi revise-claude-md per salvare in memoria).
+  "analizza la sessione", "pattern da automatizzare", or any request to identify automation opportunities
+  from the work just completed. Works well in combination with /claude-md-management:revise-claude-md (run this
+  first to capture automations, then revise-claude-md to persist them to memory).
 ---
 
 # Session Retrospective
 
-Analizza la sessione corrente per estrarre opportunità di automazione.
+Analyzes the current session to extract automation opportunities.
 
-## Scopo
+## Purpose
 
-Alla fine di una sessione di lavoro, ripercorri quello che è stato fatto e identifica:
-- Sequenze di azioni ripetitive che potrebbero diventare **skill**
-- Singoli comandi riutilizzabili che potrebbero diventare **command**
-- Gruppi di skill/command correlati che potrebbero diventare **plugin**
-- Pattern che si ripetono tra sessioni diverse
+At the end of a work session, walk back through what was done and identify:
+- Repetitive action sequences that could become **skills**
+- Single reusable commands that could become **commands**
+- Groups of related skills/commands that could become **plugins**
+- Patterns that recur across different sessions
 
-L'obiettivo è trasformare il lavoro manuale in automazione incrementale: ogni sessione lascia dietro di sé strumenti che rendono la prossima sessione più veloce.
+The goal is to turn manual work into incremental automation: every session leaves behind tools that make the next session faster.
 
 ## Workflow
 
-### Fase 1: Scan della sessione
+### Phase 1: Scan the session
 
-Ripercorri l'intera conversazione e cataloga:
+Walk back through the entire conversation and catalog:
 
-1. **Azioni eseguite**: ogni tool call, bash command, file creato/modificato, ricerca fatta
-2. **Sequenze multi-step**: gruppi di azioni che insieme completano un obiettivo (es. "cerca file → filtra → copia → rinomina")
-3. **Decisioni prese dall'utente**: scelte che indicano preferenze ricorrenti
-4. **Correzioni e aggiustamenti**: dove l'utente ha corretto il corso indica un pattern da codificare
+1. **Actions executed**: every tool call, bash command, file created/modified, search performed
+2. **Multi-step sequences**: groups of actions that together complete an objective (e.g. "find file → filter → copy → rename")
+3. **User decisions**: choices that indicate recurring preferences
+4. **Corrections and adjustments**: places where the user corrected the course indicate a pattern to codify
 
-### Fase 1.5: Cross-check con il backlog esistente
+### Phase 1.5: Cross-check with existing backlog
 
-Prima di identificare nuovi candidati, controlla la pagina Notion "Skills & Sub-agents per Claude" (cercala su Notion). Leggi la tabella "Status Implementazione" per vedere:
-- Quali skill sono già pubblicati (status ✅)
-- Quali sono già registrati come idee (status 💡 IDEA)
-- Eventuali sezioni "Idee da sessione" da retrospettive precedenti
+Before identifying new candidates, check the Notion page "Skills & Sub-agents per Claude" (search Notion for it). Read the "Status Implementazione" table to see:
+- Which skills are already published (status ✅)
+- Which are already registered as ideas (status 💡 IDEA)
+- Any "Idee da sessione" sections from previous retrospectives
 
-Se un candidato di questa sessione corrisponde a un IDEA esistente, marcalo come **"confirmed by repetition"** invece di proporlo come nuovo. Più occorrenze indipendenti dello stesso pattern attraverso sessioni diverse sono un segnale forte per dare priorità alla costruzione.
+If a candidate from this session matches an existing IDEA, mark it as **"confirmed by repetition"** instead of proposing it as new. Multiple independent occurrences of the same pattern across sessions is a strong signal to prioritize building it.
 
-### Fase 1.7: Cross-check con skill installati (/find-skills)
+### Phase 1.7: Cross-check with installed skills (/find-skills)
 
-Per ogni candidato che ha superato il check Notion (Fase 1.5), invoca lo skill `/find-skills` cercando skill che coprono lo stesso caso d'uso.
+For each candidate that passed the Notion check (Phase 1.5), invoke the `/find-skills` skill to search for skills that cover the same use case.
 
-**Default: scarta silenziosamente** se `/find-skills` trova uno skill con copertura ≥90% del caso d'uso. Il candidato non appare nel report finale e non viene menzionato all'utente.
+**Default: discard silently** if `/find-skills` finds a skill with ≥90% coverage of the use case. The candidate does not appear in the final report and is not mentioned to the user.
 
-**Segnala invece di scartare** nei quattro casi seguenti:
+**Surface instead of discarding** in the following four cases:
 
-- **Copertura parziale (50-89%)**: presenta il candidato come "miglioramento skill esistente" anziché skill nuovo. Indica esplicitamente i gap: cosa copre lo skill trovato e cosa manca rispetto al pattern osservato. Suggerisci di estendere lo skill esistente piuttosto che crearne uno nuovo.
-- **Pattern ad alta frequenza (≥3 occorrenze nella sessione)**: anche se il match supera ≥90% e il candidato viene scartato, aggiungi una nota separata con il dato di frequenza e un suggerimento d'azione concreto (es. "lancia quello skill" o "automatizza il trigger"). Non ripetere "già coperto" — aggiungi solo il valore della frequenza come segnale d'azione.
-- **Match nominale con dominio non pertinente**: se lo skill trovato ha un nome vagamente simile ma la sua descrizione copre un dominio diverso da quello del candidato, non scartare e non trattare come match parziale. Segnala l'ambiguità all'utente con le due opzioni esplicite: (a) il candidato è un nuovo skill separato, o (b) lo skill esistente va aggiornato per includere il nuovo dominio. Non prendere la decisione autonomamente.
-- **Skill esistente sembra obsoleto**: la descrizione dello skill trovato non menziona il caso d'uso specifico emerso nella sessione, pur avendo potenziale sovrapposizione. Segnala e lascia decidere all'utente.
+- **Partial coverage (50-89%)**: present the candidate as "existing skill improvement" rather than a new skill. Explicitly indicate the gaps: what the found skill covers and what is missing relative to the observed pattern. Suggest extending the existing skill rather than creating a new one.
+- **High-frequency pattern (≥3 occurrences in the session)**: even if the match exceeds ≥90% and the candidate is discarded, add a separate note with the frequency data and a concrete action suggestion (e.g. "run that skill" or "automate the trigger"). Do not repeat "already covered" — just add the frequency value as an action signal.
+- **Name match with non-relevant domain**: if the found skill has a vaguely similar name but its description covers a different domain from the candidate, do not discard and do not treat as a partial match. Surface the ambiguity to the user with the two explicit options: (a) the candidate is a new separate skill, or (b) the existing skill should be updated to include the new domain. Do not make the decision autonomously.
+- **Existing skill seems outdated**: the description of the found skill does not mention the specific use case that emerged in the session, despite potential overlap. Surface it and let the user decide.
 
-Se `/find-skills` non trova nulla di rilevante, il candidato passa a Fase 2 senza messaggi aggiuntivi sul cross-check. Il silenzio è il comportamento atteso per "tutto ok".
+If `/find-skills` finds nothing relevant, the candidate passes to Phase 2 without additional messages about the cross-check. Silence is the expected behavior for "all good".
 
-### Fase 2: Identificare i candidati
+### Phase 2: Identify candidates
 
-Per ogni sequenza o pattern identificato che ha superato le fasi precedenti, valuta:
+For each sequence or pattern that passed the previous phases, evaluate:
 
-**È ripetibile?** Se è un'azione one-off specifica a questa situazione, non serve automatizzarla. Se potrebbe succedere di nuovo (anche in forma leggermente diversa), è un candidato.
+**Is it repeatable?** If it's a one-off action specific to this situation, it doesn't need to be automated. If it could happen again (even in slightly different form), it's a candidate.
 
-**È sufficientemente complesso?** Se sono 1-2 comandi banali, non vale la pena di uno skill. Se sono 3+ step con logica decisionale, sì.
+**Is it complex enough?** If it's 1-2 trivial commands, it's not worth a skill. If it's 3+ steps with decision logic, yes.
 
-**Esiste già come skill?** Questo viene verificato automaticamente in Fase 1.7 tramite `/find-skills` — non ripetere il controllo manualmente qui.
+**Does it already exist as a skill?** This is automatically verified in Phase 1.7 via `/find-skills` — do not repeat the check manually here.
 
-**Esiste già come idea nel backlog?** Verifica nel backlog Notion (Fase 1.5). Se presente, non presentarlo come scoperta nuova: nota "Già in backlog come [nome] (IDEA, [data]). Questa sessione conferma il pattern — valuta di alzare la priorità."
+**Does it already exist as an idea in the backlog?** Check the Notion backlog (Phase 1.5). If found, don't present it as a new discovery: note "Already in backlog as [name] (IDEA, [date]). This session confirms the pattern — consider bumping priority."
 
-Categorizza ogni candidato:
+Categorize each candidate:
 
-| Tipo | Quando | Esempio |
-|------|--------|---------|
-| **Skill** | Workflow multi-step con logica, riutilizzabile in contesti diversi | Raccolta documenti per pratiche burocratiche |
-| **Command** | Azione singola o prompt strutturato da lanciare con un trigger | Retrospettiva di fine sessione |
-| **Plugin** | Gruppo di skill + command correlati che servono uno stesso dominio | Toolkit gestione pratiche PA |
-| **Miglioramento skill esistente** | Uno skill c'è ma manca qualcosa | Aggiungere ricerca cloud a document-collector |
+| Type | When | Example |
+|------|------|---------|
+| **Skill** | Multi-step workflow with logic, reusable in different contexts | Document collection for bureaucratic processes |
+| **Command** | Single action or structured prompt to launch with a trigger | End-of-session retrospective |
+| **Plugin** | Group of related skills + commands serving one domain | PA process management toolkit |
+| **Existing skill improvement** | A skill exists but is missing something | Add cloud search to document-collector |
 
-### Fase 3: Presentare i risultati
+### Phase 3: Present results
 
-Per ogni candidato, presenta:
+For each candidate, present:
 
-**Nome proposto**: es. `document-collector`
+**Proposed name**: e.g. `document-collector`
 
-**Tipo**: skill / command / plugin / miglioramento
+**Type**: skill / command / plugin / improvement
 
-**Cosa automatizza**: descrizione concreta di cosa farebbe, basata su quello che è successo nella sessione. Niente astrazioni vaghe, fai riferimento alle azioni reali osservate.
+**What it automates**: concrete description of what it would do, based on what happened in the session. No vague abstractions — reference the actual observed actions.
 
-**Trigger di esempio**: 2-3 frasi che l'utente direbbe per attivarlo.
+**Example triggers**: 2-3 phrases the user would say to activate it.
 
-**Effort stimato**: basso (< 30 min), medio (30 min - 2 ore), alto (> 2 ore)
+**Estimated effort**: low (< 30 min), medium (30 min - 2 hours), high (> 2 hours)
 
-**Priorità suggerita**: basata su frequenza d'uso stimata × tempo risparmiato per utilizzo
+**Suggested priority**: based on estimated usage frequency × time saved per use
 
-### Fase 4: Decidere e agire
+### Phase 4: Decide and act
 
-Chiedi all'utente cosa vuole fare:
+Ask the user what they want to do:
 
-1. **Creare subito** uno o più degli skill/command identificati → usa lo skill-creator se disponibile, altrimenti scrivi il SKILL.md direttamente
-2. **Salvare come idea** → aggiungi a un backlog (Notion task, file locale, o semplicemente in CLAUDE.md)
-3. **Scartare** → niente da fare, la sessione non ha prodotto pattern automatizzabili
+1. **Create now** one or more of the identified skills/commands → use skill-creator if available, otherwise write the SKILL.md directly
+2. **Save as an idea** → add to a backlog (Notion task, local file, or simply CLAUDE.md)
+3. **Discard** → nothing to do, the session did not produce automatable patterns
 
-Se l'utente sceglie di creare, procedi immediatamente. Non rimandare a "la prossima sessione".
+If the user chooses to create, proceed immediately. Do not defer to "the next session".
 
-## Cosa NON è un buon candidato per l'automazione
+## What is NOT a good automation candidate
 
-- Conversazioni e decisioni che richiedono giudizio umano ogni volta
-- Azioni eseguite una sola volta per un contesto irripetibile
-- Pattern troppo semplici (un singolo comando bash, una query di ricerca)
-- Cose che l'utente preferisce fare manualmente per mantenere il controllo
+- Conversations and decisions that require human judgment every time
+- Actions executed only once for an unrepeatable context
+- Patterns too simple (a single bash command, a search query)
+- Things the user prefers to do manually to maintain control
 
-## Suggerimento d'uso
+## Usage suggestion
 
-Lancia questo command prima di `/claude-md-management:revise-claude-md`. L'ordine ideale a fine sessione:
+Run this command before `/claude-md-management:revise-claude-md`. The ideal end-of-session order:
 
-1. `/session-retrospective` → identifica cosa automatizzare
-2. Crea gli skill/command se deciso
-3. `/claude-md-management:revise-claude-md` → salva le nuove conoscenze (inclusi i nuovi skill creati)
+1. `/session-retrospective` → identify what to automate
+2. Create the skills/commands if decided
+3. `/claude-md-management:revise-claude-md` → save the new knowledge (including newly created skills)

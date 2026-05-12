@@ -1,6 +1,6 @@
-# Eval Cases — session-retrospective (Fase 1.7)
+# Eval Cases — session-retrospective (Phase 1.7)
 
-These cases are the spec for Fase 1.7 of the session-retrospective skill: the `/find-skills` cross-check
+These cases are the spec for Phase 1.7 of the session-retrospective skill: the `/find-skills` cross-check
 that verifies a candidate skill does not already exist locally before proposing it to the user.
 
 Each case has:
@@ -8,153 +8,153 @@ Each case has:
 - **Expected**: what Claude must do in response
 - **Pass criterion**: how to verify the skill contains this behavior
 
-Run a manual eval by reading `SKILL.md` and checking each case against the Fase 1.7 guidance.
+Run a manual eval by reading `SKILL.md` and checking each case against the Phase 1.7 guidance.
 A case fails when the skill is missing the expected behavior or contains contradicting guidance.
 
 ---
 
-## TC-01 — Skill identico trovato → scarta silenziosamente
+## TC-01 — Exact skill match → discard silently
 
 **Setup**
 
-La Fase 1 identifica una sequenza multi-step: l'utente ha esportato documenti da Notion, li ha caricati
-su Drive, e ha estratto metadati in CSV. Claude propone come candidato: `document-exporter`.
+Phase 1 identifies a multi-step sequence: the user exported documents from Notion, uploaded them to Drive,
+and extracted metadata into CSV. Claude proposes the candidate: `document-exporter`.
 
-`/find-skills` restituisce un match ad alta confidenza: lo skill `document-collector` copre esattamente
-la sequenza (Notion export → Drive upload → metadata extraction). Copertura stimata: 95%+.
+`/find-skills` returns a high-confidence match: the `document-collector` skill covers exactly that
+sequence (Notion export → Drive upload → metadata extraction). Estimated coverage: 95%+.
 
 **Expected**
 
-Claude scarta silenziosamente il candidato. Non lo menziona nel report finale. Non chiede all'utente
-cosa fare. Il report di Fase 3 elenca solo candidati che hanno superato il cross-check.
+Claude silently discards the candidate. It is not mentioned in the final report. The user is not asked
+what to do. The Phase 3 report only lists candidates that passed the cross-check.
 
 **Pass criterion**
 
-SKILL.md Fase 1.7 contiene una regola esplicita: se il match supera una soglia di copertura (es. ≥90%),
-il candidato viene scartato senza apparire nel report. La soglia deve essere dichiarata numericamente.
+SKILL.md Phase 1.7 contains an explicit rule: if the match exceeds a coverage threshold (e.g. ≥90%),
+the candidate is discarded without appearing in the report. The threshold must be declared numerically.
 
 ---
 
-## TC-02 — Copertura parziale (~70%) → segnalazione "estendi lo skill esistente"
+## TC-02 — Partial coverage (~70%) → surface as "extend existing skill"
 
 **Setup**
 
-La Fase 1 identifica: l'utente ha iterato 4 volte su un processo di review di PR con checklist custom
-(sicurezza, performance, leggibilità, test coverage). Candidato proposto: `pr-review-toolkit`.
+Phase 1 identifies: the user iterated 4 times on a PR review process with a custom checklist
+(security, performance, readability, test coverage). Proposed candidate: `pr-review-toolkit`.
 
-`/find-skills` restituisce un match parziale: lo skill `code-review:code-review` copre review generica
-ma non la parte checklist custom né il loop multi-iterazione. Copertura stimata: ~70%.
+`/find-skills` returns a partial match: the `code-review:code-review` skill covers generic review
+but not the custom checklist part or the multi-iteration loop. Estimated coverage: ~70%.
 
 **Expected**
 
-Claude segnala il match parziale nel report. Invece di proporre `pr-review-toolkit` come skill nuovo,
-suggerisce di estendere `code-review:code-review` con i gap identificati (checklist custom, loop).
-Indica esplicitamente i gap: cosa manca nello skill esistente rispetto al pattern osservato.
+Claude surfaces the partial match in the report. Instead of proposing `pr-review-toolkit` as a new skill,
+it suggests extending `code-review:code-review` with the identified gaps (custom checklist, loop).
+Explicitly indicates the gaps: what is missing in the existing skill relative to the observed pattern.
 
 **Pass criterion**
 
-SKILL.md Fase 1.7 distingue tra match completo (≥90%) e match parziale (50-89%). Per il caso parziale
-deve contenere istruzioni a presentare il candidato come "miglioramento skill esistente" con lista dei gap,
-non come skill nuovo.
+SKILL.md Phase 1.7 distinguishes between full match (≥90%) and partial match (50-89%). For the partial case
+it must contain instructions to present the candidate as "existing skill improvement" with a gap list,
+not as a new skill.
 
 ---
 
-## TC-03 — Alta frequenza (≥3 occorrenze) + duplicato esatto → segnalazione della frequenza
+## TC-03 — High frequency (≥3 occurrences) + exact duplicate → surface the frequency
 
 **Setup**
 
-La Fase 1 trova che l'utente ha eseguito la stessa sequenza di deploy 5 volte durante la sessione:
-`git push` → attesa CI → check Notion status → aggiornamento manuale del campo. Candidato: `ci-deploy-tracker`.
+Phase 1 finds that the user executed the same deploy sequence 5 times during the session:
+`git push` → wait for CI → check Notion status → manual field update. Candidate: `ci-deploy-tracker`.
 
-`/find-skills` restituisce un match esatto (95%+): lo skill `planning-review-system` include già un
-passo di aggiornamento Notion post-CI. Copertura: ~92%.
+`/find-skills` returns an exact match (95%+): the `planning-review-system` skill already includes a
+post-CI Notion update step. Coverage: ~92%.
 
-In aggiunta, la Fase 1 rileva che questa sequenza è apparsa ≥3 volte nella sessione corrente.
+In addition, Phase 1 detected that this sequence appeared ≥3 times in the current session.
 
 **Expected**
 
-Il candidato viene scartato (match esatto). Tuttavia, anche se scartato, Claude segnala all'utente la
-frequenza elevata (5 occorrenze) come dato rilevante: "Il pattern è già coperto da `planning-review-system`,
-ma la sua frequenza (5×) suggerisce di lanciare quello skill o automatizzare il trigger."
+The candidate is discarded (exact match). However, even though discarded, Claude surfaces the high
+frequency (5 occurrences) to the user as relevant data: "The pattern is already covered by `planning-review-system`,
+but its frequency (5×) suggests running that skill or automating the trigger."
 
-Il messaggio è costruttivo, non ridondante: non ripete "già coperto" due volte, ma aggiunge il valore
-della frequenza come segnale d'azione.
+The message is constructive, not redundant: it does not repeat "already covered" twice, but adds the
+frequency value as an action signal.
 
 **Pass criterion**
 
-SKILL.md Fase 1.7 specifica che, anche in caso di scarto per duplicato, se la frequenza osservata
-è ≥3 occorrenze, Claude aggiunge una nota separata sulla frequenza con suggerimento d'azione concreto
-(es. "lancia X" o "automatizza il trigger"). La frequenza soglia deve essere dichiarata numericamente.
+SKILL.md Phase 1.7 specifies that, even in case of discard for duplicate, if the observed frequency
+is ≥3 occurrences, Claude adds a separate note about the frequency with a concrete action suggestion
+(e.g. "run X" or "automate the trigger"). The frequency threshold must be declared numerically.
 
 ---
 
-## TC-04 — Skill esistente con descrizione obsoleta/non pertinente → segnalazione + delega utente
+## TC-04 — Existing skill with outdated/non-relevant description → surface + delegate to user
 
 **Setup**
 
-La Fase 1 identifica: l'utente ha configurato più volte impostazioni di deploy su tre ambienti diversi
-(staging, prod, preview) usando file `.env` distinti con logica di merge. Candidato: `env-config-manager`.
+Phase 1 identifies: the user configured deploy settings multiple times across three environments
+(staging, prod, preview) using distinct `.env` files with merge logic. Candidate: `env-config-manager`.
 
-`/find-skills` restituisce un match nominale: esiste uno skill `update-config`, ma la sua descrizione
-parla esclusivamente di configurazione del harness Claude Code (settings.json, hooks, permissions),
-non di deploy environments o `.env` files. Il nome coincide vagamente ma il dominio è completamente diverso.
+`/find-skills` returns a nominal match: a skill `update-config` exists, but its description talks
+exclusively about Claude Code harness configuration (settings.json, hooks, permissions), not about
+deploy environments or `.env` files. The name vaguely coincides but the domain is completely different.
 
 **Expected**
 
-Claude non scarta il candidato e non lo tratta come match parziale. Invece, segnala all'utente:
-lo skill `update-config` esiste ma copre un dominio diverso. Chiede all'utente di decidere se:
-(a) `env-config-manager` è davvero un nuovo skill separato, o (b) `update-config` va aggiornato per
-includere anche env management.
+Claude does not discard the candidate and does not treat it as a partial match. Instead, it surfaces
+to the user: the `update-config` skill exists but covers a different domain. It asks the user to decide whether:
+(a) `env-config-manager` is genuinely a new separate skill, or (b) `update-config` should be updated to
+also include env management.
 
-Claude non prende la decisione autonomamente perché il confine di dominio è ambiguo.
+Claude does not make the decision autonomously because the domain boundary is ambiguous.
 
 **Pass criterion**
 
-SKILL.md Fase 1.7 prevede un caso "falso positivo per nome": quando il match è solo nominale (descrizione
-non pertinente al dominio del candidato), Claude segnala l'ambiguità e delega la decisione all'utente
-con le due opzioni esplicite (nuovo skill vs estensione). Non scarta silenziosamente, non assume automaticamente
-che siano la stessa cosa.
+SKILL.md Phase 1.7 covers a "false positive by name" case: when the match is only nominal (description
+not relevant to the candidate's domain), Claude surfaces the ambiguity and delegates the decision to the user
+with the two explicit options (new skill vs extension). It does not discard silently, does not automatically
+assume they are the same thing.
 
 ---
 
-## TC-05 — Nessun match trovato → candidato passa a Fase 2 normalmente
+## TC-05 — No match found → candidate passes to Phase 2 normally
 
 **Setup**
 
-La Fase 1 identifica: l'utente ha analizzato 3 appartamenti BnB, calcolato ROI stimato per ognuno,
-e generato un report comparativo in markdown. Candidato: `bnb-roi-comparator`.
+Phase 1 identifies: the user analyzed 3 BnB apartments, calculated estimated ROI for each,
+and generated a comparative report in markdown. Candidate: `bnb-roi-comparator`.
 
-`/find-skills` non trova alcun match. Nessuno skill installato copre analisi comparativa di immobili
-BnB con calcolo ROI.
+`/find-skills` finds no match. No installed skill covers comparative analysis of BnB properties
+with ROI calculation.
 
 **Expected**
 
-Claude procede normalmente a Fase 2 con il candidato `bnb-roi-comparator` intatto. Nessun messaggio
-aggiuntivo sul cross-check (il silenzio sul check è il comportamento atteso per il caso "tutto ok").
-Il candidato viene presentato in Fase 3 come skill nuovo con la struttura standard: nome, tipo, cosa
-automatizza, trigger di esempio, effort, priorità.
+Claude proceeds normally to Phase 2 with the candidate `bnb-roi-comparator` intact. No additional
+messages about the cross-check (silence on the check is the expected behavior for the "all good" case).
+The candidate is presented in Phase 3 as a new skill with the standard structure: name, type, what
+it automates, example triggers, effort, priority.
 
 **Pass criterion**
 
-SKILL.md Fase 1.7 specifica che, in assenza di match, il candidato passa al flusso normale senza
-modifiche e senza messaggi aggiuntivi sul cross-check. Il comportamento "nessun match" deve essere
-il caso neutro, non un caso che genera output extra.
+SKILL.md Phase 1.7 specifies that, in the absence of a match, the candidate passes through the normal
+flow without modifications and without additional cross-check messages. The "no match" behavior must be
+the neutral case, not one that generates extra output.
 
 ---
 
-## Come eseguire questo eval
+## How to run this eval
 
-1. Leggi `SKILL.md` sezione Fase 1.7 (quando esiste)
-2. Per ogni caso, verifica il pass criterion
-3. Segna pass/fail per ogni TC
-4. Un caso fail significa che SKILL.md deve essere aggiornato prima di mergiare
+1. Read `SKILL.md` Phase 1.7 section (when it exists)
+2. For each case, verify the pass criterion
+3. Mark pass/fail for every TC
+4. A fail means SKILL.md must be updated before merging
 
-Lo skill è "green" quando tutti e 5 i casi passano.
+The skill is "green" when all 5 cases pass.
 
-| ID | Descrizione | Pass |
+| ID | Description | Pass |
 |----|-------------|------|
-| TC-01 | Skill identico → scarto silenzioso | [ ] |
-| TC-02 | Copertura parziale → segnala gap | [ ] |
-| TC-03 | Alta frequenza + duplicato → nota frequenza | [ ] |
-| TC-04 | Match nominale obsoleto → delega utente | [ ] |
-| TC-05 | Nessun match → passa avanti senza rumore | [ ] |
+| TC-01 | Exact skill → silent discard | [ ] |
+| TC-02 | Partial coverage → surface gaps | [ ] |
+| TC-03 | High frequency + duplicate → frequency note | [ ] |
+| TC-04 | Outdated nominal match → delegate to user | [ ] |
+| TC-05 | No match → pass through silently | [ ] |
