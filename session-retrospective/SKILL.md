@@ -25,6 +25,20 @@ The goal is to turn manual work into incremental automation: every session leave
 
 ## Workflow
 
+### Phase 0: Backlog health check
+
+Before scanning the session, fetch the Notion backlog page "Skills & Sub-agents per Claude" and verify:
+- Total page length ≤ 800 lines
+- No `# Idee da sessione [date]` sections at top-level (anti-pattern, see "Anti-patterns" below)
+
+If either limit is breached, STOP and surface to the user:
+
+> "The backlog page has grown beyond healthy limits (X lines, Y `# Idee da sessione` sections). The retrospective should write into a clean catalog, not into a log. Recommend running `/simplify` cleanup on the page first, then re-run retrospective."
+
+Do not proceed with Phase 1 until the user either confirms cleanup is done or explicitly overrides ("procedi comunque").
+
+Rationale: without this gate, retrospective output silently drowns in noise, and Phase 1.5 cross-check becomes useless (the model cannot find repetitions in a 1200-line page).
+
 ### Phase 1: Scan the session
 
 Walk back through the entire conversation and catalog:
@@ -97,13 +111,46 @@ For each candidate, present:
 
 ### Phase 4: Decide and act
 
-Ask the user what they want to do:
+**OUTPUT RULE — critical**: Notion backlog updates go ONLY as rows in the existing `Status Implementazione` table. NEVER as new sections `# Idee da sessione [date]` or `## Nuove idee` / `## Bump priority` / `## Insegnamenti di metodo` / `## Note meta sulla sessione`.
 
-1. **Create now** one or more of the identified skills/commands → use skill-creator if available, otherwise write the SKILL.md directly
-2. **Save as an idea** → add to a backlog (Notion task, local file, or simply CLAUDE.md)
-3. **Discard** → nothing to do, the session did not produce automatable patterns
+Ask the user what to do:
+
+1. **Create now** → use skill-creator if available, otherwise write SKILL.md directly
+2. **Save as idea** → choose path:
+   - **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
+   - **Repetition of existing idea**: update ONLY the "Note" cell of the existing row, appending `+ Nª occorrenza (YYYY-MM-DD): [one-line context]`. Bump priority in same cell if Nª ≥ 3.
+3. **Discard** → no action
+
+For cross-project methodology lessons (e.g. "memory → artifact promotion", "auto-mode does not bypass approvals"), these belong in `~/.claude/CLAUDE.md` via `/claude-md-management:revise-claude-md`, NOT in the Notion backlog. Surface them to the user as a separate list at end of retrospective output and suggest running revise-claude-md as next step.
 
 If the user chooses to create, proceed immediately. Do not defer to "the next session".
+
+## Anti-patterns (what NOT to do in the Notion backlog)
+
+**NEVER create sections with these titles in the backlog page**:
+- `# Idee da sessione [data]`
+- `## Nuove idee` / `## Bump priority su idee esistenti`
+- `## Insegnamenti di metodo` / `## Note meta sulla sessione`
+- `## [Categoria specifica della sessione]`
+
+The Notion backlog is a **consultable catalog**, not a session journal. Every section above represents narrative content that:
+- Duplicates information already in the canonical table
+- Grows unboundedly across sessions (we hit 19 such sections / ~800 lines before forced cleanup on 2026-05-12)
+- Makes future cross-check (Phase 1.5) impossible because the model cannot find repetitions inside narrative blocks
+
+If you have valuable methodology insights that don't fit as table rows, surface them to the user at end of output and route them to `/claude-md-management:revise-claude-md` (CLAUDE.md globale or memory file), not to the backlog.
+
+### Output budget per row
+
+| Cell | Max length | Allowed values |
+|------|-----------|----------------|
+| Skill name | 60 chars | Human-readable name |
+| Skill ID | 40 chars | kebab-case identifier |
+| Status | one of | `💡 IDEA`, `🚧 DRAFT`, `✅ Pubblicato`, `✅ Pubblicato (locale)`, `✅ SUPERSEDED → [link]` |
+| Date | "YYYY-MM-DD" or "YYYY-MM-DD (bump YYYY-MM-DD)" | First occurrence + optional bump dates |
+| Note | 200 chars | One-line description + occurrence count if repetition |
+
+If you cannot stay within the budget, the idea is probably too vague to be actionable — clarify scope with the user before saving.
 
 ## What is NOT a good automation candidate
 

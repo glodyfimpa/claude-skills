@@ -142,14 +142,57 @@ the neutral case, not one that generates extra output.
 
 ---
 
+## TC-06 — Output rules: backlog updates are table rows, NOT new sections (Phase 4)
+
+**Setup**
+
+Phase 1 identifies 3 distinct repeated patterns during a session:
+1. A new pattern never seen before (effort: medium, frequency: 4×)
+2. A new pattern with cross-project methodology value (e.g. "always validate volume before batch operations")
+3. A pattern that matches an existing `💡 IDEA` row in `Status Implementazione` (e.g. `bureaucratic-research-assistant` at its 5th occurrence)
+
+The Notion backlog page already has a healthy `Status Implementazione` table with 15 rows and no `# Idee da sessione` sections (Phase 0 passes).
+
+**Expected**
+
+In Phase 4, Claude:
+- For pattern 1 (new): adds ONE row to the `Status Implementazione` table with status `💡 IDEA`, Note cell ≤ 200 chars
+- For pattern 2 (methodology): does NOT add to Notion. Surfaces it separately at the end of output as "methodology insight" and suggests running `/claude-md-management:revise-claude-md` for `~/.claude/CLAUDE.md`
+- For pattern 3 (repetition): updates ONLY the existing row's Note cell with `+ 5ª occorrenza (YYYY-MM-DD): [one-liner]`. Bumps priority since Nª ≥ 3.
+
+Claude does NOT create any new section in the page: no `# Idee da sessione [date]`, no `## Nuove idee`, no `## Bump priority`, no `## Insegnamenti di metodo`, no `## Note meta sulla sessione`.
+
+**Failure modes (FAIL)**
+
+- Creating a section `# Idee da sessione [date]` ← critical fail, the original bug
+- Writing a debrief paragraph with session context before the table updates
+- Creating subsections like `## Nuove idee` / `## Bump priority` / `## Note meta`
+- Note cells longer than 200 chars
+- Adding methodology insights as rows in the backlog (they belong in CLAUDE.md, not Notion)
+- Skipping the methodology routing and silently dropping the insight
+
+**Pass criterion**
+
+SKILL.md Phase 4 contains:
+- An explicit `OUTPUT RULE` declaring that backlog updates go ONLY as table rows, NEVER as new sections
+- A dedicated `Anti-patterns` section listing forbidden section titles (`# Idee da sessione`, `## Nuove idee`, `## Bump priority`, `## Insegnamenti di metodo`, `## Note meta`)
+- An `Output budget` table specifying max char length per cell (Note ≤ 200)
+- A clear separation of "what goes in Notion backlog" (actionable skill rows) vs "what goes in CLAUDE.md" (methodology insights), with explicit routing to `/claude-md-management:revise-claude-md`
+
+**Why this case exists**
+
+Between mid-March and mid-May 2026 the skill silently generated 19 `# Idee da sessione` sections (~800 lines of noise) in the Notion backlog before being noticed in a cleanup session on 2026-05-12. The original Phase 4 instruction ("add to a backlog") was ambiguous and the model interpreted it as verbose narrative output. The fix introduced strict OUTPUT RULE + Anti-patterns + Output budget + Phase 0 health check. This eval case ensures regressions don't reintroduce the bug.
+
+---
+
 ## How to run this eval
 
-1. Read `SKILL.md` Phase 1.7 section (when it exists)
+1. Read `SKILL.md` Phase 1.7 and Phase 4 sections (when they exist)
 2. For each case, verify the pass criterion
 3. Mark pass/fail for every TC
 4. A fail means SKILL.md must be updated before merging
 
-The skill is "green" when all 5 cases pass.
+The skill is "green" when all 6 cases pass.
 
 | ID | Description | Pass |
 |----|-------------|------|
@@ -158,3 +201,4 @@ The skill is "green" when all 5 cases pass.
 | TC-03 | High frequency + duplicate → frequency note | [ ] |
 | TC-04 | Outdated nominal match → delegate to user | [ ] |
 | TC-05 | No match → pass through silently | [ ] |
+| TC-06 | Output rules: rows not sections | [ ] |
