@@ -1,0 +1,29 @@
+# portals-catalog.yaml
+# Catalogo portali PA italiani: URL base, pattern FAQ, campi con ID dinamici noti.
+# Ogni entry è un portale. Aggiornare con auto-save quando si scoprono nuovi mapping.
+
+portals:
+  soggiorniamoMilano:
+    name: "SoggiorniAmo Milano"
+    base_url: "https://soggiorniamoamilano.comune.milano.it"
+    faq_url: "https://soggiorniamoamilano.comune.milano.it/res/FAQ.pdf"
+    login_url: "https://soggiorniamoamilano.comune.milano.it/login"
+    auth_provider: keycloak
+    session_timeout_min: 30
+    notes: "Codici operatore sequenziali visibili (es. 24276) — race condition possibile. Ricliccare se 'già presente'."
+    known_fields:
+      # label: selettore CSS o xpath (popolato da auto-save id-mapper)
+      codice_struttura: "input[name='codiceStruttura']"
+      denominazione: "input[name='denominazione']"
+
+  bdsr:
+    name: "BDSR Banca Dati Strutture Ricettive"
+    base_url: "https://bdsr.regione.lombardia.it"
+    faq_url: "https://bdsr.regione.lombardia.it/res/FAQ.pdf"
+    login_url: "https://bdsr.regione.lombardia.it/login"
+    auth_provider: keycloak
+    session_timeout_min: 30
+    notes: "Punto 2 gas/CO N.A. legittimo per <4 appartamenti (comma 7 art. 13-ter DL 145/2023). Verificare FAQ prima di compilare."
+    known_fields:
+      codice_fiscale: "input[name='codiceFiscale']"
+      pec: "input[name='pec']"
