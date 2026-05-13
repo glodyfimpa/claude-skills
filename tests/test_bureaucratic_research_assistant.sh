@@ -49,15 +49,25 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 }
 
 @test "pa-form-filler: portals-catalog.yaml esiste con almeno 2 entry" {
-  skip "pending — implementazione in t1778606943416"
+  catalog="$REPO_ROOT/pa-form-filler/references/portals-catalog.yaml"
+  [ -f "$catalog" ]
+  entry_count=$(grep -c "^  [a-zA-Z]" "$catalog")
+  [ "$entry_count" -ge 2 ]
 }
 
 @test "pa-form-filler: workflow FAQ PDF scan documentato in SKILL.md" {
-  skip "pending — implementazione in t1778606943416"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "FAQ" "$skill_file"
+  grep -q "pdftotext" "$skill_file"
+  grep -q "obbligatori" "$skill_file"
 }
 
 @test "pa-form-filler: browser adapter fallback Playwright→Chrome→Computer Use documentato" {
-  skip "pending — implementazione in t1778606943416"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "Playwright" "$skill_file"
+  grep -q "Chrome" "$skill_file"
+  grep -q "Computer Use" "$skill_file"
+  grep -q "fallback" "$skill_file"
 }
 
 @test "pa-form-filler id-mapper: strategia label-first documentata" {

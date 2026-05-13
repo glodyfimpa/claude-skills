@@ -1,8 +1,109 @@
 ---
 name: pa-form-filler
-description: Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use), scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici (Keycloak) e checkpoint di sessione.
+description: Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use). Scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici Keycloak (label-first + catalog fallback), salva progressi con checkpoint per resistere a timeout di sessione.
 ---
 
 # pa-form-filler
 
-> **Placeholder** — implementazione completa nei task t1778606943416, t1778606943593, t1778606943771.
+Compila autocertificazioni e form su portali PA italiani. Parte dalla FAQ del portale per identificare quali campi sono obbligatori per legge (generalmente 5–10× meno di quelli visibili), poi naviga e compila solo quelli.
+
+Validato su SoggiorniAmo Milano e BDSR Lombardia (2026-05-06).
+
+## Browser Adapter Gerarchico
+
+Usa il tool di browser automation meno invasivo disponibile. Scala al tier successivo solo quando il tier corrente fallisce o non è disponibile.
+
+| Tier | Tool | Quando usare |
+|------|------|-------------|
+| 1 | Playwright MCP (`mcp__plugin_playwright_playwright__*`) | Primo tentativo. DOM-aware, selettori CSS/XPath, nessuna visione pixel. |
+| 2 | Chrome MCP (`mcp__Claude_in_Chrome__*`) | Se Playwright non è connesso o la pagina usa shadow DOM / web components che Playwright non raggiunge. |
+| 3 | Computer Use (`mcp__computer-use__*`) | Ultima risorsa. Usa solo per app native o quando i tier 1–2 falliscono su tutti i selettori. Più lento e fragile. |
+
+**Criteri di fallback:**
+- Tier 1 → Tier 2: `browser_snapshot` non trova l'elemento dopo 2 tentativi con selettori diversi, oppure `browser_fill_form` lancia errore di timeout.
+- Tier 2 → Tier 3: `read_page` restituisce struttura vuota (shadow DOM), oppure `form_input` lancia errore su tutti i selettori.
+- Tier 3 attivato: avvisa l'utente ("uso Computer Use — più lento, potrei sbagliare pixel") prima di procedere.
+
+**Gotcha specifici (da CLAUDE.md):**
+- Dropdown custom spesso invisibili a `read_page` interactive — usare `javascript_tool` per trovare `<select>` e triggerare `change` event.
+- React Select: usare `mousedown` event, non `click()`, per aprire dropdown.
+- Autocomplete location: richiedere `keypress` + `keydown` + native setter per ogni carattere + 2s wait per API asincrona.
+
+## FAQ PDF Scan
+
+Prima di compilare qualsiasi campo, scarica e analizza la FAQ del portale.
+
+```
+URL pattern: {base_url}/res/FAQ.pdf
+Estrazione:  curl -sLo /tmp/faq.pdf "{faq_url}" && pdftotext /tmp/faq.pdf -
+Parsing:     cerca sezione "campi obbligatori" / "dati necessari" / "documenti richiesti"
+```
+
+Costruisce la lista campi obbligatori per legge. Compila SOLO quelli. Ignora il resto (anagrafica statistica, campi opzionali, sezioni non obbligatorie).
+
+Se la FAQ non è disponibile all'URL `{base_url}/res/FAQ.pdf`, cerca link alternativi nella pagina di login o in piè di pagina prima di procedere senza FAQ.
+
+## Workflow End-to-End
+
+```
+INPUT: url portale, profilo utente (da pa-data-vault)
+
+1. FAQ SCAN
+   - Scarica FAQ PDF dal portale
+   - Estrae lista campi obbligatori per legge
+   - Mostra all'utente: "Compilerei N campi su M visibili — procedo?"
+
+2. NAVIGAZIONE
+   - Apri url portale con browser adapter (Tier 1 → 2 → 3)
+   - Login con credenziali da profilo pa-data-vault
+   - Naviga al form target
+
+3. COMPILAZIONE
+   - Per ogni campo obbligatorio:
+     a. Risolvi selettore con id-mapper (label-first → catalog → discovery manuale)
+     b. Compila valore dal profilo
+     c. Salva checkpoint ogni 5 campi e ogni cambio pagina
+   - Se HTTP 401 / redirect login → checkpoint + prompt resume
+
+4. SUBMIT
+   - Verifica riassunto form prima di submit
+   - Submit
+   - Cattura conferma / numero protocollo
+   - Elimina checkpoint
+
+OUTPUT: numero protocollo, screenshot conferma, log campi compilati
+```
+
+## Dipendenze
+
+- **pa-data-vault**: fornisce il profilo con CF, PEC, CIN, P.IVA, codici portali.
+- **pa-form-filler references/portals-catalog.yaml**: catalogo URL e mapping campi noti.
+- **ID mapper**: gestisce campi con ID dinamici Keycloak (sezione separata — task t1778606943593).
+- **Checkpoint**: gestisce session timeout e resume (sezione separata — task t1778606943771).
+
+## Portals Catalog
+
+Il file `references/portals-catalog.yaml` mappa portali a URL base, URL FAQ, provider auth e mapping campi noti. Viene aggiornato automaticamente dal id-mapper quando scopre nuovi selettori (auto-save).
+
+```yaml
+portals:
+  <nome>:
+    base_url: "https://..."
+    faq_url: "https://.../res/FAQ.pdf"
+    auth_provider: keycloak
+    session_timeout_min: 30
+    known_fields:
+      <label>: "<selettore CSS>"
+```
+
+Vedi `references/portals-catalog.yaml` per le entry esempio (soggiorniamoMilano, bdsr).
+
+## Error Handling
+
+| Errore | Causa | Azione |
+|--------|-------|--------|
+| FAQ non disponibile | URL 404 | Avvisa utente, procedi chiedendo conferma manuale dei campi |
+| Browser non disponibile | Nessun tier attivo | Stop + istruzioni per installare Playwright MCP o abilitare Computer Use |
+| Campo non trovato | ID dinamico non in catalog | Attiva discovery manuale id-mapper |
+| HTTP 401 / redirect login | Session timeout Keycloak | Salva checkpoint, prompt resume |
+| Submit fallito | Errore form / validazione PA | Mostra messaggio errore, lascia form aperto per correzione manuale |
