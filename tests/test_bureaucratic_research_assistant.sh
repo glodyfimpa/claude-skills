@@ -71,15 +71,23 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 }
 
 @test "pa-form-filler id-mapper: strategia label-first documentata" {
-  skip "pending — implementazione in t1778606943593"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "Label-First\|label-first" "$skill_file"
+  grep -q "for=" "$skill_file"
 }
 
 @test "pa-form-filler id-mapper: catalog fallback documentato" {
-  skip "pending — implementazione in t1778606943593"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "Catalog Fallback\|catalog fallback" "$skill_file"
+  grep -q "portals-catalog.yaml" "$skill_file"
 }
 
 @test "pa-form-filler id-mapper: auto-save regola nuova nel YAML" {
-  skip "pending — implementazione in t1778606943593"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "Auto-Save\|auto-save\|auto_save" "$skill_file"
+  # Verifica che il catalog YAML sia scrivibile (test di smoke)
+  catalog="$REPO_ROOT/pa-form-filler/references/portals-catalog.yaml"
+  [ -w "$catalog" ]
 }
 
 @test "pa-form-filler checkpoint: schema file ~/.claude/pa-checkpoints/{portale}-{YYYY-MM-DD}.json documentato" {

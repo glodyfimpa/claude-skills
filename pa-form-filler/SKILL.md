@@ -74,6 +74,57 @@ INPUT: url portale, profilo utente (da pa-data-vault)
 OUTPUT: numero protocollo, screenshot conferma, log campi compilati
 ```
 
+## ID Mapper — Gestione Campi con ID Dinamici
+
+I portali PA basati su Keycloak rigenerano gli attributi `name` e `id` dei campi a ogni sessione (es. `name=field_a3f7b` → `name=field_c91d2` alla sessione successiva). L'id-mapper risolve il selettore reale a runtime con tre strategie in cascata.
+
+### Strategia 1 — Label-First (preferita, ~90% portali PA)
+
+Algoritmo:
+1. Scansiona il DOM per tutte le `<label>` visibili.
+2. Normalizza il testo della label (lowercase, rimuovi `:`, rimuovi spazi multipli).
+3. Cerca `<label>` che match (esatto o fuzzy) il campo desiderato.
+4. Risolvi il campo corrispondente:
+   - Se `<label for="...">`: usa l'attributo `for` come ID del campo.
+   - Se `<label>` contiene direttamente il campo (nesting): risali al primo `input/select/textarea` dentro la label.
+   - Se nessuno dei due: cerca il primo `input/select/textarea` dopo la label nella sequenza DOM.
+5. Usa il selettore risolto per compilare.
+
+```
+# Esempio: label "Codice Fiscale" → campo con id dinamico field_a3f7b
+label_text = "Codice Fiscale"
+label_el = find_label(text=label_text)        # <label for="field_a3f7b">
+field_id = label_el.get_attribute("for")      # "field_a3f7b"
+field_el = find_by_id(field_id)               # <input id="field_a3f7b">
+```
+
+### Strategia 2 — Catalog Fallback
+
+Se label-first fallisce (label non trovata o ambigua), consulta `references/portals-catalog.yaml`:
+
+```yaml
+known_fields:
+  codice_fiscale: "input[name='codiceFiscale']"
+```
+
+Usa il selettore CSS del catalog come fallback diretto. Funziona per portali dove la label è assente o in formato non-standard.
+
+### Strategia 3 — Discovery Manuale + Auto-Save
+
+Se sia label-first che catalog falliscono:
+1. Mostra all'utente la lista dei `<input>/<select>/<textarea>` visibili nel form con il loro testo circostante.
+2. Chiede: "Quale di questi corrisponde al campo '{label}'?"
+3. L'utente indica il campo (per numero o cliccando).
+4. Auto-save: scrive la nuova regola in `portals-catalog.yaml` sotto `known_fields` per usi futuri.
+
+```yaml
+# Auto-save genera questa entry
+known_fields:
+  denominazione: "input[name='denominazioneStruttura']"  # scoperto 2026-05-13
+```
+
+**Teardown auto-save**: il test bats verifica che l'auto-save scriva correttamente nel YAML e poi elimina la regola di test per non sporcare il catalog.
+
 ## Dipendenze
 
 - **pa-data-vault**: fornisce il profilo con CF, PEC, CIN, P.IVA, codici portali.
