@@ -99,19 +99,26 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 }
 
 @test "pa-form-filler checkpoint: schema file ~/.claude/pa-checkpoints/{portale}-{YYYY-MM-DD}.json documentato" {
-  skip "pending — implementazione in t1778606943771"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "pa-checkpoints" "$skill_file"
+  grep -q "YYYY-MM-DD" "$skill_file"
 }
 
 @test "pa-form-filler checkpoint: trigger save ogni cambio pagina + ogni 5 campi documentato" {
-  skip "pending — implementazione in t1778606943771"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "cambio pagina\|ogni 5" "$skill_file"
 }
 
 @test "pa-form-filler checkpoint: detection HTTP 401 e redirect login documentata" {
-  skip "pending — implementazione in t1778606943771"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "401" "$skill_file"
+  grep -q "redirect\|login" "$skill_file"
 }
 
 @test "pa-form-filler checkpoint: cleanup automatico post-submit documentato" {
-  skip "pending — implementazione in t1778606943771"
+  skill_file="$REPO_ROOT/pa-form-filler/SKILL.md"
+  grep -q "Cleanup\|cleanup\|Elimina\|eliminato" "$skill_file"
+  grep -q "submit" "$skill_file"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

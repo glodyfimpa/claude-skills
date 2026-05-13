@@ -125,6 +125,76 @@ known_fields:
 
 **Teardown auto-save**: il test bats verifica che l'auto-save scriva correttamente nel YAML e poi elimina la regola di test per non sporcare il catalog.
 
+## Checkpoint — Gestione Session Timeout
+
+I portali PA basati su Keycloak scadono dopo ~30 minuti senza avvisare. Il checkpoint salva il progresso su disco e permette di riprendere dalla compilazione interrotta.
+
+### Schema File Checkpoint
+
+Percorso: `~/.claude/pa-checkpoints/{portale}-{YYYY-MM-DD}.json`
+
+Esempio: `~/.claude/pa-checkpoints/soggiorniamoMilano-2026-05-13.json`
+
+```json
+{
+  "portale": "soggiorniamoMilano",
+  "data": "2026-05-13",
+  "url_corrente": "https://soggiorniamoamilano.comune.milano.it/form/step2",
+  "pagina_corrente": 2,
+  "campi_compilati": {
+    "nome_struttura": "BnB Via Braida",
+    "tipo_struttura": "bed_and_breakfast"
+  },
+  "campi_rimanenti": ["cin", "codice_struttura_milano"],
+  "timestamp": "2026-05-13T14:23:00Z"
+}
+```
+
+### Trigger Save
+
+Salva il checkpoint automaticamente in questi momenti:
+- Ogni cambio pagina del form (step 1 → step 2 → ...)
+- Ogni 5 campi compilati con successo
+- Prima di operazioni lente (upload documenti, chiamate API portale)
+
+### Detection Session Timeout
+
+Rileva timeout in questi modi (in ordine di affidabilità):
+1. **HTTP 401** nella risposta del browser adapter.
+2. **Redirect a URL login**: URL corrente contiene `/login`, `/sso`, `/auth/realms`.
+3. **DOM "sessione scaduta"**: cerca testo "sessione scaduta", "session expired", "Accedi di nuovo" nella pagina.
+
+Quando rilevato: salva checkpoint immediato + interrompe compilazione + mostra prompt:
+
+```
+Sessione scaduta su {portale}. Checkpoint salvato.
+Vuoi riprendere dal campo '{ultimo_campo_compilato}'? [s/n]
+```
+
+### Resume Esplicito
+
+L'utente può richiedere resume in qualsiasi momento:
+
+```
+riprendi il form soggiorniamoMilano
+```
+
+Mostra lista checkpoint disponibili ordinati per data:
+```
+Checkpoint disponibili:
+1. soggiorniamoMilano-2026-05-13.json — pagina 2, 3 campi rimanenti (2026-05-13 14:23)
+2. bdsr-2026-05-10.json — pagina 1, 7 campi rimanenti (2026-05-10 09:15)
+Quale vuoi riprendere? [1/2/annulla]
+```
+
+### Cleanup Post-Submit
+
+Dopo submit andato a buon fine (pagina conferma / numero protocollo ricevuto):
+- Elimina `~/.claude/pa-checkpoints/{portale}-{YYYY-MM-DD}.json`
+- Log: "Checkpoint eliminato — sessione completata."
+
+Se submit fallisce, il checkpoint viene mantenuto per retry manuale.
+
 ## Dipendenze
 
 - **pa-data-vault**: fornisce il profilo con CF, PEC, CIN, P.IVA, codici portali.
