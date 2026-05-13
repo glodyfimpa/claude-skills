@@ -54,9 +54,8 @@ phase_block() {
 # ──────────────────────────────────────────────────────────────────────────────
 
 @test "Phase 3.5: sezione Self-evaluation gate esiste con header ### Phase 3.5" {
-  grep -q "^### Phase 3.5" "$SKILL_FILE"
-  block="$(phase_block "3.5")"
-  echo "$block" | grep -qiE "self.?eval"
+  # Header del paragrafo nello SKILL.md
+  grep -qiE "^### Phase 3\.5.*[Ss]elf.?[Ee]valuation" "$SKILL_FILE"
 }
 
 @test "Phase 3.5: 5 euristiche deterministiche con condizioni chiave" {
@@ -67,8 +66,8 @@ phase_block() {
   echo "$block" | grep -qE "1 occorrenza|1 occurrence"
   # ≥90% coverage
   echo "$block" | grep -qE "≥90%"
-  # partial coverage 50-89%
-  echo "$block" | grep -qE "50.?89%|partial coverage"
+  # partial coverage 50-89% (accetta en-dash o hyphen, o termine "Partial coverage")
+  echo "$block" | grep -qiE "50.{1,3}89%|partial coverage"
   # ≥3 in sessione singola
   echo "$block" | grep -qE "≥3"
 }

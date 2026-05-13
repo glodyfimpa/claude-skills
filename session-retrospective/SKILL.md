@@ -59,18 +59,29 @@ If a candidate from this session matches an existing IDEA, mark it as **"confirm
 
 ### Phase 1.7: Cross-check with installed skills (/find-skills)
 
-For each candidate that passed the Notion check (Phase 1.5), invoke the `/find-skills` skill to search for skills that cover the same use case.
+For each candidate that passed the Notion check (Phase 1.5), execute the cross-check with the skills marketplace. **This is not optional**: skipping it silently produces false "no skill found" reports (regression observed 2026-05-13).
 
-**Default: discard silently** if `/find-skills` finds a skill with ≥90% coverage of the use case. The candidate does not appear in the final report and is not mentioned to the user.
+**Step 1 — REQUIRED, do not skip**: run the bash command below for each candidate. Replace `<keywords>` with 2-4 words that capture the candidate's use case.
 
-**Surface instead of discarding** in the following four cases:
+```bash
+npx skills find "<keywords>"
+```
 
-- **Partial coverage (50-89%)**: present the candidate as "existing skill improvement" rather than a new skill. Explicitly indicate the gaps: what the found skill covers and what is missing relative to the observed pattern. Suggest extending the existing skill rather than creating a new one.
-- **High-frequency pattern (≥3 occurrences in the session)**: even if the match exceeds ≥90% and the candidate is discarded, add a separate note with the frequency data and a concrete action suggestion (e.g. "run that skill" or "automate the trigger"). Do not repeat "already covered" — just add the frequency value as an action signal.
-- **Name match with non-relevant domain**: if the found skill has a vaguely similar name but its description covers a different domain from the candidate, do not discard and do not treat as a partial match. Surface the ambiguity to the user with the two explicit options: (a) the candidate is a new separate skill, or (b) the existing skill should be updated to include the new domain. Do not make the decision autonomously.
-- **Existing skill seems outdated**: the description of the found skill does not mention the specific use case that emerged in the session, despite potential overlap. Surface it and let the user decide.
+The command returns a list of `owner/repo@skill` hits with install counts. If output is empty or all hits have <1K installs, write the literal line `No relevant skill found via skills.sh for "<keywords>"` and skip to Phase 2 for that candidate.
 
-If `/find-skills` finds nothing relevant, the candidate passes to Phase 2 without additional messages about the cross-check. Silence is the expected behavior for "all good".
+**Step 2 — REQUIRED when Step 1 returns hits with ≥1K installs**: estimate coverage of the top hit using `WebFetch` on `https://skills.sh/<owner>/<repo>/<skill>`. Prompt the fetch with: "Does this skill cover the use case '<candidate description>'? Quote relevant capabilities and gaps."
+
+**Step 3 — decision table** (coverage estimated from Step 2, reputation from install count of Step 1):
+
+| Coverage | Reputation | Azione obbligata |
+|----------|-----------|-------------------|
+| ≥90% | ≥1K installs | **discard silently** — non menzionare al utente, candidato non passa a Phase 2 |
+| ≥90% | <1K installs | **surface come "installazione suggerita"**, una riga in Phase 4 closing summary, niente menu |
+| 50–89% | qualsiasi | **save_idea come "extend X"** (mai come skill nuova standalone). La nota Notion menziona quale skill esistente estendere e i gap precisi. |
+| <50% o no hit | — | candidato passa a Phase 2 senza menzione cross-check |
+| Name match con dominio diverso | — | surface ambiguità con AskUserQuestion a 2 opzioni: (a) nuova skill separata, (b) estendi esistente includendo il nuovo dominio. Non decidere autonomamente. |
+
+The high-frequency pattern (≥3 occurrences in the session) is handled in Phase 3.5, not here. This phase is purely "does the marketplace already cover it?".
 
 ### Phase 2: Identify candidates
 
@@ -109,17 +120,53 @@ For each candidate, present:
 
 **Suggested priority**: based on estimated usage frequency × time saved per use
 
+### Phase 3.5: Self-evaluation gate (BEFORE Phase 4)
+
+Per ogni candidato passato attraverso Phase 1.7 + Phase 2 + Phase 3, decidi TU stesso (non l'utente) tra `create_now`, `save_idea`, `discard` applicando queste 5 euristiche deterministiche, in ordine:
+
+1. **≥2 occorrenze in <30 giorni AND non coperto da skill esistente** → `create_now` se la 2ª occorrenza è recente (≤7 giorni) e l'effort è basso (<2h), altrimenti `save_idea`.
+2. **1 occorrenza AND non coperto** → `discard`. Il pattern non è ancora confermato dalla regola del 3 (rule of three for abstractions); riproporrai alla 2ª occorrenza in retro futura.
+3. **≥2 occorrenze ma coperto ≥90% da skill esistente** → `discard` con menzione "installa skill X" in chiusura, non come domanda.
+4. **Partial coverage 50–89%** → `save_idea` come "extend skill X" (mai come standalone). La nota Notion documenta gap precisi.
+5. **Frequenza ≥3 occorrenze nella sessione singola** → `create_now` indipendentemente da copertura. La frequenza intra-sessione è segnale più forte della copertura: lo skill esistente non sta evidentemente venendo usato perché non match al contesto reale.
+
+**Output del gate**: per ogni candidato, scrivere a sé stessi una riga `candidate=<nome> → <create_now|save_idea|discard> (rule=<numero euristica>, reason=<motivo>)`.
+
+**Procedi a Phase 4 SOLO con candidati la cui auto-valutazione è `create_now` o `save_idea`**. I candidati `discard` sono raccolti in una lista che andrà in chiusura summary (Phase 4 closing), non in AskUserQuestion.
+
 ### Phase 4: Decide and act
 
 **OUTPUT RULE — critical**: Notion backlog updates go ONLY as rows in the existing `Status Implementazione` table. NEVER as new sections `# Idee da sessione [date]` or `## Nuove idee` / `## Bump priority` / `## Insegnamenti di metodo` / `## Note meta sulla sessione`.
 
-Ask the user what to do:
+#### Default: single-confirmation per candidate
 
-1. **Create now** → use skill-creator if available, otherwise write SKILL.md directly
-2. **Save as idea** → choose path:
-   - **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
-   - **Repetition of existing idea**: update ONLY the "Note" cell of the existing row, appending `+ Nª occorrenza (YYYY-MM-DD): [one-line context]`. Bump priority in same cell if Nª ≥ 3.
-3. **Discard** → no action
+**Default behavior** = single confirmation. Per ogni candidato sopravvissuto al gate di Phase 3.5 (auto-valutazione = `create_now` o `save_idea`), apri UNA AskUserQuestion con UNA singola opzione + "Annulla":
+
+- Auto-valutazione `create_now` → "Creo ora `<nome>` (effort: X, motivo: Y). Procedo?" — opzione singola "Procedo / Annulla".
+- Auto-valutazione `save_idea` → "Salvo `<nome>` come idea nel backlog Notion (riga nuova in `Status Implementazione`, status `💡 IDEA`). Procedo?" — opzione singola "Procedo / Annulla".
+
+**Riferimento user-level**: questo comportamento è prescritto dal memory file `~/.claude/projects/-Users-figlody-mac-Documents-3-RESOURCES-SKILLS-claude-skills/memory/feedback_retro_no_menu_theater.md` (cache personale dell'utente). Se il memory file esiste o `~/.claude/CLAUDE.md` ha convenzioni utente equivalenti, applicare il default single-confirmation senza eccezioni.
+
+Azioni concrete per `save_idea` (le 2 path Notion):
+- **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
+- **Repetition of existing idea**: update ONLY the "Note" cell of the existing row, appending `+ Nª occorrenza (YYYY-MM-DD): [one-line context]`. Bump priority in same cell if Nª ≥ 3.
+
+#### Caso eccezionale: menu 3-opzioni
+
+Il menu Create / Save / Discard a 3 opzioni è il **caso eccezionale**, non il default. Va aperto SOLO quando:
+- 2+ candidati di pari valore con direzioni davvero ortogonali (es. "skill nuova" vs "estendi esistente" e i dati di Phase 1.7 non bastano a scegliere); E
+- L'utente non ha convenzioni che prescrivono autonomia decisionale.
+
+In ogni altro caso, il menu 3-opzioni è anti-pattern (produce "presentation theater" — vedi memory file citato sopra).
+
+#### Closing summary obbligatoria
+
+A fine Phase 4, riporta in narrativa (NON AskUserQuestion):
+1. Lista candidati `create_now`/`save_idea` con esito conferma utente (procedo / annullato).
+2. Lista candidati `discard` da Phase 3.5 con motivo (rule + reason): formato "Valutato `<nome>`, scartato perché `<motivo>`".
+3. Eventuali skill da installare ("installa `<owner/repo@skill>`") per coverage ≥90% con <1K installs.
+
+#### Cross-project methodology lessons
 
 For cross-project methodology lessons (e.g. "memory → artifact promotion", "auto-mode does not bypass approvals"), these belong in `~/.claude/CLAUDE.md` via `/claude-md-management:revise-claude-md`, NOT in the Notion backlog. Surface them to the user as a separate list at end of retrospective output and suggest running revise-claude-md as next step.
 
