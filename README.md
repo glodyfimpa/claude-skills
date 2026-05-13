@@ -119,12 +119,13 @@ claude-skills/
 ├── pa-legal-clause-analyzer/
 │   └── SKILL.md                                     analisi clausole e esoneri su autocertificazioni PA
 ├── tests/
-│   └── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
+│   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
+│   └── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-11 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 + 23 bats tests. No plugin infrastructure.
+11 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 + 23 + 10 bats tests. No plugin infrastructure.
 
 ## License
 
