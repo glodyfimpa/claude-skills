@@ -133,21 +133,35 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 }
 
 @test "pa-legal-clause-analyzer: input multipli (URL, PDF locale, testo) documentati" {
-  skip "pending — implementazione in t1778606943948"
+  skill_file="$REPO_ROOT/pa-legal-clause-analyzer/SKILL.md"
+  grep -q "URL" "$skill_file"
+  grep -q "PDF locale\|PDF" "$skill_file"
+  grep -q "testo" "$skill_file"
 }
 
 @test "pa-legal-clause-analyzer: pattern normativi (art. X, comma Y D.L. Z/YYYY) documentati" {
-  skip "pending — implementazione in t1778606943948"
+  skill_file="$REPO_ROOT/pa-legal-clause-analyzer/SKILL.md"
+  grep -q "Pattern A\|art\." "$skill_file"
+  grep -q "D\.L\.\|D\.Lgs\." "$skill_file"
+  grep -q "comma" "$skill_file"
 }
 
 @test "pa-legal-clause-analyzer: cross-check profilo pa-data-vault documentato" {
-  skip "pending — implementazione in t1778606943948"
+  skill_file="$REPO_ROOT/pa-legal-clause-analyzer/SKILL.md"
+  grep -q "pa-data-vault" "$skill_file"
+  grep -q "[Ee]sonero\|[Ee]sonerata" "$skill_file"
 }
 
 @test "pa-legal-clause-analyzer: output tabella markdown con colonne Clausola/Obbligatoria?/Norma/Valore suggerito" {
-  skip "pending — implementazione in t1778606943948"
+  skill_file="$REPO_ROOT/pa-legal-clause-analyzer/SKILL.md"
+  grep -q "Clausola" "$skill_file"
+  grep -q "Obbligatoria" "$skill_file"
+  grep -q "Norma citata\|Norma" "$skill_file"
+  grep -q "Valore suggerito" "$skill_file"
 }
 
 @test "pa-legal-clause-analyzer: limite cita solo norme presenti nel documento documentato" {
-  skip "pending — implementazione in t1778606943948"
+  skill_file="$REPO_ROOT/pa-legal-clause-analyzer/SKILL.md"
+  grep -q "[Ll]imite esplicito\|Non inventare norme\|Non fa interpretazione" "$skill_file"
+  grep -q "fallback\|Fallback" "$skill_file"
 }
