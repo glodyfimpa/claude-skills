@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "prd_source": {
+    "provider": "local-file"
+  },
+  "task_storage": {
+    "provider": "local-file"
+  }
+}

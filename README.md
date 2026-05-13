@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Eight standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, and agent-team orchestration. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Eleven standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, agent-team orchestration, and PA bureaucratic assistance (form filling, data vault, legal clause analysis). Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -22,6 +22,9 @@ Eight standalone skills covering GTD planning, energy-adaptive scheduling, Airbn
 | [bash-portability-linter](./bash-portability-linter/) | Scans shell scripts for constructs that break on macOS bash 3.2, BSD coreutils, and Git Bash on Windows. Seven rules (BP001-BP007): bash 4+ case modification, associative arrays, `mapfile`, `sed -i` BSD/GNU split, `awk` multi-char RS, `readlink -f`, `date --iso-8601`. Default text output or `--json`. |
 | [session-retrospective](./session-retrospective/) | End-of-session analysis to identify repeatable patterns that could become skills, commands, or plugins. Cross-checks against Notion backlog to avoid duplicates and confirm recurring ideas. |
 | [agent-teams-playbook](./agent-teams-playbook/) | Operational reference for Claude Code agent teams (multiple coordinated sessions with shared task list and mailbox). Decision matrix vs subagents/Explore/single session, sizing rules (3–5 teammates, 5–6 tasks each), spawn prompt template, plan-approval gate for risky work, anti-patterns, cleanup discipline, and a lessons-learned section that grows with each team executed (rule-of-three promotion). |
+| [pa-data-vault](./pa-data-vault/) | Gestisce dati identificativi (CF, PEC, CIN, P.IVA, codici portali) per strutture BnB e profilo personale. Rileva campi mancanti ([da completare]), salva nuovi valori, restituisce un bundle strutturato alle altre skill PA. |
+| [pa-form-filler](./pa-form-filler/) | Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use). Scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici Keycloak con strategia label-first + catalog fallback, salva progressi con checkpoint per resistere a timeout di sessione. |
+| [pa-legal-clause-analyzer](./pa-legal-clause-analyzer/) | Analizza autocertificazioni PA italiane, estrae riferimenti normativi (art. X, comma Y D.L. Z/YYYY), incrocia con il profilo pa-data-vault per identificare clausole di esonero applicabili. Output: tabella markdown Clausola/Obbligatoria?/Norma/Valore suggerito. |
 
 ## Usage
 
@@ -109,11 +112,19 @@ claude-skills/
 │       └── fixtures/                                one clean + 7 per-rule violation samples
 ├── session-retrospective/
 │   └── SKILL.md                                     end-of-session automation discovery
+├── pa-data-vault/
+│   └── SKILL.md                                     vault dati identificativi per portali PA
+├── pa-form-filler/
+│   └── SKILL.md                                     compilazione form PA con browser automation
+├── pa-legal-clause-analyzer/
+│   └── SKILL.md                                     analisi clausole e esoneri su autocertificazioni PA
+├── tests/
+│   └── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-7 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 bats tests. No plugin infrastructure.
+11 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 + 23 bats tests. No plugin infrastructure.
 
 ## License
 
