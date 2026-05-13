@@ -145,7 +145,7 @@ Per ogni candidato passato attraverso Phase 1.7 + Phase 2 + Phase 3, decidi TU s
 - Auto-valutazione `create_now` → "Creo ora `<nome>` (effort: X, motivo: Y). Procedo?" — opzione singola "Procedo / Annulla".
 - Auto-valutazione `save_idea` → "Salvo `<nome>` come idea nel backlog Notion (riga nuova in `Status Implementazione`, status `💡 IDEA`). Procedo?" — opzione singola "Procedo / Annulla".
 
-**Riferimento user-level**: questo comportamento è prescritto dal memory file `~/.claude/projects/-Users-figlody-mac-Documents-3-RESOURCES-SKILLS-claude-skills/memory/feedback_retro_no_menu_theater.md` (cache personale dell'utente). Se il memory file esiste o `~/.claude/CLAUDE.md` ha convenzioni utente equivalenti, applicare il default single-confirmation senza eccezioni.
+**Riferimento user-level**: questo comportamento è prescritto dal memory file `feedback_retro_no_menu_theater.md` (cache personale dell'utente, tipicamente in `~/.claude/projects/<project-id>/memory/`). Se il memory file esiste o `~/.claude/CLAUDE.md` ha convenzioni utente equivalenti (es. "delega esplicita = esegui, non chiedere"), applicare il default single-confirmation senza eccezioni.
 
 Azioni concrete per `save_idea` (le 2 path Notion):
 - **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
