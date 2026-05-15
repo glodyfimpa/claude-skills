@@ -69,6 +69,8 @@ npx skills find "<keywords>"
 
 The command returns a list of `owner/repo@skill` hits with install counts. If output is empty or all hits have <1K installs, write the literal line `No relevant skill found via skills.sh for "<keywords>"` and skip to Phase 2 for that candidate.
 
+**Environment-blocked fallback (NOT the same as "no hit")**: if `npx skills find` is denied by the host security policy / auto-mode classifier — i.e. the command never ran, as opposed to running and returning nothing — do NOT treat this as a blocking step and do NOT attempt to edit permission files to route around the block. Write the literal line `Cross-check marketplace non eseguibile in questo ambiente (comando negato dalla policy) — procedo senza` and proceed to Phase 2 for that candidate, exactly as you would on a "no hit". The marketplace check is one filter among several (Phase 1.5 Notion backlog + Phase 2 repeatability + Phase 3.5 rule-of-three already gate the candidate); degrading gracefully on it is correct, stalling the whole retrospective is not. To make the command runnable on this machine, the user can add `Bash(npx skills find:*)` to their `~/.claude/settings.json` allowlist — surface this as a one-line suggestion in the Phase 4 closing summary, never act on it yourself.
+
 **Step 2 — REQUIRED when Step 1 returns hits with ≥1K installs**: estimate coverage of the top hit using `WebFetch` on `https://skills.sh/<owner>/<repo>/<skill>`. Prompt the fetch with: "Does this skill cover the use case '<candidate description>'? Quote relevant capabilities and gaps."
 
 **Step 3 — decision table** (coverage estimated from Step 2, reputation from install count of Step 1):
