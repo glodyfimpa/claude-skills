@@ -235,14 +235,94 @@ machines without the `npx` allowlist entry (notably: anyone who clones the repo)
 
 ---
 
+## TC-08 — Backlog source is the FILESYSTEM VAULT, not Notion (Phase 0 + Phase 1.5 read)
+
+**Setup**
+
+The user runs `/session-retrospective` at the end of a work session. The skill needs to (a) health-check the
+backlog and (b) cross-check candidates against existing ideas/published skills.
+
+The backlog lives as a markdown file in the Obsidian vault at
+`~/Documents/brain/areas/ai-automation/backlog-skill.md` (migrated from Notion on 2026-06-03). There is a stale
+Notion page with the same content, but it is now historical/read-only and must NOT be the source of truth.
+
+**Expected**
+
+In Phase 0 (health check) and Phase 1.5 (cross-check), Claude reads the backlog from the VAULT FILE using the
+Read tool on `~/Documents/brain/areas/ai-automation/backlog-skill.md`. It does NOT `notion-fetch` or
+`notion-search` for the page "Skills & Sub-agents per Claude". The health-check limits (≤ N lines, no
+`# Idee da sessione` sections) apply to the vault file.
+
+**Failure modes (FAIL)**
+
+- Calling `notion-fetch` / `notion-search` to read the backlog
+- Instructing the user to "search Notion for the page"
+- Reading Notion as primary and the vault as fallback (wrong direction — vault is primary)
+
+**Pass criterion**
+
+SKILL.md Phase 0 and Phase 1.5 reference the vault file path
+`~/Documents/brain/areas/ai-automation/backlog-skill.md` as the backlog source, read via the Read tool.
+No instruction to fetch/search Notion for the backlog remains anywhere in the skill.
+
+**Why this case exists**
+
+The backlog "Skills & Sub-agents per Claude" was migrated from Notion to the filesystem vault on 2026-06-03 as
+part of the Second Brain Migration (the user is moving "thinking" out of Notion). The skill previously read
+from Notion (Phase 0 fetch, Phase 1.5 search), which kept generating drift: every retrospective wrote new rows
+to Notion that then had to be re-migrated to the vault by hand. Redirecting the READ side to the vault closes
+half the loop; TC-09 closes the WRITE side.
+
+---
+
+## TC-09 — Backlog writes go to the VAULT FILE, not Notion (Phase 4 write)
+
+**Setup**
+
+Phase 3.5 self-evaluates a candidate `bnb-shopping-researcher` as `save_idea` (new idea). Another candidate
+`atomic-project-merge` matches an existing `💡 IDEA` row and is its 3rd occurrence.
+
+**Expected**
+
+In Phase 4, Claude edits the vault file `~/Documents/brain/areas/ai-automation/backlog-skill.md`:
+- New idea: adds ONE row to the `Status Implementazione` markdown table (status `💡 IDEA`, Note cell ≤ 200 chars)
+  using the Edit tool on the vault file.
+- Repetition: updates ONLY the existing row's Note cell, appending `+ Nª occorrenza (YYYY-MM-DD): [one-liner]`,
+  bumping priority since Nª ≥ 3.
+
+Claude does NOT call `notion-update-page` / `notion-create-pages`. It updates the `updated:` frontmatter date of
+the vault file. No new top-level sections are created (the TC-06 anti-patterns still apply to the markdown table).
+
+**Failure modes (FAIL)**
+
+- Calling any `notion-*` write tool to update the backlog
+- Writing to both Notion and the vault (dual-write reintroduces drift)
+- Forgetting to bump the `updated:` frontmatter date
+- Creating new sections instead of table rows (TC-06 regression)
+
+**Pass criterion**
+
+SKILL.md Phase 4 instructs writing the two `save_idea` paths (new row / repetition) into the
+`Status Implementazione` table of `~/Documents/brain/areas/ai-automation/backlog-skill.md` via the Edit tool,
+and bumping the `updated:` frontmatter. No `notion-*` write instruction for the backlog remains. The skill also
+contains a one-line note that the old Notion page is historical/read-only and must not be written to.
+
+**Why this case exists**
+
+Companion to TC-08. The original Phase 4 wrote rows to the Notion table, which is exactly the source of the
+drift the Second Brain Migration is eliminating. This case locks the write target to the vault file so the
+backlog has a single source of truth on the filesystem.
+
+---
+
 ## How to run this eval
 
-1. Read `SKILL.md` Phase 1.7 and Phase 4 sections (when they exist)
+1. Read `SKILL.md` Phase 0, Phase 1.5, Phase 1.7 and Phase 4 sections (when they exist)
 2. For each case, verify the pass criterion
 3. Mark pass/fail for every TC
 4. A fail means SKILL.md must be updated before merging
 
-The skill is "green" when all 7 cases pass.
+The skill is "green" when all 9 cases pass.
 
 | ID | Description | Pass |
 |----|-------------|------|
@@ -253,3 +333,5 @@ The skill is "green" when all 7 cases pass.
 | TC-05 | No match → pass through silently | [ ] |
 | TC-06 | Output rules: rows not sections | [ ] |
 | TC-07 | `npx` blocked by policy → degrade, no stall/self-modify | [x] (RED→GREEN verified 2026-05-15) |
+| TC-08 | Backlog READ source = vault file, not Notion | [x] (RED→GREEN verified 2026-06-03) |
+| TC-09 | Backlog WRITE target = vault file, not Notion | [x] (RED→GREEN verified 2026-06-03) |
