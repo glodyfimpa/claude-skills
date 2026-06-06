@@ -66,6 +66,80 @@ Apply these filters to ALL queries:
 
 **If `task_tool = none`:** Skip this section. All data will be collected conversationally.
 
+## Vault Filesystem Mode
+
+This section applies **only when `notes_tool = vault_filesystem`** in config. It defines how Phase 6 (Summary) writes the weekly review to the Obsidian vault on disk instead of Notion.
+
+**Required config fields when `notes_tool = vault_filesystem`:**
+- `vault_path`: absolute path to the vault root (e.g. `~/Documents/brain`)
+- `helpers_path`: absolute path to the project directory containing the Python helpers and venv (e.g. `~/Documents/1.PROJECTS/SECOND_BRAIN_MIGRATION`)
+- `mode` (optional): `vault_only` (default) or `with_legacy_fallback`. Resolved at runtime via `read_life_os_mode()` (see "Source resolution" below).
+
+**Source resolution (M1 front-end switch, 2026-06-06):** the data source for each category is decided by `<vault_path>/system/source_resolution.py`. Read `mode` from config with `read_life_os_mode()`, then call `resolve_source(vault_has_category, mode)`:
+- `vault_only` (current setup): always reads from the vault. The thought lives in the vault; structured DBs stay on Notion, so no per-category fallback fires.
+- `with_legacy_fallback`: reads from the vault when the category exists there, otherwise from Notion (soft transition). Not active in the current config.
+
+With the default `vault_only`, the save-actions below already write to the vault — the resolver makes that contract explicit and reversible (flip `mode` in config, no code change).
+
+**Path convention:**
+- Weekly file: `<vault_path>/weekly/YYYY-Www.md` (ISO week, e.g. `2026-W21.md`)
+
+The weekly file MUST already exist. If missing, fall back to chat mode and tell the user the file isn't there yet.
+
+### Action A — Save Phases 1+2+3 (Quick Capture, Inbox Processed, Projects)
+
+Run from `<helpers_path>`:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from life_os.weekly_review import append_weekly_review_sections, WeeklyReviewPayload, ProjectStatus
+
+append_weekly_review_sections(
+    Path('<vault_path>/weekly/YYYY-Www.md'),
+    WeeklyReviewPayload(
+        quick_capture=['<item 1>', '<item 2>'],
+        inbox_processed=['<task A → action>', '<task B → action>'],
+        projects=[
+            ProjectStatus(nome='<project>', status='<Active|Stand By|Archive>', quarter='<Q1-Q4>', note='<short note>'),
+        ],
+    ),
+)
+"
+```
+
+### Action B — Save Phases 4+5 (Quarterly Progress + Week Ahead)
+
+Run after Action A:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from life_os.planning_review_system import append_planning_review_sections, PlanningReviewPayload
+
+append_planning_review_sections(
+    Path('<vault_path>/weekly/YYYY-Www.md'),
+    PlanningReviewPayload(
+        quarter='Q<1-4>',
+        completamento='<NN>%',
+        giorni_rimanenti=<int>,
+        risultato_forte='<short sentence>',
+        spillover='<projects spilling to next quarter or — >',
+        range_date='<DD MMM – DD MMM>',
+        priorita_1='<from Phase 5: one decision>',
+        priorita_2='<supporting priority>',
+        priorita_3='<supporting priority>',
+        numero='<from Phase 5: one metric>',
+        perche='<from Phase 5: one why>',
+    ),
+)
+"
+```
+
+Conflict handling: both helpers raise `ValueError` if the corresponding section is already present with different content. If that happens, tell the user the weekly review section already exists and ask whether to keep the existing one (the skill does not overwrite).
+
 ## Workflow (6 Phases, 30 min total)
 
 ### Phase 1: Quick Capture (3 min)
@@ -146,7 +220,9 @@ Apply the Golden Rule — ask user:
 
 ### Phase 6: Summary (2 min)
 
-**If `notes_tool != none`:** Create a page under the output page (from config `output_page_url`):
+**If `notes_tool = vault_filesystem`:** See "Vault Filesystem Mode" section above. Run **Action A** first (Phases 1+2+3 → `WeeklyReviewPayload`), then **Action B** (Phases 4+5 → `PlanningReviewPayload`) on the same weekly file. Both append distinct sections; they don't conflict with each other.
+
+**If `notes_tool != none` (Notion or other):** Create a page under the output page (from config `output_page_url`):
 
 **If `notes_tool = none`:** Present the complete review summary in chat as formatted markdown. Tell the user: "Here's your weekly review summary. You can copy it wherever you'd like."
 

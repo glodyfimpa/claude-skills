@@ -63,6 +63,140 @@ If `task_tool != none`, read all database IDs from config frontmatter:
 
 If `task_tool = none`, skip — data will be collected from the user directly.
 
+## Vault Filesystem Mode
+
+This section applies **only when `notes_tool = vault_filesystem`** in config. It defines how the 4 save-actions of this skill (Phase 1 Step 5, Phase 2 Step 5, Phase 3 Step 4, Phase 4 Step 6) write to the Obsidian vault on disk instead of Notion.
+
+**Required config fields when `notes_tool = vault_filesystem`:**
+- `vault_path`: absolute path to the vault root (e.g. `~/Documents/brain`)
+- `helpers_path`: absolute path to the directory containing the Python helpers and the project venv (e.g. `~/Documents/1.PROJECTS/SECOND_BRAIN_MIGRATION`)
+- `mode` (optional): `vault_only` (default) or `with_legacy_fallback`. Resolved at runtime via `read_life_os_mode()` (see "Source resolution" below).
+
+**Source resolution (M1 front-end switch, 2026-06-06):** the data source for each category is decided by `<vault_path>/system/source_resolution.py`. Read `mode` from config with `read_life_os_mode()`, then call `resolve_source(vault_has_category, mode)`:
+- `vault_only` (current setup): always reads from the vault. The thought lives in the vault; structured DBs stay on Notion, so no per-category fallback fires.
+- `with_legacy_fallback`: reads from the vault when the category exists there, otherwise from Notion (soft transition). Not active in the current config.
+
+With the default `vault_only`, the four save-actions below already write to the vault — the resolver makes that contract explicit and reversible (flip `mode` in config, no code change).
+
+**Path conventions:**
+- Daily file: `<vault_path>/daily/plans/YYYY-MM-DD-daily.md`
+- Weekly file: `<vault_path>/weekly/YYYY-Www.md`
+
+The daily file MUST already exist (created by an earlier morning plan or manually) — these helpers only APPEND sections, they don't create files. If the file is missing, fall back to chat mode (`notes_tool = none` behavior) and tell the user the file isn't there yet.
+
+### Action 1 — Save morning plan (Phase 1 Step 5)
+
+After collecting the morning plan dialog inputs, run this bash command from `<helpers_path>`:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from datetime import date
+from life_os.morning_plan import append_morning_plan_section, MorningPlanPayload, Block
+
+append_morning_plan_section(
+    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    MorningPlanPayload(
+        data=date(YYYY, MM, DD),
+        energia_mattutina=<1-5>,
+        contesto='<optional note or — >',
+        priorita_settimanale='<from weekly review>',
+        tipo_settimana='<Sprint A | Sprint B | Standard>',
+        email_last_check='<ISO timestamp or — >',
+        blocks=[
+            Block(orario='HH:MM-HH:MM', descrizione='<block name>', tipo='<Deep|Admin|Break|Lunch|Meeting>'),
+            # ... one Block per planned block
+        ],
+        daily_goal='<verdict-style sentence>',
+    ),
+)
+"
+```
+
+If the helper raises `ValueError` ("section already exists with different content"), tell the user the morning plan was already saved today and ask whether to keep the existing one or overwrite (overwrite requires manual edit — don't re-run the helper).
+
+### Action 2 — Save afternoon check-in (Phase 2 Step 5)
+
+After the mid-day dialog, run:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from life_os.time_energy_manager import append_afternoon_check_section, AfternoonCheckPayload
+
+append_afternoon_check_section(
+    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    AfternoonCheckPayload(
+        skipped=False,
+        energia_pomeriggio=<1-5>,
+        tasks_completate='<comma list>',
+        tasks_rimanenti='<comma list or —>',
+        pivot_necessario=False,
+        note='<optional or None>',
+    ),
+)
+"
+```
+
+If the user skipped the mid-day check, pass `AfternoonCheckPayload(skipped=True)` (no other fields needed).
+
+### Action 3 — Save pivot (Phase 3 Step 4)
+
+A pivot updates the SAME `### Afternoon Check-in` section. Use the same helper as Action 2 with `pivot_necessario=True` and put the pivot reason + removed/added items in the `note` field:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from life_os.time_energy_manager import append_afternoon_check_section, AfternoonCheckPayload
+
+append_afternoon_check_section(
+    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    AfternoonCheckPayload(
+        skipped=False,
+        energia_pomeriggio=<current energy 1-5>,
+        tasks_completate='<comma list>',
+        tasks_rimanenti='<comma list>',
+        pivot_necessario=True,
+        note='Pivot at HH:MM: <reason>. Removed <X>, added <Y>.',
+    ),
+)
+"
+```
+
+If Action 2 already ran today, the helper raises `ValueError` on conflict. In that case, ask the user to manually edit the afternoon section (the skill doesn't overwrite).
+
+### Action 4 — Save evening close (Phase 4 Step 6)
+
+After the evening dialog:
+
+```bash
+cd <helpers_path> && .venv/bin/python -c "
+import sys; sys.path.insert(0, 'scripts')
+from pathlib import Path
+from life_os.evening_close import append_evening_close_section, EveningClosePayload
+
+append_evening_close_section(
+    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    EveningClosePayload(
+        energia_sera=<1-5>,
+        completati='<comma list>',
+        non_completati='<comma list or —>',
+        verdict='<the verdict sentence from Step 4>',
+        nota_domani='<optional or None>',
+    ),
+)
+"
+```
+
+Same conflict semantics as the other actions: if a different evening close exists already, the helper raises `ValueError` and the skill should not retry — tell the user and let them edit manually.
+
+### Read-back actions (Phase 1 Step 1, Phase 2 Step 2, Phase 3 Step 2, Phase 4 Step 1)
+
+These read sections from the daily file (e.g., "Read today's Plan page"). Use the standard `Read` tool on `<vault_path>/daily/plans/YYYY-MM-DD-daily.md` and grep for the relevant heading (`## Plan `, `### Afternoon Check-in`, `### Evening Close`). For weekly review lookups, look in `<vault_path>/weekly/YYYY-Www.md`.
+
 ## Critical Filters
 
 Skip if `task_tool = none`.
@@ -200,7 +334,8 @@ If the user modifies, adapt. If confirmed, proceed.
 
 ### Step 5: Save plan
 
-- If `notes_tool != none`: Create a page under the output page (from config `output_page_url`) with:
+- If `notes_tool = vault_filesystem`: See "Vault Filesystem Mode" section above → **Action 1 — Save morning plan**. Skip the rest of this step.
+- If `notes_tool != none` (Notion or other): Create a page under the output page (from config `output_page_url`) with:
 
   - **Title:** `Plan [date in configured language]`
   - **Content:** the complete plan with blocks, energy, weekly priorities
@@ -297,7 +432,8 @@ If today IS blocked by a commitment:
 
 ### Step 5: Save check-in
 
-- If `notes_tool != none`: Update today's Plan page, "Afternoon Check-in" section:
+- If `notes_tool = vault_filesystem`: See "Vault Filesystem Mode" section above → **Action 2 — Save afternoon check-in**. Skip the rest of this step.
+- If `notes_tool != none` (Notion or other): Update today's Plan page, "Afternoon Check-in" section:
 
   ```markdown
   ### Afternoon Check-in
@@ -346,7 +482,8 @@ Compare:
 
 If the user changes the plan:
 
-- If `notes_tool != none`: Update the daily page with the new blocks. Add note:
+- If `notes_tool = vault_filesystem`: See "Vault Filesystem Mode" section above → **Action 3 — Save pivot**. Skip the rest of this step.
+- If `notes_tool != none` (Notion or other): Update the daily page with the new blocks. Add note:
   > "Pivot at [time]: [reason]. Removed [X], added [Y]."
 
 - If `notes_tool = none`: Present the updated plan in chat as formatted markdown, including the pivot note.
@@ -393,7 +530,8 @@ If yes, note it. If no, skip.
 
 ### Step 6: Save evening close
 
-- If `notes_tool != none`: Update today's Plan page, "Evening Close" section:
+- If `notes_tool = vault_filesystem`: See "Vault Filesystem Mode" section above → **Action 4 — Save evening close**. Skip the rest of this step.
+- If `notes_tool != none` (Notion or other): Update today's Plan page, "Evening Close" section:
 
   ```markdown
   ### Evening Close
