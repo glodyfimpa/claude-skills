@@ -93,11 +93,41 @@ sub-agente può già confrontare la N-1 trascritta (Fase 3).
 
 Per ogni lezione del gruppo, nell'ordine del tracker:
 
-1. Apri la lezione cliccando il **titolo esatto** (runbook, Passo 1).
+1. Apri la lezione cliccando il **titolo esatto** (runbook, Passo 1). Due viste DOM diverse:
+   la **home corso** (`?source=courses` senza `/posts/`) mostra l'albero completo di tutti i
+   moduli → il click-per-titolo funziona per qualsiasi lezione. **Dentro** una lezione
+   (`/posts/<id>`) l'indice laterale si restringe al modulo corrente → per una lezione di un
+   altro modulo torna prima alla home.
 2. **Cattura il testo allegato** della lezione (template, note): spesso è già metà del
-   valore e costa zero (runbook, Passo 1).
-3. Premi play, leggi l'hash video dalla rete (`index-f1` → `cts-<HASH>_`, runbook Passo 2).
+   valore e costa zero (runbook, Passo 1). Non tutte le lezioni ce l'hanno (molte sono solo
+   video): se assente, il valore è tutto nella trascrizione.
+3. Leggi l'hash video (`cts-<HASH>_`). ⚠️ **Punto fragile, verificato nel collaudo 006-010.**
 4. Scarica l'audio: `python3 fetch_audio.py NNN <HASH>` → `audio/NNN.ts`.
+
+> ⚠️ **La cattura dell'hash è il punto debole del protocollo.** Il player HLS **precarica
+> ~230 manifest** (tutti i video del corso) all'apertura, quindi "l'ultimo `master.m3u8`
+> richiesto" NON è la lezione corrente. Nel collaudo 006-010 solo **2 hash su 5** erano
+> corretti col metodo automatico. Conseguenze pratiche:
+> - L'unico hash isolabile in modo pulito da `read_network_requests` è quello della **PRIMA**
+>   lezione aperta in una sessione di rete vergine (prima che il precaricamento completi).
+> - `read_network_requests(clear:true)` può sforare i token (skill `mcp-tokens-overflow-handler`).
+> - La `performance.getEntriesByType('resource')` vede le risorse anche pre-tracking, ma
+>   restituisce TUTTI i manifest precaricati, non isola la lezione corrente.
+> - **Metodo robusto da definire** (TODO build): una mappa `postId → hash` (il postId è nell'URL
+>   della lezione, stabile), o leggere l'url da hls.js. Finché non c'è, la cattura hash va fatta
+>   con cautela e SEMPRE validata (gate sotto).
+
+> ⚠️ **GATE coerenza hash — obbligatorio prima di trascrivere (Fase 1 → Fase 2).** Un hash
+> sbagliato scarica il video di un'altra lezione. Due controlli a costo quasi zero che lo
+> rivelano:
+> 1. **Durata**: `ffprobe -v error -show_entries format=duration -of csv=p=0 audio/NNN.ts`.
+>    Se la durata è incongrua con una lezione tematica (es. 74 min per una lezione corta, o
+>    2 min), l'hash è quasi certamente sbagliato → riscarica, non trascrivere.
+> 2. **Coerenza titolo↔contenuto**: dopo la trascrizione, le prime righe del transcript
+>    devono parlare dell'argomento del titolo. Nel collaudo la 006 aveva durata plausibile
+>    (13 min) ma era il video sbagliato ("obiettivo del corso" invece di "Le date HOT") — solo
+>    la trascrizione l'ha rivelato. Se il contenuto non combacia col titolo: hash sbagliato,
+>    scarta la sintesi, riscarica con hash corretto.
 
 > ⚠️ **Un solo Chrome.** Mai parallelizzare la Fase 1 con sub-agenti: collisione
 > Playwright/Chrome (vedi environment-macos). I download `curl` di `fetch_audio.py` sono già
