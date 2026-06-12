@@ -52,6 +52,10 @@ Tutto vive in:
 └── tracker-lezioni.md        # macchina a stati (checkbox + contatore)
 ```
 
+I percorsi `references/...` citati sotto sono relativi a questa skill (accanto allo
+`SKILL.md`), non alla cartella di lavoro: `references/golden-set.md` è il riferimento
+qualità per la Fase 3.
+
 **`analisi-lezioni/runbook.md` è la fonte di verità per i dettagli tecnici** (selettori del
 click per titolo, `read_network_requests` per l'hash, costanti Location/Product/CDN, nota
 account). Questa skill orchestra il protocollo e applica i gate; per i comandi browser
@@ -109,9 +113,11 @@ Per ogni `audio/NNN.ts`: `./transcribe.sh NNN` → `transcripts/NNN.txt`.
 
 ### Fase 3 · CONFRONTA — parallelizzabile via sub-agenti
 
-Un sub-agente indipendente per lezione trascritta. Ogni sub-agente legge
-`transcripts/NNN.txt` + il testo allegato della Fase 1, e produce `sintesi/NNN.md` con questa
-struttura fissa:
+Un sub-agente indipendente per lezione trascritta. **Prima di abbozzare**, ogni sub-agente
+legge `references/golden-set.md` (criteri di qualità + due esempi calibrati dal pilot: il
+pattern "CORSO IMPRECISO con fonte" della 001 e la marcatura calibrata non-allarmista della
+002). Poi legge `transcripts/NNN.txt` + il testo allegato della Fase 1, e produce
+`sintesi/NNN.md` con questa struttura fissa:
 
 ```markdown
 # NNN — <titolo lezione>
