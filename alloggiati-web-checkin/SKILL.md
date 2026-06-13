@@ -20,7 +20,7 @@ Per questo il motore è **Chrome MCP** (`mcp__Claude_in_Chrome__*`), non Playwri
 
 ## Niente checkpoint, sessione filata
 
-A differenza di altri form PA, qui **non** serve la machinery di checkpoint/resume. Il portale è un ASP.NET datato con sessione fragile che scade in fretta, e l'intero invio dura ~25 minuti. La strategia corretta è l'opposta del checkpoint: fai tutto in una sequenza unica e veloce (login → inserimento → invia → verifica), senza pause lunghe. Salvare stato intermedio inviterebbe proprio le pause che fanno cadere la sessione.
+A differenza della skill generica `pa-form-filler`, qui **non** serve la machinery di checkpoint/resume. Il portale è un ASP.NET datato con sessione fragile che scade in fretta, e l'intero invio dura ~25 minuti. La strategia corretta è l'opposta del checkpoint: fai tutto in una sequenza unica e veloce (login → inserimento → invia → verifica), senza pause lunghe. Salvare stato intermedio inviterebbe proprio le pause che fanno cadere la sessione.
 
 ## I cinque stati del flusso
 
@@ -40,8 +40,8 @@ A differenza di altri form PA, qui **non** serve la machinery di checkpoint/resu
                      │
 [4] COMPILA    Full auto su Chrome MCP (tecniche → references/portal-map.md):
                Step1 (capo o singolo, con campi documento) → "Conferma" →
-               Step2 (membri del gruppo, solo anagrafica, ripeti "Aggiungi" per ognuno) →
-               "Invia Tutti".
+               Step2 (membri del gruppo, solo anagrafica, ripeti "Aggiungi" per ognuno;
+               saltato del tutto per l'Ospite Singolo, che non ha membri) → "Invia Tutti".
                      │
 [5] PROVA      Verifica in Analisi.aspx ("Lista delle schedine inviate oggi" = prova
                immediata della trasmissione). Ricorda all'utente: la ricevuta PDF NON è
