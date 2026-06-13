@@ -25,6 +25,7 @@ Eleven standalone skills covering GTD planning, energy-adaptive scheduling, Airb
 | [pa-data-vault](./pa-data-vault/) | Gestisce dati identificativi (CF, PEC, CIN, P.IVA, codici portali) per strutture BnB e profilo personale. Rileva campi mancanti ([da completare]), salva nuovi valori, restituisce un bundle strutturato alle altre skill PA. |
 | [pa-form-filler](./pa-form-filler/) | Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use). Scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici Keycloak con strategia label-first + catalog fallback, salva progressi con checkpoint per resistere a timeout di sessione. |
 | [pa-legal-clause-analyzer](./pa-legal-clause-analyzer/) | Analizza autocertificazioni PA italiane, estrae riferimenti normativi (art. X, comma Y D.L. Z/YYYY), incrocia con il profilo pa-data-vault per identificare clausole di esonero applicabili. Output: tabella markdown Clausola/Obbligatoria?/Norma/Valore suggerito. |
+| [alloggiati-web-checkin](./alloggiati-web-checkin/) | Compila e invia le schedine ospiti sul Portale Alloggiati (Polizia di Stato, art. 109 TULPS) per una struttura ricettiva. L'utente fa login + 2FA a mano (vincolo penale), l'agente fa tutto il resto fino a "Invia Tutti" su Chrome MCP. Gestisce le specificità del portale: 5 tipi alloggiato (Capo Gruppo→Membro), autocomplete stati esteri, campi documento solo per il capo, arrivi scaglionati. Diversa da pa-form-filler (generica). |
 
 ## Usage
 
@@ -118,6 +119,11 @@ claude-skills/
 │   └── SKILL.md                                     compilazione form PA con browser automation
 ├── pa-legal-clause-analyzer/
 │   └── SKILL.md                                     analisi clausole e esoneri su autocertificazioni PA
+├── alloggiati-web-checkin/
+│   ├── SKILL.md                                     schedine ospiti Portale Alloggiati (Polizia, art. 109 TULPS)
+│   └── references/
+│       ├── portal-map.md                            mappa tecnica ASP.NET (sequenza pagine, tipi campo, gotcha)
+│       └── tipo-alloggiato.md                       regole dominio (5 tipi, albero, arrivi scaglionati)
 ├── tests/
 │   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
 │   └── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
@@ -125,7 +131,7 @@ claude-skills/
 └── README.md
 ```
 
-11 skills, 13 automation scripts, 4 reference files, 1 template, 1 installer, 19 + 23 + 10 bats tests. No plugin infrastructure.
+12 skills, 13 automation scripts, 6 reference files, 1 template, 1 installer, 19 + 23 + 10 bats tests. No plugin infrastructure.
 
 ## License
 

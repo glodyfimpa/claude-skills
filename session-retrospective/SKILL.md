@@ -13,6 +13,21 @@ description: >
 
 Analyzes the current session to extract automation opportunities.
 
+## Backlog location (source of truth)
+
+The skill backlog "Skills & Sub-agents per Claude" lives as a markdown file in the filesystem vault:
+
+```
+~/Documents/brain/areas/ai-automation/backlog-skill.md
+```
+
+Read it with the Read tool and update it with the Edit tool. This file is the **single source of truth**.
+
+The backlog was migrated from Notion to the vault on 2026-06-03 (Second Brain Migration — the user is moving
+"thinking" out of Notion into the filesystem). The old Notion page is **historical/read-only**: never
+`notion-fetch`, `notion-search`, or `notion-update-page` it for the backlog. All reads and writes target the
+vault file above.
+
 ## Purpose
 
 At the end of a work session, walk back through what was done and identify:
@@ -27,17 +42,17 @@ The goal is to turn manual work into incremental automation: every session leave
 
 ### Phase 0: Backlog health check
 
-Before scanning the session, fetch the Notion backlog page "Skills & Sub-agents per Claude" and verify:
-- Total page length ≤ 800 lines
+Before scanning the session, Read the backlog vault file `~/Documents/brain/areas/ai-automation/backlog-skill.md` and verify:
+- Total file length ≤ 800 lines
 - No `# Idee da sessione [date]` sections at top-level (anti-pattern, see "Anti-patterns" below)
 
 If either limit is breached, STOP and surface to the user:
 
-> "The backlog page has grown beyond healthy limits (X lines, Y `# Idee da sessione` sections). The retrospective should write into a clean catalog, not into a log. Recommend running `/simplify` cleanup on the page first, then re-run retrospective."
+> "The backlog file has grown beyond healthy limits (X lines, Y `# Idee da sessione` sections). The retrospective should write into a clean catalog, not into a log. Recommend running `/simplify` cleanup on the file first, then re-run retrospective."
 
 Do not proceed with Phase 1 until the user either confirms cleanup is done or explicitly overrides ("procedi comunque").
 
-Rationale: without this gate, retrospective output silently drowns in noise, and Phase 1.5 cross-check becomes useless (the model cannot find repetitions in a 1200-line page).
+Rationale: without this gate, retrospective output silently drowns in noise, and Phase 1.5 cross-check becomes useless (the model cannot find repetitions in a 1200-line file).
 
 ### Phase 1: Scan the session
 
@@ -50,7 +65,7 @@ Walk back through the entire conversation and catalog:
 
 ### Phase 1.5: Cross-check with existing backlog
 
-Before identifying new candidates, check the Notion page "Skills & Sub-agents per Claude" (search Notion for it). Read the "Status Implementazione" table to see:
+Before identifying new candidates, Read the backlog vault file `~/Documents/brain/areas/ai-automation/backlog-skill.md`. Read the "Status Implementazione" table to see:
 - Which skills are already published (status ✅)
 - Which are already registered as ideas (status 💡 IDEA)
 - Any "Idee da sessione" sections from previous retrospectives
@@ -59,7 +74,7 @@ If a candidate from this session matches an existing IDEA, mark it as **"confirm
 
 ### Phase 1.7: Cross-check with installed skills (/find-skills)
 
-For each candidate that passed the Notion check (Phase 1.5), execute the cross-check with the skills marketplace. **This is not optional**: skipping it silently produces false "no skill found" reports (regression observed 2026-05-13).
+For each candidate that passed the backlog check (Phase 1.5), execute the cross-check with the skills marketplace. **This is not optional**: skipping it silently produces false "no skill found" reports (regression observed 2026-05-13).
 
 **Step 1 — REQUIRED, do not skip**: run the bash command below for each candidate. Replace `<keywords>` with 2-4 words that capture the candidate's use case.
 
@@ -69,7 +84,7 @@ npx skills find "<keywords>"
 
 The command returns a list of `owner/repo@skill` hits with install counts. If output is empty or all hits have <1K installs, write the literal line `No relevant skill found via skills.sh for "<keywords>"` and skip to Phase 2 for that candidate.
 
-**Environment-blocked fallback (NOT the same as "no hit")**: if `npx skills find` is denied by the host security policy / auto-mode classifier — i.e. the command never ran, as opposed to running and returning nothing — do NOT treat this as a blocking step and do NOT attempt to edit permission files to route around the block. Write the literal line `Cross-check marketplace non eseguibile in questo ambiente (comando negato dalla policy) — procedo senza` and proceed to Phase 2 for that candidate, exactly as you would on a "no hit". The marketplace check is one filter among several (Phase 1.5 Notion backlog + Phase 2 repeatability + Phase 3.5 rule-of-three already gate the candidate); degrading gracefully on it is correct, stalling the whole retrospective is not. To make the command runnable on this machine, the user can add `Bash(npx skills find:*)` to their `~/.claude/settings.json` allowlist — surface this as a one-line suggestion in the Phase 4 closing summary, never act on it yourself.
+**Environment-blocked fallback (NOT the same as "no hit")**: if `npx skills find` is denied by the host security policy / auto-mode classifier — i.e. the command never ran, as opposed to running and returning nothing — do NOT treat this as a blocking step and do NOT attempt to edit permission files to route around the block. Write the literal line `Cross-check marketplace non eseguibile in questo ambiente (comando negato dalla policy) — procedo senza` and proceed to Phase 2 for that candidate, exactly as you would on a "no hit". The marketplace check is one filter among several (Phase 1.5 backlog cross-check + Phase 2 repeatability + Phase 3.5 rule-of-three already gate the candidate); degrading gracefully on it is correct, stalling the whole retrospective is not. To make the command runnable on this machine, the user can add `Bash(npx skills find:*)` to their `~/.claude/settings.json` allowlist — surface this as a one-line suggestion in the Phase 4 closing summary, never act on it yourself.
 
 **Step 2 — REQUIRED when Step 1 returns hits with ≥1K installs**: estimate coverage of the top hit using `WebFetch` on `https://skills.sh/<owner>/<repo>/<skill>`. Prompt the fetch with: "Does this skill cover the use case '<candidate description>'? Quote relevant capabilities and gaps."
 
@@ -79,7 +94,7 @@ The command returns a list of `owner/repo@skill` hits with install counts. If ou
 |----------|-----------|-------------------|
 | ≥90% | ≥1K installs | **discard silently** — non menzionare al utente, candidato non passa a Phase 2 |
 | ≥90% | <1K installs | **surface come "installazione suggerita"**, una riga in Phase 4 closing summary, niente menu |
-| 50–89% | qualsiasi | **save_idea come "extend X"** (mai come skill nuova standalone). La nota Notion menziona quale skill esistente estendere e i gap precisi. |
+| 50–89% | qualsiasi | **save_idea come "extend X"** (mai come skill nuova standalone). La nota nel backlog vault menziona quale skill esistente estendere e i gap precisi. |
 | <50% o no hit | — | candidato passa a Phase 2 senza menzione cross-check |
 | Name match con dominio diverso | — | surface ambiguità con AskUserQuestion a 2 opzioni: (a) nuova skill separata, (b) estendi esistente includendo il nuovo dominio. Non decidere autonomamente. |
 
@@ -95,7 +110,7 @@ For each sequence or pattern that passed the previous phases, evaluate:
 
 **Does it already exist as a skill?** This is automatically verified in Phase 1.7 via `/find-skills` — do not repeat the check manually here.
 
-**Does it already exist as an idea in the backlog?** Check the Notion backlog (Phase 1.5). If found, don't present it as a new discovery: note "Already in backlog as [name] (IDEA, [date]). This session confirms the pattern — consider bumping priority."
+**Does it already exist as an idea in the backlog?** Check the backlog vault file (Phase 1.5). If found, don't present it as a new discovery: note "Already in backlog as [name] (IDEA, [date]). This session confirms the pattern — consider bumping priority."
 
 Categorize each candidate:
 
@@ -129,7 +144,7 @@ Per ogni candidato passato attraverso Phase 1.7 + Phase 2 + Phase 3, decidi TU s
 1. **≥2 occorrenze in <30 giorni AND non coperto da skill esistente** → `create_now` se la 2ª occorrenza è recente (≤7 giorni) e l'effort è basso (<2h), altrimenti `save_idea`.
 2. **1 occorrenza AND non coperto** → `discard`. Il pattern non è ancora confermato dalla regola del 3 (rule of three for abstractions); riproporrai alla 2ª occorrenza in retro futura.
 3. **≥2 occorrenze ma coperto ≥90% da skill esistente** → `discard` con menzione "installa skill X" in chiusura, non come domanda.
-4. **Partial coverage 50–89%** → `save_idea` come "extend skill X" (mai come standalone). La nota Notion documenta gap precisi.
+4. **Partial coverage 50–89%** → `save_idea` come "extend skill X" (mai come standalone). La nota nel backlog vault documenta gap precisi.
 5. **Frequenza ≥3 occorrenze nella sessione singola** → `create_now` indipendentemente da copertura. La frequenza intra-sessione è segnale più forte della copertura: lo skill esistente non sta evidentemente venendo usato perché non match al contesto reale.
 
 **Output del gate**: per ogni candidato, scrivere a sé stessi una riga `candidate=<nome> → <create_now|save_idea|discard> (rule=<numero euristica>, reason=<motivo>)`.
@@ -138,20 +153,21 @@ Per ogni candidato passato attraverso Phase 1.7 + Phase 2 + Phase 3, decidi TU s
 
 ### Phase 4: Decide and act
 
-**OUTPUT RULE — critical**: Notion backlog updates go ONLY as rows in the existing `Status Implementazione` table. NEVER as new sections `# Idee da sessione [date]` or `## Nuove idee` / `## Bump priority` / `## Insegnamenti di metodo` / `## Note meta sulla sessione`.
+**OUTPUT RULE — critical**: backlog updates go ONLY as rows in the existing `Status Implementazione` markdown table inside the vault file `~/Documents/brain/areas/ai-automation/backlog-skill.md`, edited with the Edit tool. NEVER write to Notion. NEVER add new sections `# Idee da sessione [date]` or `## Nuove idee` / `## Bump priority` / `## Insegnamenti di metodo` / `## Note meta sulla sessione`.
 
 #### Default: single-confirmation per candidate
 
 **Default behavior** = single confirmation. Per ogni candidato sopravvissuto al gate di Phase 3.5 (auto-valutazione = `create_now` o `save_idea`), apri UNA AskUserQuestion con UNA singola opzione + "Annulla":
 
 - Auto-valutazione `create_now` → "Creo ora `<nome>` (effort: X, motivo: Y). Procedo?" — opzione singola "Procedo / Annulla".
-- Auto-valutazione `save_idea` → "Salvo `<nome>` come idea nel backlog Notion (riga nuova in `Status Implementazione`, status `💡 IDEA`). Procedo?" — opzione singola "Procedo / Annulla".
+- Auto-valutazione `save_idea` → "Salvo `<nome>` come idea nel backlog vault (riga nuova in `Status Implementazione` di `backlog-skill.md`, status `💡 IDEA`). Procedo?" — opzione singola "Procedo / Annulla".
 
 **Riferimento user-level**: questo comportamento è prescritto dal memory file `feedback_retro_no_menu_theater.md` (cache personale dell'utente, tipicamente in `~/.claude/projects/<project-id>/memory/`). Se il memory file esiste o `~/.claude/CLAUDE.md` ha convenzioni utente equivalenti (es. "delega esplicita = esegui, non chiedere"), applicare il default single-confirmation senza eccezioni.
 
-Azioni concrete per `save_idea` (le 2 path Notion):
-- **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
+Azioni concrete per `save_idea` (le 2 path, tutte sul file vault `~/Documents/brain/areas/ai-automation/backlog-skill.md` via Edit tool):
+- **New idea**: add ONE row (cell text ≤ 200 chars) to the `Status Implementazione` markdown table with status `💡 IDEA`. Cells: Skill name, Skill ID, Status, Date, Note (one-liner). No new sections.
 - **Repetition of existing idea**: update ONLY the "Note" cell of the existing row, appending `+ Nª occorrenza (YYYY-MM-DD): [one-line context]`. Bump priority in same cell if Nª ≥ 3.
+- **After any write**: bump the `updated:` field in the file's YAML frontmatter to today's date.
 
 #### Caso eccezionale: menu 3-opzioni
 
@@ -170,19 +186,19 @@ A fine Phase 4, riporta in narrativa (NON AskUserQuestion):
 
 #### Cross-project methodology lessons
 
-For cross-project methodology lessons (e.g. "memory → artifact promotion", "auto-mode does not bypass approvals"), these belong in `~/.claude/CLAUDE.md` via `/claude-md-management:revise-claude-md`, NOT in the Notion backlog. Surface them to the user as a separate list at end of retrospective output and suggest running revise-claude-md as next step.
+For cross-project methodology lessons (e.g. "memory → artifact promotion", "auto-mode does not bypass approvals"), these belong in `~/.claude/CLAUDE.md` via `/claude-md-management:revise-claude-md`, NOT in the backlog. Surface them to the user as a separate list at end of retrospective output and suggest running revise-claude-md as next step.
 
 If the user chooses to create, proceed immediately. Do not defer to "the next session".
 
-## Anti-patterns (what NOT to do in the Notion backlog)
+## Anti-patterns (what NOT to do in the backlog file)
 
-**NEVER create sections with these titles in the backlog page**:
+**NEVER create sections with these titles in the backlog file**:
 - `# Idee da sessione [data]`
 - `## Nuove idee` / `## Bump priority su idee esistenti`
 - `## Insegnamenti di metodo` / `## Note meta sulla sessione`
 - `## [Categoria specifica della sessione]`
 
-The Notion backlog is a **consultable catalog**, not a session journal. Every section above represents narrative content that:
+The backlog is a **consultable catalog**, not a session journal. Every section above represents narrative content that:
 - Duplicates information already in the canonical table
 - Grows unboundedly across sessions (we hit 19 such sections / ~800 lines before forced cleanup on 2026-05-12)
 - Makes future cross-check (Phase 1.5) impossible because the model cannot find repetitions inside narrative blocks
