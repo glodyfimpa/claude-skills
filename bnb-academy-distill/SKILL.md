@@ -66,9 +66,14 @@ aggiorna un solo posto.
 
 1. **Toolchain offline verde**: `ffmpeg`, `whisper-cli` in PATH, modello in
    `~/.cache/whisper/ggml-small.bin`. Se manca, fermarsi e segnalarlo.
-2. **Chrome loggato su BnB Academy** col profilo che ha l'accesso **pagato**. Verificare che
-   il progresso del corso NON sia 0/233 (sintomo di account sbagliato, vedi nota account nel
-   runbook). Se è 0/233, fermarsi: le lezioni non si aprono.
+2. **Chrome loggato su BnB Academy** col profilo che ha l'accesso **pagato** (NON Arc).
+   ⚠️ **`0/233` NON significa "account sbagliato"** (corretto 2026-06-15): l'account giusto
+   può mostrare `0/233` perché è un **render stantio** della SPA (contatore prima che il
+   progresso si idrati). Non fermarsi su quel dato: attendere l'idratazione, oppure
+   controllare la vista libreria `/courses/library-v2` che mostra il % reale (BnB Academy al
+   6%, avatar GF, "I miei corsi 2" = accesso OK). L'account "Personal Chrome" (login Google
+   glodyfimpa) è quello giusto e pagato — confermato. Fermarsi solo se ANCHE la vista libreria
+   non mostra il corso (vero account senza accesso). Vedi memory `project-bnb-academy-account-access`.
 3. **cwd per gli script** = `~/Documents/brain/areas/affitti-brevi/bnb-academy/analisi-lezioni/`.
 
 ## Stato e ripresa
@@ -140,6 +145,19 @@ Per ogni lezione del gruppo, nell'ordine del tracker:
 >    la trascrizione l'ha rivelato. Se il contenuto non combacia col titolo: hash sbagliato,
 >    scarta la sintesi, riscarica con hash corretto.
 
+> ⚠️ **Webinar / Video-Call lunghi (>1h) — download fragile + contenuto diluito (verificato 131-150).**
+> Alcune lezioni del corso (es. i "Macro-aggiornamenti"/"Video-Call Interna") sono dirette/webinar
+> da 2-3.5h. Due conseguenze:
+> 1. **Il download CDN si tronca spesso** su file così lunghi (HTTP 502 / socket timeout, non
+>    sistematico: nel gruppo 131-150 134/136 troncati, 135/137/138 integri). GATE: confronta la
+>    durata audio scaricata con quella letta dal player (`ffprobe` vs durata `<video>`); se manca
+>    una porzione, **marca la sintesi "parziale ~X/Y min", NON spacciarla completa**. Ri-scaricare
+>    dall'hash a volte riesce (è andata così per la 138). Il file integro può superare gli 800 MB.
+> 2. **Sono contenuto community/Q&A/promo, valore di dominio diluito.** Il sub-agente deve scorrere
+>    (non leggere parola per parola), estrarre i 3-6 punti reali, e marcare il resto N/A-community
+>    senza gonfiare. whisper su 3h aggiunge spesso un loop allucinato in coda (artefatto noto, nulla
+>    perso). Costo alto, resa bassa: valutare con Glody se distillarli o lasciarli come allegato-hash.
+
 > ⚠️ **Un solo Chrome.** Mai parallelizzare la Fase 1 con sub-agenti: collisione
 > Playwright/Chrome (vedi environment-macos). I download `curl` di `fetch_audio.py` sono già
 > veloci e sequenziali; il rate-limit 429 del CDN è gestito dal retry dello script.
@@ -195,6 +213,19 @@ Confrontare sempre contro: `[[locazioni-turistiche-compliance]]`, le procedure i
    ufficiale (Airbnb Help) o un esperto tecnico riconosciuto prima di marcare.
 4. **Fonte non trovata dopo aver provato** → marca `DA VERIFICARE` onesto e segnala a Glody
    "non risolto, decidi tu". **Non forzare** una marcatura.
+5. **Comportamento di un prodotto (Airbnb in primis) → SOLO fonte ufficiale del fornitore.**
+   Regola rafforzata dopo l'errore del gruppo 131-150: un claim su **commissioni / ranking /
+   policy / feature** di Airbnb (o altra piattaforma) si marca `DATATO`/`IMPRECISO` **solo** se
+   sostenuto da Airbnb Help/Terms o newsroom (URL `airbnb.com` / `news.airbnb.com`). Con **solo**
+   blog di settore (Hostaway, Futurestay, Lodgify, thehostreport, AirDNA blog, OptimizeMyBnb…) o
+   thread community → marca `DA VERIFICARE`, **MAI `DATATO`**. Caso reale: i sub-agenti avevano
+   marcato "split-fee 3% dismesso", "copertina scelta dall'algoritmo", "Smart Setup è il default" —
+   tutti **falsi/non confermati** alla fonte ufficiale (Help art. 1857: lo split-fee resta; art.
+   477: l'host controlla la copertina). I blog STR sono i primi risultati di ricerca e si copiano:
+   sono la trappola numero uno di questa skill.
+6. **La testimonianza diretta di Glody sul suo account/strumento è FONTE PRIMARIA.** Se Glody
+   dice "ho l'opzione X attiva ora", quello batte qualsiasi blog. Non contraddire un fatto di
+   prima mano dell'utente con un consenso di blog.
 
 ### Fase 4 · CHECKPOINT — main, sequenziale, umano. STOP.
 
@@ -203,6 +234,13 @@ Confrontare sempre contro: `[[locazioni-turistiche-compliance]]`, le procedure i
 2. Glody valida o contesta.
 3. Propaga i fix validati alle procedure (es. una correzione di soglia in
    `procedure/gestione-recensioni.md`).
+   > ⚠️ **Prima di propagare a un artefatto in uso** (procedura, knowledge, tool/skill, codice):
+   > il fix dev'essere **verificato alla fonte ufficiale**, non solo riportato da un sub-agente.
+   > "Validato da un sub-agente" ≠ "verificato". Nel gruppo 131-150 un claim-da-blog è stato
+   > propagato nei tool `bnb-investment-toolkit` (cambiato persino il default di calcolo) e ha
+   > richiesto un `git checkout` per annullarlo. Se il fix tocca un prodotto esterno, applica il
+   > GATE FONTI punto 5 (Help ufficiale) PRIMA dell'edit. In dubbio, porta il punto a Glody invece
+   > di propagare.
 4. Spunta le lezioni nel tracker (`- [ ]` → `- [x]`, aggiungi `· [[NNN|sintesi]]`) e aggiorna
    il contatore `Progresso: X/233` con i sotto-totali per fase.
 5. **Pulisci `audio/*.ts` e `*.wav` PRIMA del commit** (grossi, rigenerabili dall'hash via
