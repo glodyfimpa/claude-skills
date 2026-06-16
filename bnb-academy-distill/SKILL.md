@@ -102,7 +102,18 @@ Per ogni lezione del gruppo, nell'ordine del tracker:
    valore e costa zero (runbook, Passo 1). Non tutte le lezioni ce l'hanno (molte sono solo
    video): se assente, il valore è tutto nella trascrizione.
 3. Leggi l'hash video (`cts-<HASH>_`). ⚠️ **Punto fragile, verificato nel collaudo 006-010.**
-4. Scarica l'audio: `python3 fetch_audio.py NNN <HASH>` → `audio/NNN.ts`.
+4. (Facoltativo, igiene) **Metti in pausa il video** dopo aver letto l'hash (`document.querySelector('video').pause()`):
+   il play serve SOLO a far scaricare i segmenti da cui si legge l'hash, non a "guardare" il
+   video. Lasciarlo girare a vuoto è spreco innocuo ma disordinato.
+5. Scarica l'audio: `python3 fetch_audio.py NNN <HASH>` → `audio/NNN.ts`.
+
+> ℹ️ **Perché NON si perde nessuna parte del video** (dubbio legittimo). Il play nel browser
+> non è la fonte del contenuto: serve solo a costringere il player a scaricare i segmenti, dal
+> cui URL si legge l'`<HASH>` (= "numero di scaffale" della lezione). Una volta letto l'hash,
+> `fetch_audio.py` scarica il file **completo dall'inizio alla fine** direttamente dal CDN
+> (come scaricare un PDF), indipendentemente da quanto il video sia avanzato nel browser. Quindi
+> il fatto che il video continui a scorrere mentre si fa altro è irrilevante: la trascrizione è
+> sempre della lezione intera. Il gate durata (sotto) lo conferma a costo zero.
 
 > ⚠️ **La cattura dell'hash è il punto debole del protocollo.** Il player HLS **precarica
 > ~230 manifest** (tutti i video del corso) all'apertura, quindi "l'ultimo `master.m3u8`
@@ -194,9 +205,22 @@ Confrontare sempre contro: `[[locazioni-turistiche-compliance]]`, le procedure i
    `procedure/gestione-recensioni.md`).
 4. Spunta le lezioni nel tracker (`- [ ]` → `- [x]`, aggiungi `· [[NNN|sintesi]]`) e aggiorna
    il contatore `Progresso: X/233` con i sotto-totali per fase.
-5. Commit.
-6. **Pulisci** `audio/*.ts` e `audio/*.wav` (grossi, rigenerabili dall'hash via
-   `fetch_audio.py`). Tieni solo `transcripts/` e `sintesi/`.
+5. **Pulisci `audio/*.ts` e `*.wav` PRIMA del commit** (grossi, rigenerabili dall'hash via
+   `fetch_audio.py`). Tieni solo `transcripts/`, `sintesi/`, `allegati/`.
+6. **Commit** — committa SOLO `sintesi/`, `transcripts/`, `allegati/`, knowledge/procedure
+   modificate, tracker. **Mai `git add` della cartella `audio/`** (vedi gate sotto).
+7. Push se richiesto.
+
+> ⚠️⚠️ **GATE: l'audio NON va mai in git (errore 051-070, 2026-06-16).** `audio/*.ts`/`*.wav`
+> sono ~700MB/gruppo di spazzatura intermedia, rigenerabili dagli hash salvati nel runbook.
+> `audio/` è già in `.gitignore` (`areas/affitti-brevi/bnb-academy/analisi-lezioni/audio/`).
+> Errore commesso: `git add` della cartella `analisi-lezioni/` PRIMA di pulire ha forzato gli
+> audio in git scavalcando gitignore (git ignora il gitignore per file aggiunti esplicitamente
+> via cartella padre già tracciata). Conseguenza: 687MB committati, poi rewrite della history
+> per toglierli prima del push. **Regola operativa**: (a) pulizia audio = step 5, PRIMA del
+> commit; (b) `git add` mirato sui soli path buoni (`...analisi-lezioni/sintesi`,
+> `.../transcripts`, `.../allegati`), MAI `git add` della cartella `analisi-lezioni/` intera né
+> `git add -A`; (c) prima di committare, `git status` e verificare zero `audio/` staged.
 
 Poi: chiedi a Glody se procedere col gruppo successivo o fermarsi qui.
 
