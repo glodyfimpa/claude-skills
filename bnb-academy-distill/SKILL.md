@@ -14,8 +14,16 @@ description: >
 
 # BnB Academy Distill
 
-Processa le lezioni del corso BnB Academy in gruppi piccoli, con checkpoint umano a ogni
-gruppo. Non è un generatore di sintesi in serie: il pilot 001-005 ha mostrato che 4 lezioni
+> ✅ **STATO: corso completo — 233/233 distillato (2026-06-17).** Tutte le lezioni sono
+> trascritte e sintetizzate, il tracker è a 233/233. Questa skill ha esaurito il suo scopo
+> per il corso BnB Academy: NON c'è più nulla da distillare. Serve ancora solo come (a)
+> riferimento per RI-trascrivere una lezione dall'hash salvato nel runbook (senza riaprire il
+> browser), (b) modello di protocollo per un eventuale 2° corso (vedi "Candidati estrazione
+> futura"). Se Glody chiede di "distillare le lezioni", verificare prima il tracker: è già
+> tutto fatto.
+
+Processa le lezioni del corso BnB Academy in gruppi (default 20, anche di più), con checkpoint
+umano a ogni gruppo. Non è un generatore di sintesi in serie: il pilot 001-005 ha mostrato che 4 lezioni
 su 5 erano già coperte dalle nostre procedure, e il valore reale sono **i 2-3 punti dove il
 corso o la nostra knowledge erano sbagliati** (es. soglia Superhost, mito viste/preferiti).
 Quei punti richiedono giudizio umano e confronto con le fonti, non si automatizzano in serie
@@ -34,8 +42,60 @@ senza riprodurre l'errore "marcare a naso".
 /bnb-academy-distill [N]
 ```
 
-`N` = numero di lezioni da processare in questo run (default **5**). Il timebox è in lezioni,
-non in minuti.
+`N` = numero di lezioni da processare in questo run (default **20**). Il timebox è in lezioni,
+non in minuti. Glody preferisce gruppi grandi per chiudere la distill prima: se non passa un
+`N`, punta a **20+** e spingiti oltre quando la macchina regge e il contenuto scorre, non
+fermarti a 5. Il checkpoint umano resta a ogni gruppo (vedi Fase 4), ma il gruppo è grande.
+
+## Saturazione macchina — il thread principale NON aspetta mai (direttiva permanente)
+
+Regola di Glody, da applicare sempre senza che la ripeta: **sfrutta ogni tempo morto, il main
+non resta mai in attesa che un background finisca.** Il pipeline ha 3 stadi con vincoli diversi
+— incastrali, non eseguirli a barriera:
+
+- **Fase 1 (browser)** = lavoro del main, seriale (un solo Chrome). Mentre un download `curl` o
+  un whisper girano in background, il main avanza la Fase 1 sulla lezione successiva (apri →
+  leggi hash → lancia download in background → passa alla prossima). Non guardare il download.
+- **Fase 2 (whisper)** = background, seriale obbligato (mai due insieme: contesa CPU). Lancia
+  le trascrizioni in coda in background e prosegui.
+- **Fase 3 (confronto)** = sub-agenti paralleli, sicuri (leggono file + WebSearch, niente
+  browser). Lanciali sulle lezioni GIÀ trascritte mentre la Fase 2 macina le successive e il
+  main fa Fase 1 sulle ancora-da-aprire.
+
+Il lavoro che il main porta avanti nei tempi morti deve essere **non in conflitto** con i
+background: avanzare la Fase 1 nel browser (risorsa esclusiva del main) mentre download/whisper
+girano è il caso canonico. Non lanciare due cose che competono per la stessa risorsa (due
+whisper, due agenti sullo stesso Chrome). Pattern di riferimento già nel CLAUDE.md globale:
+"Parallelismo proattivo — decidere io, non l'utente".
+
+## Modalità leggera per la Traccia Passiva (lezioni 191-230)
+
+La Traccia Passiva del corso (Mod 10 analisi host, Mod 11 case study, le 23 FAQ
+#OresteRisponde) è marcata "ascolto serale, senza ordine" e si è rivelata **quasi
+interamente N/A per Via Braida**: analisi di annunci altrui, case study narrativi, FAQ su
+acquisizione/PM. Distillarla col rigore pieno (un sub-agente di confronto per lezione + gate
+fonti) è costo che non si ripaga su contenuto N/A — verificato sul gruppo 191-233 (distillato
+2026-06-17): 43 lezioni, zero fix nuovi propagati, tutto già coperto dai moduli Nucleo→Fase 5.
+
+**Regola: per la Traccia Passiva usa la modalità leggera** (salvo che Glody chieda il rigore
+pieno). Il deliverable che resta è la **trascrizione cercabile**, non la sintesi:
+
+1. **Scarica + trascrivi** normalmente (così il contenuto resta cercabile nel vault).
+2. **NIENTE sub-agente di confronto pieno.** Il main scrive la sintesi snella a mano: 2-3
+   punti + tabella con una riga `N/A` + "nessuna azione". Una funzione helper bash che genera
+   il file da pochi parametri è il modo più veloce (vedi gruppo 191-233).
+3. **Scan datati a colpo d'occhio**: il main legge la trascrizione e marca SOLO se trova un
+   claim Airbnb/fiscale/normativo databile. Vale ancora il GATE FONTI (claim prodotto Airbnb →
+   `DA VERIFICARE` se non confermato a fonte ufficiale; vedi 227 rating). Le FAQ
+   fiscali/normative meritano l'occhio in più (es. APE, metratura, soglia 30 giorni, PM/P.IVA,
+   contanti) — ma di norma confermano la nostra knowledge o ne sono una versione più povera.
+4. **Niente checkpoint a gruppi di 20 per la passiva**: si può catturare/distillare in blocco
+   e fare UN solo checkpoint finale, vista la resa.
+
+Distinzione netta: i moduli **Nucleo → Fase 5** (lezioni ~1-190) vanno col **rigore pieno**
+(sub-agente + gate), perché è lì che vive il valore (compliance, fisco, prodotto). La passiva
+no. Se una lezione passiva sorprende con un claim databile reale, alza tu il rigore su quella
+singola, non sull'intero blocco.
 
 ## Cartella di lavoro e fonte dei dettagli tecnici
 
