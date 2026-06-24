@@ -1,11 +1,11 @@
-"""Tests for forfettario_calc.py — regime forfettario Italian tax calculator."""
+"""TDD tests for forfettario_calc.py — Italian forfettario tax regime calculator."""
 import pytest
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "forfettario-tax-calculator", "scripts"))
 
-from forfettario_calc import calculate
+from forfettario_calc import calculate, format_breakdown
 
 
 class TestCase1Canonical:
@@ -14,7 +14,7 @@ class TestCase1Canonical:
     def setup_method(self):
         self.result = calculate(
             fatturato=50000,
-            coefficiente=0.78,
+            coefficiente_redditivita=0.78,
             aliquota_inps=0.2607,
             aliquota_sostitutiva=0.05,
         )
@@ -41,7 +41,7 @@ class TestCase2NoContributi:
     def setup_method(self):
         self.result = calculate(
             fatturato=30000,
-            coefficiente=0.78,
+            coefficiente_redditivita=0.78,
             aliquota_inps=0.0,
             aliquota_sostitutiva=0.15,
         )
@@ -83,3 +83,14 @@ class TestReturnKeys:
         result = calculate(fatturato=10000)
         expected = {"imponibile_lordo", "contributi_inps", "imponibile_netto", "imposta", "netto"}
         assert expected.issubset(result.keys())
+
+
+class TestFormatBreakdown:
+    """format_breakdown deve produrre una stringa con le voci principali"""
+
+    def test_contains_netto_and_fatturato(self):
+        result = calculate(fatturato=50000, coefficiente_redditivita=0.78,
+                           aliquota_inps=0.2607, aliquota_sostitutiva=0.05)
+        output = format_breakdown(result, fatturato=50000)
+        assert "Netto reale" in output
+        assert "50000.00" in output
