@@ -11,10 +11,10 @@ Calculation order is fixed by law:
 Intermediates are kept in full float precision; rounding is the caller's responsibility.
 """
 
-# Default parameters (2024 values — update aliquota_inps yearly from INPS circular)
-_DEFAULT_COEFFICIENTE = 0.78           # professional services, ATECO 64-88
+# Default parameters (2024 values — update aliquota_inps yearly)
+_DEFAULT_COEFFICIENTE = 0.78      # professional services, ATECO 64-88
 _DEFAULT_ALIQUOTA_SOSTITUTIVA = 0.15   # standard regime; use 0.05 for new activities (first 5 years)
-_DEFAULT_ALIQUOTA_INPS = 0.2607        # Gestione Separata rate
+_DEFAULT_ALIQUOTA_INPS = 0.2607   # Gestione Separata rate
 
 
 def calculate(

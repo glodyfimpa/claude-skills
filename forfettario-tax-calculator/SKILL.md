@@ -6,30 +6,33 @@ description: |
 
 # Forfettario Tax Calculator
 
-Compute the real net take-home for a freelancer on the Italian *regime forfettario*, starting from annual revenue. Shows the full breakdown so the client can see exactly where each euro goes.
+Compute the real net take-home for a freelancer on the Italian *regime forfettario*,
+starting from annual revenue. Shows the full breakdown so the client can see exactly
+where each euro goes.
 
-## Sequenza di calcolo (ordine vincolante)
+## Calculation chain (order is fixed by law)
 
 ```
 1. imponibile_lordo  = fatturato × coefficiente_redditivita
 2. contributi_inps   = imponibile_lordo × aliquota_inps        (Gestione Separata)
-3. imponibile_netto  = imponibile_lordo − contributi_inps      ← INPS deducibile PRIMA dell'imposta
+3. imponibile_netto  = imponibile_lordo − contributi_inps      (INPS deductible before tax)
 4. imposta           = imponibile_netto × aliquota_sostitutiva
 5. netto             = fatturato − contributi_inps − imposta
 ```
 
-I contributi INPS si deducono sempre **prima** di applicare l'imposta sostitutiva — è l'unica deduzione ammessa nel regime forfettario e modifica significativamente l'imposta finale.
+INPS contributions are **always deducted before applying the flat tax** — this is the key
+rule of the forfettario regime and must not be skipped or reordered.
 
-## Utilizzo
+## Usage
 
 ```python
 from scripts.forfettario_calc import calculate, format_breakdown
 
 result = calculate(
     fatturato=50000,
-    coefficiente_redditivita=0.78,   # default — attività professionali ATECO 64-88
-    aliquota_sostitutiva=0.05,       # 0.05 nuove attività (primi 5 anni) / 0.15 ordinario
-    aliquota_inps=0.2607,            # default — Gestione Separata 2024
+    coefficiente_redditivita=0.78,   # optional, default 0.78
+    aliquota_sostitutiva=0.05,       # optional, default 0.15
+    aliquota_inps=0.2607,            # optional, default 0.2607
 )
 
 print(format_breakdown(result, fatturato=50000))
@@ -47,75 +50,60 @@ Imposta sostitutiva:  - €       1441.64
 Netto reale:            €      38391.07
 ```
 
-La funzione `calculate()` restituisce un dict con tutte le voci intermedie in piena precisione float — arrotondare solo in presentazione (usa `format_breakdown()` o `f"{value:.2f}"`).
+The `calculate()` function returns a dict with all intermediate values at full float
+precision — format only at the presentation layer (see `format_breakdown()`).
 
-## Parametri
+## Parameters and defaults
 
-| Parametro | Default | Note |
-|-----------|---------|------|
-| `fatturato` | — obbligatorio — | Fatturato annuo lordo in EUR (≥ 0) |
-| `coefficiente_redditivita` | `0.78` | Professionisti/servizi (ATECO 64-88). Verificare Allegato 4, L. 190/2014 |
-| `aliquota_sostitutiva` | `0.15` | Regime ordinario; `0.05` per nuove attività (primi 5 anni) |
-| `aliquota_inps` | `0.2607` | Gestione Separata 2024 — aggiornare ogni anno dalla circolare INPS |
+| Parameter | Default | Notes |
+|-----------|---------|-------|
+| `coefficiente_redditivita` | `0.78` | Professional services, ATECO 64-88 |
+| `aliquota_sostitutiva` | `0.15` | Standard regime; use `0.05` for new activities (first 5 years) |
+| `aliquota_inps` | `0.2607` | Gestione Separata 2024 — update annually |
 
-### Tabella coefficienti ATECO comuni
+### When to use `aliquota_sostitutiva=0.05`
 
-| Attività | Coefficiente |
+New activity in the forfettario for the first 5 tax years, if the freelancer has not
+carried out the same business activity in the previous 3 years as an employee or
+self-employed. Verify eligibility with the commercialista before applying.
+
+### ATECO coefficient table (common codes)
+
+| Activity | Coefficiente |
 |----------|-------------|
-| Professionisti e servizi (ATECO 64-88, 93, 99) | 0.78 |
-| Commercio, hotel, ristorazione (45, 46, 47, 55, 56) | 0.40 |
-| Costruzioni, idraulica (41-43, 68) | 0.86 |
-| Intermediari di commercio (46.1) | 0.62 |
-| Altri servizi | 0.67 |
+| Professional services (64-88, 93, 99) | 0.78 |
+| Trade, hotels, catering (45, 46, 47, 55, 56) | 0.40 |
+| Construction, plumbing (41-43, 68) | 0.86 |
+| Intermediaries in trade (46.1) | 0.62 |
+| Other services (other ATECO) | 0.67 |
 
-Fonte: Allegato 4, Legge n. 190/2014 — verificare con il commercialista per il codice ATECO esatto.
+Source: Allegato 4, Legge n. 190/2014 — verify with commercialista for exact ATECO match.
 
-## Casi d'uso principali
+## Scripts reference
 
-**Professionista con nuova attività (agevolazione 5 anni):**
-```python
-result = calculate(fatturato=40000, aliquota_sostitutiva=0.05)
-```
-
-**Senza contributi INPS (es. già coperto da altra cassa previdenziale):**
-```python
-result = calculate(fatturato=30000, aliquota_inps=0.0)
-```
-
-**Commerciante (ATECO 45-47, coeff=0.40):**
-```python
-result = calculate(fatturato=80000, coefficiente_redditivita=0.40)
-```
-
-## Arrotondamento
-
-I valori nel dict restituito sono `float` senza arrotondamento intermedio. Arrotondare **solo nella presentazione** con `format_breakdown()` o `f"{value:.2f}"`. Applicare `round()` nella logica di calcolo introdurrebbe errori di propagazione sui passaggi intermedi.
-
-## Scripts Reference
-
-`scripts/forfettario_calc.py` — logica pura, nessuna dipendenza esterna.
-- `calculate(fatturato, ...)` → `dict` con chiavi: `imponibile_lordo`, `contributi_inps`, `imponibile_netto`, `imposta`, `netto`. Valori float in piena precisione.
-- `format_breakdown(result, fatturato)` → stringa formattata con arrotondamento a 2 decimali, pronta per display in messaggio o report.
-- Solleva `ValueError` se `fatturato < 0`.
+`scripts/forfettario_calc.py`
+- `calculate(fatturato, ...)` → `dict` with five keys: `imponibile_lordo`,
+  `contributi_inps`, `imponibile_netto`, `imposta`, `netto`.
+- `format_breakdown(result, fatturato)` → formatted string with 2-decimal rounding,
+  suitable for display in a message or report.
+- Raises `ValueError` if `fatturato < 0`.
 
 ## Tests
 
 ```bash
-python3 -m pytest tests/test_forfettario_calc.py -v
+python3 -m unittest tests.test_forfettario_calc -v
 ```
 
-13 test pytest coprono:
-- Caso canonico fatturato 50.000 (5 asserzioni sui valori intermedi)
-- Isolamento deduzione INPS con aliquota zero
-- Fatturato zero → tutti gli output a zero
-- Fatturato negativo → `ValueError`
-- Presenza di tutte le chiavi nel dict restituito
-- `format_breakdown()` produce output con voce netto e fatturato
+Four numeric cases covered (50k standard, 30k zero-INPS, zero revenue, negative revenue).
 
-## Limiti e avvertenze
+## Important caveats
 
-- Applicabile solo al regime forfettario (L. 190/2014). Non adatto a soci SRL, ditte individuali in regime ordinario, lavoratori dipendenti.
-- I parametri di default riflettono i valori 2024. Le aliquote INPS variano ogni anno — verificare la circolare INPS prima di comunicare cifre a un cliente.
-- L'agevolazione 5% si applica solo se non si è esercitata la stessa attività nei 3 anni precedenti (art. 1 c. 65 L. 190/2014). Verificare con un commercialista.
-- Il calcolo non considera acconti/saldi IRPEF di periodi precedenti, né detrazioni fuori regime.
-- Soglia di accesso al forfettario: 85.000 € di ricavi annui (2024). Non verificata dal calcolatore.
+- This tool applies the forfettario regime only. It does not cover P.IVA ordinaria,
+  cedolare secca (rental income), or IRPEF progressive rates.
+- Contributi INPS in Gestione Separata are calculated on `imponibile_lordo`, not on
+  `fatturato`. This differs from Gestione Artigiani/Commercianti where minimale fisso
+  applies.
+- The 85.000 € annual revenue cap for the forfettario regime is not enforced here —
+  check eligibility before applying to revenues above that threshold.
+- Always consult a commercialista for official tax filings. This tool is for planning
+  and estimation only.
