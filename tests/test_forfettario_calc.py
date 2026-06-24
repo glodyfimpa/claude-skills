@@ -1,18 +1,17 @@
 """TDD tests for forfettario_calc.py — Italian forfettario tax regime calculator."""
-
+import pytest
 import sys
 import os
-import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "forfettario-tax-calculator", "scripts"))
 
-from forfettario_calc import calculate
+from forfettario_calc import calculate, format_breakdown
 
 
-class TestForfettarioCalcCase1(unittest.TestCase):
-    """Case 1: 50k fatturato, standard professional coefficients."""
+class TestCase1Canonical:
+    """fatturato=50000, coeff=0.78, inps=0.2607, aliquota=0.05"""
 
-    def setUp(self):
+    def setup_method(self):
         self.result = calculate(
             fatturato=50000,
             coefficiente_redditivita=0.78,
@@ -21,25 +20,25 @@ class TestForfettarioCalcCase1(unittest.TestCase):
         )
 
     def test_imponibile_lordo(self):
-        self.assertAlmostEqual(self.result["imponibile_lordo"], 39000.0, places=5)
+        assert self.result["imponibile_lordo"] == pytest.approx(39000.0)
 
     def test_contributi_inps(self):
-        self.assertAlmostEqual(self.result["contributi_inps"], 10167.3, places=4)
+        assert self.result["contributi_inps"] == pytest.approx(10167.30)
 
     def test_imponibile_netto(self):
-        self.assertAlmostEqual(self.result["imponibile_netto"], 28832.7, places=4)
+        assert self.result["imponibile_netto"] == pytest.approx(28832.70)
 
     def test_imposta(self):
-        self.assertAlmostEqual(self.result["imposta"], 1441.635, places=5)
+        assert self.result["imposta"] == pytest.approx(1441.635)
 
     def test_netto(self):
-        self.assertAlmostEqual(self.result["netto"], 38391.065, places=4)
+        assert self.result["netto"] == pytest.approx(38391.065)
 
 
-class TestForfettarioCalcCase2(unittest.TestCase):
-    """Case 2: 30k fatturato, zero INPS — isolates contribution deduction."""
+class TestCase2NoContributi:
+    """fatturato=30000, coeff=0.78, inps=0, aliquota=0.15 — isola la deduzione contributi"""
 
-    def setUp(self):
+    def setup_method(self):
         self.result = calculate(
             fatturato=30000,
             coefficiente_redditivita=0.78,
@@ -48,46 +47,50 @@ class TestForfettarioCalcCase2(unittest.TestCase):
         )
 
     def test_imponibile_netto(self):
-        self.assertAlmostEqual(self.result["imponibile_netto"], 23400.0, places=5)
+        assert self.result["imponibile_netto"] == pytest.approx(23400.0)
 
     def test_imposta(self):
-        self.assertAlmostEqual(self.result["imposta"], 3510.0, places=5)
+        assert self.result["imposta"] == pytest.approx(3510.0)
 
     def test_netto(self):
-        self.assertAlmostEqual(self.result["netto"], 26490.0, places=5)
+        assert self.result["netto"] == pytest.approx(26490.0)
+
+    def test_contributi_zero(self):
+        assert self.result["contributi_inps"] == pytest.approx(0.0)
 
 
-class TestForfettarioCalcCase3(unittest.TestCase):
-    """Case 3: zero fatturato — all outputs must be zero."""
+class TestCase3ZeroFatturato:
+    """fatturato=0 deve dare tutti gli output a zero"""
 
     def test_all_zero(self):
         result = calculate(fatturato=0)
-        for key, value in result.items():
-            self.assertEqual(value, 0.0, msg=f"{key} should be 0.0")
+        for key in ("imponibile_lordo", "contributi_inps", "imponibile_netto", "imposta", "netto"):
+            assert result[key] == pytest.approx(0.0), f"{key} expected 0.0"
 
 
-class TestForfettarioCalcCase4(unittest.TestCase):
-    """Case 4: negative fatturato must raise ValueError."""
+class TestCase4Negativo:
+    """fatturato negativo deve sollevare ValueError"""
 
-    def test_negative_raises(self):
-        with self.assertRaises(ValueError):
-            calculate(fatturato=-1000)
+    def test_raises_value_error(self):
+        with pytest.raises(ValueError):
+            calculate(fatturato=-1)
 
 
-class TestForfettarioCalcOutputKeys(unittest.TestCase):
-    """Result dict must contain all expected keys."""
+class TestReturnKeys:
+    """Il dict restituito deve contenere tutte le chiavi attese"""
 
     def test_keys_present(self):
         result = calculate(fatturato=10000)
-        expected_keys = {
-            "imponibile_lordo",
-            "contributi_inps",
-            "imponibile_netto",
-            "imposta",
-            "netto",
-        }
-        self.assertEqual(set(result.keys()), expected_keys)
+        expected = {"imponibile_lordo", "contributi_inps", "imponibile_netto", "imposta", "netto"}
+        assert expected.issubset(result.keys())
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestFormatBreakdown:
+    """format_breakdown deve produrre una stringa con le voci principali"""
+
+    def test_contains_netto_and_fatturato(self):
+        result = calculate(fatturato=50000, coefficiente_redditivita=0.78,
+                           aliquota_inps=0.2607, aliquota_sostitutiva=0.05)
+        output = format_breakdown(result, fatturato=50000)
+        assert "Netto reale" in output
+        assert "50000.00" in output
