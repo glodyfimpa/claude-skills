@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, agent-team orchestration, PA bureaucratic assistance (form filling, data vault, legal clause analysis), guest check-in on the Alloggiati portal, Italian forfettario tax calculation, and a portability gate for locally-scheduled routines. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, agent-team orchestration, PA bureaucratic assistance (form filling, data vault, legal clause analysis), Italian forfettario tax calculation, and a portability gate for locally-scheduled routines. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -25,7 +25,6 @@ Standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb inve
 | [pa-data-vault](./pa-data-vault/) | Gestisce dati identificativi (CF, PEC, CIN, P.IVA, codici portali) per strutture BnB e profilo personale. Rileva campi mancanti ([da completare]), salva nuovi valori, restituisce un bundle strutturato alle altre skill PA. |
 | [pa-form-filler](./pa-form-filler/) | Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use). Scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici Keycloak con strategia label-first + catalog fallback, salva progressi con checkpoint per resistere a timeout di sessione. |
 | [pa-legal-clause-analyzer](./pa-legal-clause-analyzer/) | Analizza autocertificazioni PA italiane, estrae riferimenti normativi (art. X, comma Y D.L. Z/YYYY), incrocia con il profilo pa-data-vault per identificare clausole di esonero applicabili. Output: tabella markdown Clausola/Obbligatoria?/Norma/Valore suggerito. |
-| [alloggiati-web-checkin](./alloggiati-web-checkin/) | Compila e invia le schedine ospiti sul Portale Alloggiati (Polizia di Stato, art. 109 TULPS) per una struttura ricettiva. L'utente fa login + 2FA a mano (vincolo penale), l'agente fa tutto il resto fino a "Invia Tutti" su Chrome MCP. Gestisce le specificità del portale: 5 tipi alloggiato (Capo Gruppo→Membro), autocomplete stati esteri, campi documento solo per il capo, arrivi scaglionati. Diversa da pa-form-filler (generica). |
 | [forfettario-tax-calculator](./forfettario-tax-calculator/) | Calcola il netto reale per un libero professionista italiano in regime forfettario, partendo dal fatturato annuo. Mostra la catena completa: imponibile lordo, contributi INPS, imponibile netto, imposta sostitutiva, netto finale. Include script Python con test. |
 | [portable-local-routine](./portable-local-routine/) | Gate di portabilità per routine/agenti schedulati locali (script launchd/cron, non cloud). 7 criteri (path assoluti, shebang, scheduler OS-detect, segreti clonabili, preflight+set -e, niente bridge cloud, fire diagnosticabile) in due modalità: build (checklist mentre costruisci) e audit (report `[OK]/[FIX]/[N/A]` su una routine esistente). Check + report, no auto-fix. Distinta da bash-portability-linter (sintassi) per l'asse "schedulato o no". |
 
@@ -121,15 +120,13 @@ claude-skills/
 │   └── SKILL.md                                     compilazione form PA con browser automation
 ├── pa-legal-clause-analyzer/
 │   └── SKILL.md                                     analisi clausole e esoneri su autocertificazioni PA
-├── alloggiati-web-checkin/
-│   ├── SKILL.md                                     schedine ospiti Portale Alloggiati (Polizia, art. 109 TULPS)
-│   └── references/
-│       ├── portal-map.md                            mappa tecnica ASP.NET (sequenza pagine, tipi campo, gotcha)
-│       └── tipo-alloggiato.md                       regole dominio (5 tipi, albero, arrivi scaglionati)
 ├── forfettario-tax-calculator/
 │   ├── SKILL.md                                     forfettario tax breakdown workflow
 │   └── scripts/
 │       └── forfettario_calc.py                      calculate() + format_breakdown() functions
+├── portable-local-routine/
+│   ├── SKILL.md                                     portability gate for locally-scheduled routines
+│   └── README.md                                    7 criteria + Gate 0 (form A/B/C) summary
 ├── tests/
 │   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
 │   ├── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
