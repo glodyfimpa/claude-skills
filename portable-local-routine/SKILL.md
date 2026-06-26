@@ -8,6 +8,10 @@ description: >
   cloud. Usa questa skill quando stai costruendo o modificando una routine/agente
   schedulato locale (modalità build, come gate prima di considerarlo finito) O quando
   vuoi controllare una routine esistente e conformarla allo standard (modalità audit).
+  Include un gate a monte (Gate 0) che decide la FORMA giusta: routine locale launchd/cron,
+  Claude routine dentro l'app (quando serve un MCP autenticato interattivamente nell'app), o
+  ibrido — usalo anche quando ti chiedi "questa la faccio come scheduled-task Claude o come
+  script launchd?" o "mi servono gli MCP per questa routine?".
   L'asse che decide il trigger è "schedulato o no": questa skill fira solo quando
   l'artefatto è una routine SCHEDULATA (launchd/cron/job a orari fissi); per la
   portabilità di SINTASSI di uno script bash qualsiasi non-schedulato delega a
@@ -32,6 +36,71 @@ Questa skill è il **gate** che garantisce quel design. Una routine costruita ma
 inchiodata a una macchina: path assoluti che esistono solo lì, scheduler scritto per un
 solo OS, segreti non clonabili, dipendenze implicite. Spostarla su un altro PC diventa
 una riscrittura. Il gate previene quel debito mentre il costo di evitarlo è ancora basso.
+
+## Gate 0 — è davvero il caso di una routine locale? (decidi PRIMA dei 7 criteri)
+
+Prima di applicare i criteri di portabilità, decidi *in quale forma* va costruita la
+routine. Esistono tre forme, e si scelgono in base a UNA domanda: **la routine ha bisogno
+di un MCP che è autenticato interattivamente dentro l'app Claude** (Notion/Calendar/Gmail
+collegati cliccando in Claude Desktop, sessione OAuth viva nell'app)?
+
+Non confondere "usa un MCP" con "usa un MCP dell'app". `claude -p` headless **può** caricare
+server MCP via `--mcp-config` se l'MCP è process-based e si autentica da solo (token in env
+o file). Il discriminante non è "MCP sì/no", è **come è autenticato**:
+
+- **MCP stdio/process-based, credenziali in env o file** → `claude -p` lo carica con
+  `--mcp-config`, funziona headless anche su VPS. Conta come "solo-CLI" ai fini di questo gate.
+- **MCP autenticato interattivamente nell'app** (OAuth fatto nell'UI, sessione che vive
+  nell'app) → un `claude -p` headless parte come processo nuovo, con il proprio contesto
+  MCP, e non riusa la sessione OAuth viva nell'app: quell'MCP gli risulta tipicamente
+  assente. È la stessa gotcha già osservata sulle routine cloud CCR ("interactively-
+  authenticated MCP servers may be absent in headless runs"). Trattalo come comportamento
+  da verificare nel caso specifico (un MCP process-based con token in env si ricarica via
+  `--mcp-config`; uno OAuth-interattivo no), non come legge assoluta — se in dubbio, prova
+  `claude -p --mcp-config ... -p "usa il tool X"` una volta e guarda se il tool risponde.
+
+### Le tre forme
+
+**A. Solo-CLI / MCP-headless-configurabile → routine locale launchd/cron** (quella che
+questa skill standardizza). La routine fa lavoro da riga di comando (`git`, `gh`, `curl`,
+`claude -p`, test runner) ed eventuali MCP autenticabili da sé via `--mcp-config`. È la
+scelta **strettamente migliore** quando si applica: gira come processo del SO (non si
+interrompe se usi l'app, gira anche con l'app chiusa) ed è portabile su VPS. Procedi con i
+7 criteri sotto.
+
+**B. Serve un MCP interattivo dell'app, e SOLO quello → Claude routine dentro l'app**
+(scheduled-task in `~/.claude/scheduled-tasks/`, non questa skill). Accetti i due limiti
+noti — si interrompe se l'app è occupata al fire ([reference] task local interrotto da
+sessione attiva), non gira su VPS — perché sono il prezzo per avere la sessione MCP viva.
+Questa skill non si applica: NON forzare la forma launchd su una routine che dipende da un
+MCP interattivo, la romperesti.
+
+**C. Misto: serve un MCP interattivo dell'app PER UNA PARTE, più lavoro CLI/git/PR per il
+resto → ibrido a due stadi.** Lo stadio MCP gira dentro l'app (legge Notion/Calendar/Gmail)
+e **passa i dati già estratti come argomenti** a uno script portabile, che fa la parte CLI.
+Attenzione al falso ibrido: una routine-app che lancia uno script il quale richiama
+`claude -p` **non** trasferisce gli MCP dell'app al sotto-processo (`claude -p` riparte da
+zero). L'ibrido che regge è "l'app estrae → lo script elabora i dati estratti", non "l'app
+chiama un claude headless sperando che erediti gli MCP". Lo script della parte CLI va reso
+portabile coi 7 criteri sotto; lo stadio MCP-app resta dentro l'app.
+
+### Decisione (due assi)
+
+Il primo asse è "serve un MCP interattivo dell'app?"; il secondo, che separa B da C, è
+"c'è lavoro CLI sostanziale (git/PR/test) oltre alla parte MCP?".
+
+| MCP interattivo dell'app? | + lavoro CLI sostanziale? | Forma |
+|---|---|---|
+| No | (qualunque) | **A** — script launchd/cron (questa skill) |
+| Sì, ed è tutto lì | No | **B** — Claude scheduled-task dentro l'app |
+| Sì, ma solo per una parte | Sì | **C** — l'app estrae i dati → script portabile li elabora |
+
+"Lavoro CLI sostanziale" = abbastanza da giustificare uno script portabile a parte (aprire
+issue/PR, girare test, build). Una singola `curl` di notifica NON lo è: una routine che
+legge un MCP-app e manda un Telegram resta forma B, non diventa C per via del curl finale.
+
+Se sei in forma A o nello stadio-script della forma C, prosegui coi 7 criteri. Se sei in
+forma B, questa skill non è quella giusta.
 
 ## Quando usarla — due modalità
 

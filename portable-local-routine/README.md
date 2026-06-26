@@ -7,7 +7,14 @@ sempre accesa domani) senza riscrivere niente.
 
 ## Cosa fa
 
-Applica 7 criteri di portabilità a una routine locale:
+**Gate 0 — quale forma?** Prima dei criteri di portabilità, decide come va costruita la
+routine in base a "serve un MCP autenticato interattivamente nell'app?": (A) no → routine
+locale launchd/cron (questa skill); (B) sì e basta → Claude routine dentro l'app
+(scheduled-task); (C) misto → ibrido (l'app estrae i dati via MCP, uno script portabile li
+elabora). Nota: `claude -p` headless può caricare MCP process-based via `--mcp-config`; il
+discriminante è l'autenticazione *interattiva* nell'app, non "MCP sì/no".
+
+Poi applica 7 criteri di portabilità alla routine locale (forme A e allo script della C):
 
 1. Nessun path assoluto hard-coded (`SCRIPT_DIR` via `BASH_SOURCE`)
 2. Shebang `env bash`, bash 3.2-safe
