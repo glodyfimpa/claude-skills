@@ -45,19 +45,24 @@ di un MCP che è autenticato interattivamente dentro l'app Claude** (Notion/Cale
 collegati cliccando in Claude Desktop, sessione OAuth viva nell'app)?
 
 Non confondere "usa un MCP" con "usa un MCP dell'app". `claude -p` headless **può** caricare
-server MCP via `--mcp-config` se l'MCP è process-based e si autentica da solo (token in env
-o file). Il discriminante non è "MCP sì/no", è **come è autenticato**:
+server MCP via `--mcp-config` se l'MCP è process-based e si avvia/autentica da solo. Il
+discriminante non è "MCP sì/no", è **come è autenticato/avviato**:
 
-- **MCP stdio/process-based, credenziali in env o file** → `claude -p` lo carica con
-  `--mcp-config`, funziona headless anche su VPS. Conta come "solo-CLI" ai fini di questo gate.
+- **MCP stdio/process-based** (un comando che `claude -p` può rilanciare: `npx ...`,
+  `docker ...`, un binario; credenziali in env o file) → `claude -p` lo carica con
+  `--mcp-config` e il tool risponde, anche su VPS. Conta come "solo-CLI" ai fini del gate.
 - **MCP autenticato interattivamente nell'app** (OAuth fatto nell'UI, sessione che vive
-  nell'app) → un `claude -p` headless parte come processo nuovo, con il proprio contesto
-  MCP, e non riusa la sessione OAuth viva nell'app: quell'MCP gli risulta tipicamente
-  assente. È la stessa gotcha già osservata sulle routine cloud CCR ("interactively-
-  authenticated MCP servers may be absent in headless runs"). Trattalo come comportamento
-  da verificare nel caso specifico (un MCP process-based con token in env si ricarica via
-  `--mcp-config`; uno OAuth-interattivo no), non come legge assoluta — se in dubbio, prova
-  `claude -p --mcp-config ... -p "usa il tool X"` una volta e guarda se il tool risponde.
+  nell'app) → un `claude -p` headless parte come processo nuovo, col proprio contesto MCP,
+  e non riusa quella sessione: quell'MCP gli è assente. Non c'è un comando stdio da
+  rilanciare via `--mcp-config` (la sua "config" è la sessione viva nell'app), quindi non
+  lo recuperi headless.
+
+**Verificato 2026-06-26** (test diretto, non dedotto): `claude -p` headless nudo → `NO_MCP`
+(zero tool MCP; gli MCP dell'app NON sono ereditati). Lo stesso `claude -p` con
+`--mcp-config` su un server stdio process-based (`sequential-thinking`, npx) → il tool
+`mcp__sequential-thinking__sequentialthinking` è disponibile e risponde. Conferma la regola:
+process-based si ricarica headless, app-interattivo no. Per un caso dubbio il test è di 2
+minuti: `claude -p --mcp-config <file.json> -- 'hai il tool X? SI/NO'`.
 
 ### Le tre forme
 
