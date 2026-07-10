@@ -91,8 +91,11 @@ Le tre skill in life-os citeranno `../_shared-refs/config-lookup.md` (path relat
 
 **Migrazione delle 2 skill esistenti:** planning-review-system e time-energy-manager
 sostituiscono il nocciolo inline con la citazione a `_shared-refs/`. Le loro parti
-divergenti restano invariate. Test a guardia: i test esistenti in SBM
-(`tests/skills/`) devono restare verdi dopo la sostituzione.
+divergenti restano invariate. **Guardia reale:** i test SBM (`tests/skills/`) coprono
+solo gli helper Python, NON il testo dei SKILL.md — restano verdi qualsiasi cosa faccia
+al markdown, quindi NON sono guardia della migrazione. La guardia è: (a) diff testuale
+che il contenuto spostato in `_shared-refs/` sia byte-identico a quello rimosso, (b) il
+canarino e2e finale. Verificato 2026-07-10.
 
 ## La skill weekly-planner — 4 fasi
 
@@ -164,9 +167,13 @@ restano funzionanti a ogni passo. Zero big-bang.
 
 ## Testing
 
-- **Helper Python**: già coperti (`tests/skills/test_weekly_review.py`). Se la Fase 4
-  tocca il payload, aggiungere test RED→GREEN lì.
-- **Migrazione nocciolo**: i test SBM esistenti sono la guardia — verdi prima e dopo.
+- **Helper Python**: già coperti (`tests/skills/test_weekly_review.py`). weekly-planner
+  NON aggiunge codice Python (riusa `append_weekly_review_sections` invariato), quindi
+  nessun nuovo test Python necessario. Se in futuro la Fase 4 toccasse il payload,
+  aggiungere test RED→GREEN lì.
+- **Migrazione nocciolo (markdown-only)**: i test SBM NON la coprono (testano solo gli
+  helper Python, non i SKILL.md). Guardia = diff testuale byte-identico del contenuto
+  spostato + canarino e2e. NON illudersi che pytest verde = migrazione corretta.
 - **Skill (prompt)**: non unit-testabile; il canarino e2e reale (step 6) è il gate.
   "stub-green ≠ system-works": il primo run vero rivela i gap.
 
