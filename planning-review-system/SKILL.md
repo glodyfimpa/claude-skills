@@ -10,11 +10,7 @@ Weekly review workflow (30 min) with GTD-based inbox processing and quarterly tr
 
 ## Config Guard
 
-**BEFORE ANYTHING ELSE:** Look for the config file in this order:
-1. `.claude/life-os.local.md` (project-level)
-2. `~/.claude/life-os.local.md` (global, portable across projects)
-
-Use the first one found.
+**Config lookup:** open and follow `_shared-refs/config-lookup.md` (or `../_shared-refs/config-lookup.md` when running from the synced plugin copy).
 
 **If a config file exists** (plugin mode or previously configured standalone):
 - Read the file and parse:
@@ -42,7 +38,7 @@ All instructions below reference config values. Never use hardcoded database IDs
 
 ## Language
 
-Respond in the language specified by the `language` field in the config. If no config exists yet (during mini-setup), detect language from the user's message. Format dates according to the configured language's conventions.
+See `_shared-refs/language.md` (or `../_shared-refs/language.md` in the synced copy).
 
 ## Database Filters (CRITICAL)
 

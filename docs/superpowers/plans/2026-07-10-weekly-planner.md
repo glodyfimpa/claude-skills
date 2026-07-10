@@ -106,9 +106,12 @@ Expected: the literal is gone from the two SKILL.md, present in `_shared-refs/co
 - [ ] **Step 5: Run SBM Python tests — they must stay green** (they cover the helpers, not the prose; green here just confirms the markdown edits broke nothing importable):
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/projects/second-brain-migration && python3 -m pytest tests/skills/ -q
+# NOTE: system python3 is 3.9 — the helpers use `X | None` (needs 3.11+). Use a 3.11 venv:
+cd /Users/figlody_mac/Documents/brain/projects/second-brain-migration
+python3.11 -m venv /tmp/sbm-venv && /tmp/sbm-venv/bin/pip install -q pyyaml pytest
+/tmp/sbm-venv/bin/python -m pytest tests/skills/ -q
 ```
-Expected: all pass.
+Expected: all pass (66 tests as of 2026-07-10). If you see `TypeError: unsupported operand type(s) for |`, you're on py3.9 — use the 3.11 venv.
 
 - [ ] **Step 6: Commit**
 
