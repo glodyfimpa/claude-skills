@@ -8,8 +8,8 @@ description: |
 
 Forward-looking weekly planning in 4 phases. Collects the week's state, weighs every
 commitment, proposes a plan, gates on human approval, then applies it. A facade: it
-reuses planning-review-system's collect, time-energy-manager's calendar export, and the
-existing `append_weekly_review_sections` Python helper. No new code.
+reuses planning-review-system's collect and time-energy-manager's calendar-export
+pattern, and writes the weekly plan as plain markdown. No new code.
 
 **Principle:** a full calendar is not a planned week. Weigh every event, or you are just
 filling holes.
@@ -19,7 +19,7 @@ filling holes.
 **Config lookup:** open and follow `_shared-refs/config-lookup.md` (or `../_shared-refs/config-lookup.md` when running from the synced plugin copy).
 
 **If a config file exists:** read `task_tool`, `calendar_tool`, `notes_tool`, and
-`email_tool` from the frontmatter, plus `vault_path` and `helpers_path` when
+`email_tool` from the frontmatter, plus `vault_path` when
 `notes_tool = vault_filesystem`. These decide MCP vs conversational fallback.
 
 **If NO config file exists:** run the same mini-setup as planning-review-system /
@@ -41,6 +41,8 @@ ambiguous. All dates below use that Monday as the anchor.
 ## Phase 1 — Collect
 
 Gather everything the week's plan depends on. Skip any source whose tool is `none`.
+(This phase reuses the read logic of the sibling life-os skills; if they aren't loaded,
+the steps below are self-contained enough to run directly.)
 
 - **Tasks / projects / quarterly** (`task_tool`): reuse planning-review-system's collect.
   Read open tasks with due dates, active projects and their status, quarterly goals and
@@ -156,22 +158,47 @@ Only after explicit approval:
 If `calendar_tool = none`: skip calendar export.
 
 ### Write the weekly note
-**If `notes_tool = vault_filesystem`:** write to
-`<vault_path>/weekly/YYYY-MM-DD-weekly.md` where `YYYY-MM-DD` is the target **Monday**
-date (e.g. `2026-07-13-weekly.md`). This is the vault convention — NOT ISO `YYYY-Www`.
-Use the existing helper (no new code), run from `<helpers_path>`:
+**If `notes_tool = vault_filesystem`:** write the approved plan directly to
+`<vault_path>/weekly/YYYY-MM-DD-weekly.md` with the **Write tool** (plain markdown — no
+Python helper: the `weekly_review.py` helper renders *review* sections, Quick
+Capture / Inbox / Projects Status, which are the wrong shape for a *plan*).
 
-```bash
-cd <helpers_path> && .venv/bin/python -c "
-import sys; sys.path.insert(0, 'scripts')
-from life_os.weekly_review import append_weekly_review_sections
-# populate the payload from the approved plan, then append to the Monday weekly file
-"
+`YYYY-MM-DD` is the target **Monday** date (e.g. `2026-07-13-weekly.md`). This is the
+vault convention for the **filename** — NOT ISO `YYYY-Www`. (The ISO week still appears
+*inside* the frontmatter as the `week:` field — the ban is on the filename only.)
+
+Mirror the existing weekly-plan format (see `<vault_path>/weekly/2026-07-06-weekly.md`
+as the reference). Required frontmatter (mandatory `created` + `updated`, per vault rules):
+
+```yaml
+---
+title: "Piano settimana — <Monday date in configured language>"
+created: '<today ISO>'
+updated: '<today ISO>'
+tipo: weekly
+week: <ISO week, e.g. 2026-W29>
+quarter: <e.g. Q3>
+notion_url: null
+tags:
+  - weekly-plan
+---
 ```
-The weekly file MUST already exist; if missing, tell Glody and fall back to writing the
-plan in chat (do not silently create a malformed file).
 
-**If `notes_tool = notion`:** create/update the week's page under `output_page_url`.
+Then these sections, filled from Phases 2-3 (omit a section only if genuinely empty):
+- `## Contesto` — one paragraph on the week's situation.
+- `## Scadenze legali dure della settimana` — dated hard deadlines with consequence.
+- `## Golden Rule della settimana` — the one priority of priorities.
+- `## Priorità della settimana (ordine dettato dalle scadenze)` — P1..Pn, one why each.
+- `## Griglia Lun-Ven (blocchi: mattina 10-12, pomeriggio 16-18)` — the weighed grid,
+  one line per event (Glody-time + load type).
+- `## Email azionabili (scan Gmail ultimi 7gg)` — actionable emails with action + date.
+- `## Segnalazioni / conflitti` — anything moved to next week or needing a decision.
+
+If the file already exists (e.g. hand-written earlier this week), read it first and
+merge rather than overwrite — never destroy hand-written content; if unsure, ask.
+
+**If `notes_tool = notion`:** create/update the week's page under `output_page_url` with
+the same sections.
 
 **If `notes_tool = none`:** present the final plan in chat as formatted markdown.
 
