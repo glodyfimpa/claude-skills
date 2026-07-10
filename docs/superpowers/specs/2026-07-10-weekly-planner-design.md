@@ -63,15 +63,19 @@ Branch di lavoro:
 Tre frammenti sono **identici parola-per-parola** nelle skill esistenti e diventerebbero
 la 3ª copia con weekly-planner:
 
-1. **Config lookup** (~8 righe): "cerca config in `.claude/life-os.local.md` poi
-   `~/.claude/life-os.local.md`, usa il primo".
-2. **Source resolution** (~6 righe): `read_life_os_mode()` + `resolve_source()`.
-3. **Language** (~3 righe): rispondi nella lingua del campo `language`.
+1. **Config lookup** (5 righe): il blocco `**BEFORE ANYTHING ELSE:** ... Use the first
+   one found.` — verificato byte-identico in entrambe le skill.
+2. **Language** (1 riga): rispondi nella lingua del campo `language` — verificato identico.
 
 Vivono in `claude-skills/_shared-refs/`:
 - `config-lookup.md`
-- `source-resolution.md`
 - `language.md`
+
+**Source resolution NON estratta** (deciso in esecuzione 2026-07-10): il paragrafo
+differisce di una parola tra le due skill — planning-review dice "the save-actions",
+time-energy dice "the **four** save-actions" (ha 4 save-action; planning-review ne ha 2).
+Non è byte-identico → resta per-skill. Estrarlo sarebbe astrarre l'analogo. La guardia
+byte-identity del piano (Task 1) l'ha catturato prima del commit.
 
 **Come le skill li usano (traduzione onesta di DRY al registro delle skill):** un
 SKILL.md è un prompt markdown, non ha `import`. L'LLM non "risolve" un rimando da solo.

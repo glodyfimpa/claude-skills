@@ -14,7 +14,7 @@
 - Work fascia (referenced by the skill's Phase 2 text): ONLY 10-12 and 16-18, two separate islands. Never schedule work events outside these.
 - Weekly file convention in vault: `weekly/YYYY-MM-DD-weekly.md` (Monday date), NOT ISO `YYYY-Www`.
 - Extract ONLY byte-identical text to `_shared-refs/`. Analogous-but-divergent text stays per-skill (astrai l'identico, non l'analogo).
-- Config/notes/language field parsing stays per-skill (it diverges); only the config-file *lookup*, source-resolution, and Language paragraph are identical.
+- Config/notes/language field parsing stays per-skill (it diverges); only the config-file *lookup* and the Language paragraph are byte-identical and extracted. Source-resolution diverges by one word and stays per-skill.
 - Two repos, two PRs: claude-skills `feat/weekly-planner` and life-os `feat/weekly-planner`.
 - Commit messages end with `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
 
@@ -24,11 +24,12 @@
 
 **Files:**
 - Create: `claude-skills/_shared-refs/config-lookup.md`
-- Create: `claude-skills/_shared-refs/source-resolution.md`
 - Create: `claude-skills/_shared-refs/language.md`
 
 **Interfaces:**
-- Produces: three reference files that skills cite. Content is the byte-identical core lifted from the two existing skills.
+- Produces: two reference files that skills cite. Content is the byte-identical core lifted from the two existing skills.
+
+**Re-scope note (2026-07-10):** source-resolution was dropped from extraction — it differs by one word between the skills ("the save-actions" vs "the four save-actions"), so it is NOT byte-identical and stays per-skill. Only config-lookup and language are extracted.
 
 - [ ] **Step 1: Create `config-lookup.md`** with exactly this content (the 5 identical lines, verified in both skills):
 
@@ -46,34 +47,20 @@ Use the first one found.
 Respond in the language specified by the `language` field in the config. If no config exists yet (during mini-setup), detect language from the user's message. Format dates according to the configured language's conventions.
 ```
 
-- [ ] **Step 3: Create `source-resolution.md`** by copying the Source-resolution block verbatim from `time-energy-manager/SKILL.md` (the paragraph starting `**Source resolution (M1 front-end switch, 2026-06-06):**` through the line ending `...flip \`mode\` in config, no code change).`). Run to capture it exactly:
+- [ ] **Step 3: Confirm source-resolution is NOT extracted** — it diverges by one word between skills; it stays per-skill. (No file created for it.)
 
-```bash
-cd claude-skills && sed -n '/\*\*Source resolution (M1 front-end switch/,/flip .mode. in config, no code change/p' time-energy-manager/SKILL.md > _shared-refs/source-resolution.md
-cat _shared-refs/source-resolution.md
-```
-Expected: the full source-resolution paragraph, no leading/trailing noise.
-
-- [ ] **Step 4: Verify byte-identity of source-resolution across both skills** (guard — it must be truly identical to be shared):
-
-```bash
-cd claude-skills
-sed -n '/\*\*Source resolution (M1 front-end switch/,/flip .mode. in config, no code change/p' planning-review-system/SKILL.md > /tmp/sr_prs.md
-diff /tmp/sr_prs.md _shared-refs/source-resolution.md && echo "IDENTICAL — safe to share" || echo "DIVERGES — do NOT share, stop"
-```
-Expected: `IDENTICAL — safe to share`. If it diverges, stop and re-scope (that block is not extractable).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 cd claude-skills
 git add _shared-refs/
-git commit -m "feat: extract identical config-lookup/source-resolution/language core to _shared-refs
+git commit -m "feat: extract identical config-lookup + language core to _shared-refs
 
-Only the byte-identical fragments (config-file lookup, source resolution,
-Language paragraph) are extracted. Field parsing and the rest of Config Guard
-stay per-skill because they diverge by domain (calendar/schedule in
-time-energy). astrai l'identico, non l'analogo.
+Only the byte-identical fragments (config-file lookup, Language paragraph)
+are extracted. Source-resolution stays per-skill (differs by one word:
+'the four save-actions' in time-energy vs 'the save-actions' in
+planning-review). Field parsing and the rest of Config Guard stay per-skill
+too. astrai l'identico, non l'analogo.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -83,11 +70,13 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Task 2: Migrate the 2 existing skills to cite `_shared-refs/`
 
 **Files:**
-- Modify: `claude-skills/planning-review-system/SKILL.md` (config lookup lines 13-17, Language 45, source-resolution paragraph)
-- Modify: `claude-skills/time-energy-manager/SKILL.md` (config lookup lines 15-19, Language 53, source-resolution paragraph)
+- Modify: `claude-skills/planning-review-system/SKILL.md` (config lookup block, Language paragraph)
+- Modify: `claude-skills/time-energy-manager/SKILL.md` (config lookup block, Language paragraph)
+
+Note: source-resolution is NOT touched (stays inline per-skill).
 
 **Interfaces:**
-- Consumes: the three files from Task 1.
+- Consumes: the two files from Task 1 (config-lookup, language).
 - Produces: two migrated skills whose divergent field-parsing text is preserved, whose identical core is now a citation.
 
 - [ ] **Step 1: In `planning-review-system/SKILL.md`, replace the 5 identical config-lookup lines** (the `**BEFORE ANYTHING ELSE:** ... Use the first one found.` block) with:
@@ -97,21 +86,15 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 Leave the `**If a config file exists**` parsing block below it UNCHANGED (it diverges per skill).
 
-- [ ] **Step 2: In `planning-review-system/SKILL.md`, replace the source-resolution paragraph body** with:
-
-```markdown
-**Source resolution:** open and follow `_shared-refs/source-resolution.md` (or `../_shared-refs/source-resolution.md` in the synced copy).
-```
-
-- [ ] **Step 3: In `planning-review-system/SKILL.md`, replace the `## Language` paragraph body** with:
+- [ ] **Step 2: In `planning-review-system/SKILL.md`, replace the `## Language` paragraph body** with:
 
 ```markdown
 See `_shared-refs/language.md` (or `../_shared-refs/language.md` in the synced copy).
 ```
 
-- [ ] **Step 4: Repeat Steps 1-3 for `time-energy-manager/SKILL.md`** at its own line locations. Same three citations. Leave time-energy's divergent parsing block (with `calendar_tool`, `schedule settings`) UNCHANGED.
+- [ ] **Step 3: Repeat Steps 1-2 for `time-energy-manager/SKILL.md`** at its own line locations. Same two citations (config-lookup + language). Leave time-energy's divergent parsing block (with `calendar_tool`, `schedule settings`) AND its source-resolution paragraph UNCHANGED.
 
-- [ ] **Step 5: Guard — confirm no identical core text remains inline** (should now only appear in `_shared-refs/`):
+- [ ] **Step 4: Guard — confirm no identical core text remains inline** (should now only appear in `_shared-refs/`):
 
 ```bash
 cd claude-skills
@@ -120,22 +103,22 @@ grep -rln "life-os.local.md.*global, portable" planning-review-system/SKILL.md t
 ```
 Expected: the literal is gone from the two SKILL.md, present in `_shared-refs/config-lookup.md`. (The citation lines themselves are fine.)
 
-- [ ] **Step 6: Run SBM Python tests — they must stay green** (they cover the helpers, not the prose; green here just confirms the markdown edits broke nothing importable):
+- [ ] **Step 5: Run SBM Python tests — they must stay green** (they cover the helpers, not the prose; green here just confirms the markdown edits broke nothing importable):
 
 ```bash
 cd /Users/figlody_mac/Documents/brain/projects/second-brain-migration && python3 -m pytest tests/skills/ -q
 ```
 Expected: all pass.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 cd claude-skills
 git add planning-review-system/SKILL.md time-energy-manager/SKILL.md
 git commit -m "refactor: cite _shared-refs core in the two existing life-os skills
 
-Config-lookup, source-resolution and Language now cite the shared refs;
-divergent field-parsing blocks stay per-skill.
+Config-lookup and Language now cite the shared refs; source-resolution and
+the divergent field-parsing blocks stay per-skill.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
