@@ -13,3 +13,11 @@ PUBLISH_SKILL.md
 
 # Internal plans and design docs
 docs/plans/
+
+# Local sync state (per-machine, not source)
+.sync-manifest.json
+
+# Finder/iCloud duplicate artifacts
+* 2.md
+* 2.py
+* 2.json
