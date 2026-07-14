@@ -98,9 +98,36 @@ rispondere, l'N-1 era l'ultimo utile.
 Si smette quando i residui sono di **dettaglio implementativo**: lì il ciclo RED→GREEN li espone
 a costo minore di una review, e insistere tocca il blind-spot del perfezionismo.
 
+## Chiudere il testimone (obbligatorio, quando scrivi il verdetto)
+
+Quando la spec è nata, un hook ha registrato un **testimone**: un file che dice *«questa spec
+attende il giro»*. È ciò che permette al gate di bloccare l'implementazione di una spec non
+revisionata — il gate, da solo, non potrebbe *scoprire* su quale spec stai lavorando.
+
+**Scritto il verdetto, chiudi il testimone.** Se non lo fai, il gate continuerà a bloccare
+per sempre una spec che hai già revisionato.
+
+```bash
+python3 ~/Documents/brain/areas/ai-automation/design-review-harness/chiudi_testimone.py <path-della-spec>
+```
+
+**Non calcolare nulla a mano**: il testimone è indicizzato su uno sha1, e trascrivere 40
+caratteri esadecimali a memoria significa chiudere il testimone **sbagliato** — cioè liberare
+in silenzio una spec mai revisionata. Passi il path della spec, lo script fa il resto.
+
+Vale per **ogni** esito, `SALTO_MOTIVATO` incluso: anche saltare il giro è chiuderlo. Se la
+spec non ha un testimone (è nata prima che il sistema esistesse), lo script lo dice e non è un
+errore.
+
 ## Il verdetto
 
-**Path:** accanto all'artefatto, stesso stem: `<stem>-verdetto.md`.
+**Path:** accanto all'artefatto. **Il nome toglie il suffisso `-design` e aggiunge `-verdetto`**:
+
+```
+spec:      2026-07-14-design-review-harness-design.md
+verdetto:  2026-07-14-design-review-harness-verdetto.md      ← NON "…-design-verdetto.md"
+referti:   2026-07-14-design-review-harness-referto-1-architettura.md
+```
 
 **Questi nomi sono un contratto, non uno stile.** `<stem>-verdetto.md`, `<stem>-referto-*.md`
 e `<stem>-HANDOFF.md` non sono solo la convenzione di questa skill: sono l'elenco letterale
