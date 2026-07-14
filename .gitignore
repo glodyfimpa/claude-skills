@@ -21,3 +21,6 @@ docs/plans/
 * 2.md
 * 2.py
 * 2.json
+
+# Packaged plugins (build artifacts, like *.skill/*.zip above)
+*.plugin

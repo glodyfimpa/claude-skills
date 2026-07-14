@@ -1,0 +1,8 @@
+{
+  "name": "claude-md-management",
+  "version": "1.0.0",
+  "description": "Review the current session and update CLAUDE.md with new learnings, preferences, and context.",
+  "author": {
+    "name": "Glody Fimpa"
+  }
+}
