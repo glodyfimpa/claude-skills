@@ -102,6 +102,19 @@ a costo minore di una review, e insistere tocca il blind-spot del perfezionismo.
 
 **Path:** accanto all'artefatto, stesso stem: `<stem>-verdetto.md`.
 
+**Questi nomi sono un contratto, non uno stile.** `<stem>-verdetto.md`, `<stem>-referto-*.md`
+e `<stem>-HANDOFF.md` non sono solo la convenzione di questa skill: sono l'elenco letterale
+(`_PRODOTTI_DAL_GIRO` / `_MARCATORE_REFERTO`) che il riconoscitore in
+`areas/ai-automation/design-review-harness/recognize_artifact.py` usa per **non** rilanciare
+il giro sui propri stessi output. Questi file nascono dentro `specs/`, lo stesso posto che
+l'hook sorveglia — è **quel suffisso**, e solo quello, a impedire che l'hook li scambi per
+una nuova spec. Se domani rinomini il verdetto (es. `<stem>-review.md`) o un mandato scrive
+un file con un nome fuori da questo elenco, il riconoscitore non lo sa: lo tratta come una
+spec nuova, l'hook chiede un giro di review su di esso, il giro scrive un altro verdetto,
+l'hook chiede un altro giro — loop infinito. Cambiare questi nomi senza aggiornare
+`recognize_artifact.py` nello stesso commit rompe la difesa anti-ricorsione a run-time, non
+a design-time: il primo sintomo è la skill che si richiama da sola.
+
 ```yaml
 ---
 created: YYYY-MM-DD
