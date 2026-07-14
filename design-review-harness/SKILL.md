@@ -143,5 +143,3 @@ chiude i tre modi di barare:
 
 **Onestà sul limite:** questo rende il bypass **esplicito invece che silenzioso**; non lo rende
 impossibile. La dimenticanza è il fallimento osservato; la falsificazione non è mai accaduta.
-
-<!-- e2e-sync-canary-1784029669 -->
