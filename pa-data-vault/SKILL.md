@@ -83,6 +83,23 @@ Per trovare documenti di identità, CIN, DIA o altri file PDF/DOCX collegati a u
 
 `document-collector` gestisce la ricerca su filesystem, Finder tags, e cartelle Documenti. `pa-data-vault` gestisce i dati strutturati nei reference file — non fa ricerca su filesystem.
 
+### Dedup scansioni: tieni solo il completo (consolidato dal brain 2026-07-15)
+
+Quando esiste sia il file `*_completo*.pdf` (fronte+retro insieme) sia i pezzi separati
+(`*_retro`, `*_verso`, `*_fronte`), tieni solo il completo. I form PA spesso vogliono
+retro/verso separati (a volte in JPG/JPEG, a volte PDF) → si estraggono **on-demand** dal
+completo (via `pdfseparate` o screenshot della pagina), non vale tenerli pre-calcolati.
+
+- Durante audit/dedup di cartelle PA: scarta `*_retro*`/`*_verso*`/`*_fronte*` quando esiste il
+  `*_completo*` (o il file senza suffisso direzionale).
+- Documenti **distinti** della stessa categoria (CF + carta identità + permesso soggiorno) NON
+  sono duplicati: tienili tutti.
+- Quando un form PA chiede retro/verso separati a run-time, generarli allora dal completo.
+
+Esempio (2026-05-26): Helen 7 PDF in ID/ → ridotti a 3 distinti, scartati 4 retro/verso.
+Pattern "meno è meglio" applicato al dedup: ogni file in più è debito di gestione, l'estrazione
+on-demand è lavoro reversibile di 2 minuti.
+
 ## Error Handling
 
 | Errore | Causa | Azione |
