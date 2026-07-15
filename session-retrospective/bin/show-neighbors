@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""show-neighbors — the fulcrum of the session-retrospective rite.
+
+Given a spark (a lesson or tool-idea that just emerged), print the already-existing
+similar fragments in the brain, most-similar first, so Glody can judge: is this new,
+or the Nth variant of something already there (fuse/update instead of duplicate)?
+
+Usage:
+    show-neighbors [--vault DIR] [--skills DIR] [--top N] [--min-overlap K] "spark text"
+
+Defaults: --vault ~/Documents/brain, --skills ~/.claude/skills, --top 5, --min-overlap 2.
+Exit 0 always on a valid call (an empty result is a legitimate, common outcome:
+"nessun vicino" means the spark is genuinely new). Exit 64 on a missing spark.
+"""
+import argparse
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import neighbors  # noqa: E402
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(add_help=True)
+    parser.add_argument("spark", nargs="?", help="the lesson/idea that just emerged")
+    parser.add_argument("--vault", default=os.path.expanduser("~/Documents/brain"))
+    parser.add_argument("--skills", default=os.path.expanduser("~/.claude/skills"))
+    parser.add_argument("--top", type=int, default=5)
+    parser.add_argument("--min-overlap", type=int, default=2)
+    args = parser.parse_args(argv)
+
+    if not args.spark or not args.spark.strip():
+        parser.print_usage(sys.stderr)
+        print("show-neighbors: manca il testo della scintilla", file=sys.stderr)
+        return 64
+
+    vault = Path(args.vault) if args.vault and Path(args.vault).is_dir() else None
+    skills = Path(args.skills) if args.skills and Path(args.skills).is_dir() else None
+
+    sources = neighbors.collect_sources(vault_root=vault, skills_root=skills)
+    hits = neighbors.find_neighbors(args.spark, sources,
+                                    top_n=args.top, min_overlap=args.min_overlap)
+
+    if not hits:
+        print("nessun vicino: la scintilla sembra nuova nel brain.")
+        print("(nessun frammento condivide abbastanza parole-chiave — "
+              "se salvi, nasce, non fonde)")
+        return 0
+
+    print(f"{len(hits)} vicini nel brain (fondi/aggiorna invece di duplicare):\n")
+    for h in hits:
+        print(f"  [{h.score}] ({h.source.kind}) {h.source.title}")
+        print(f"      {h.source.path}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
