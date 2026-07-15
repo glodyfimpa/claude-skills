@@ -8,7 +8,7 @@
 
 A collection of Claude skills for productivity and business automation.
 
-Standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb investment analysis, property scouting, Java clean code standards, bash portability linting, session retrospective analysis, agent-team orchestration, PA bureaucratic assistance (form filling, data vault, legal clause analysis), Italian forfettario tax calculation, and a portability gate for locally-scheduled routines. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
+Standalone skills covering GTD planning, energy-adaptive scheduling, Java clean code standards, bash portability linting, session retrospective analysis, agent-team orchestration, PA bureaucratic assistance (form filling, data vault, legal clause analysis), Italian forfettario tax calculation, and a portability gate for locally-scheduled routines. Each skill auto-detects available MCP tools on first run and configures itself accordingly.
 
 ## Skills
 
@@ -16,8 +16,6 @@ Standalone skills covering GTD planning, energy-adaptive scheduling, Airbnb inve
 |-------|------|
 | [planning-review-system](./planning-review-system/) | 6-phase GTD weekly review with quarterly planning. Works with any task database MCP (Notion, Airtable, Linear) or chat-only. |
 | [time-energy-manager](./time-energy-manager/) | Daily planning in 4 phases (Morning Plan, Mid-day Check, Pivot, Evening Close). Adapts scheduling to energy levels 1-5. Works with any task/calendar MCP or chat-only. |
-| [property-acquisition-tracker](./property-acquisition-tracker/) | Automated apartment scouting across Immobiliare.it, Idealista, Casa.it. Applies investment scoring, saves qualified properties to project tracker. Includes Node.js scanner scripts. |
-| [short-term-rental-analyzer](./short-term-rental-analyzer/) | Airbnb investment analysis with InsideAirbnb market data, ROI projections, and Excel business plan generation. Covers cedolare secca tax rules. Includes Python analysis scripts. |
 | [java-spring-clean-code](./java-spring-clean-code/) | Clean Code standards for Java 8-21 LTS and Spring Boot 3. SOLID principles, naming conventions, exception handling, testing patterns, Lombok/JPA best practices, SonarQube metrics. |
 | [bash-portability-linter](./bash-portability-linter/) | Scans shell scripts for constructs that break on macOS bash 3.2, BSD coreutils, and Git Bash on Windows. Seven rules (BP001-BP007): bash 4+ case modification, associative arrays, `mapfile`, `sed -i` BSD/GNU split, `awk` multi-char RS, `readlink -f`, `date --iso-8601`. Default text output or `--json`. |
 | [session-retrospective](./session-retrospective/) | End-of-session analysis to identify repeatable patterns that could become skills, commands, or plugins. Cross-checks against Notion backlog to avoid duplicates and confirm recurring ideas. |
@@ -75,31 +73,6 @@ claude-skills/
 │   ├── SKILL.md                                     4-phase daily management workflow
 │   └── references/
 │       └── energy-patterns.md                       pattern detection guide
-├── property-acquisition-tracker/
-│   ├── SKILL.md                                     portal scouting workflow
-│   ├── references/
-│   │   ├── portals.md                               URL patterns, filters, extraction rules
-│   │   └── scoring.md                               thresholds, formulas, zone rates
-│   └── scanner/                                     Node.js automation scripts
-│       ├── scan.js                                  main scanner entry point
-│       ├── scan-idealista.js                        Idealista-specific scraper
-│       ├── scoring.js                               investment score calculator
-│       ├── dedup.js                                 cross-portal deduplication
-│       ├── notion.js                                Notion API integration
-│       ├── find-db.js                               database discovery utility
-│       ├── inspect.js                               listing inspector
-│       ├── test-notion.js                           Notion connection test
-│       ├── config.js                                scanner configuration
-│       ├── package.json                             dependencies
-│       └── .env.example                             environment template
-├── short-term-rental-analyzer/
-│   ├── SKILL.md                                     zone analysis + business plan workflow
-│   ├── scripts/
-│   │   ├── market_analyzer.py                       InsideAirbnb data pull + zone stats
-│   │   ├── business_plan_calculator.py              ROI, break-even, scenario analysis
-│   │   └── create_template.py                       Excel business plan generator
-│   └── assets/
-│       └── business_plan_template.xlsx              pre-built Excel template
 ├── java-spring-clean-code/
 │   └── SKILL.md                                     clean code standards reference
 ├── bash-portability-linter/
