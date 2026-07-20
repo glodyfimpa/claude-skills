@@ -34,9 +34,23 @@ Ripercorri la sessione e cerca UNA scintilla: una lezione pagata con un errore, 
 che si è ripetuta, un'idea di strumento maturata sul campo. **Barra alta**: si salva solo ciò
 che "cambia il domani in meglio", non la frequenza di un gesto.
 
-Se non c'è scintilla → **dillo e chiudi**: "Niente di raro da salvare oggi." Fine. Non forzare.
+**Self-check obbligatorio, scritto esplicitamente PRIMA di eseguire il mostra-vicini** (non
+dopo, non in testa): rispondi per iscritto a — *"tolta la mia soddisfazione di averla notata,
+questa scintilla cambia il domani in meglio, o è solo un episodio vivido perché è appena
+successo?"* Se non hai un caso concreto di beneficio futuro (non "è interessante", non "si è
+ripetuto nella sessione"), è rumore: fermati qui, non procedere al mostra-vicini. Il bias da
+intercettare: un episodio ripetuto PIÙ VOLTE NELLA STESSA sessione sembra "leva" solo perché è
+fresco e vivido — ma la frequenza dentro una sessione non è la stessa cosa della frequenza tra
+sessioni diverse (quella la misura la famiglia di lezioni già esistente, non questo rito).
+Verificato 2026-07-20: due "scintille" proposte (un dominio nuovo per verify-before-react, un
+pattern sintomo-vs-causa) erano entrambe già coperte nello spirito da principi esistenti — il
+mostra-vicini le avrebbe comunque agganciate a vicini forti, ma il self-check le avrebbe fermate
+un passo prima, senza nemmeno investigare.
 
-Se c'è → una frase asciutta che la descrive, e vai al Passo 2.
+Se non c'è scintilla (o il self-check la boccia) → **dillo e chiudi**: "Niente di raro da
+salvare oggi." Fine. Non forzare.
+
+Se c'è, e il self-check la conferma → una frase asciutta che la descrive, e vai al Passo 2.
 
 ## Passo 2 — il mostra-vicini (il fulcro)
 
