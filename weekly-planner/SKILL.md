@@ -70,9 +70,18 @@ never done — nobody reopened it because no ritual re-surfaced it).
    "retro" that has no calendar slot. If it implies real money or a hard consequence
    (a call to book, a cancellation with a window), it becomes a **calendar event**, not
    a reminder — a reminder with no slot is how it gets missed twice.
+5. **Check predicted load vs actual load**: for each commitment marked DONE or PARTIAL,
+   compare the load type it was weighed as (Phase 2's attribute 3: handoff vs cognitive)
+   against what the session evidence shows it actually took. Flag a mismatch when a
+   commitment predicted as light/handoff turned out cognitive-heavy with no deliverable
+   (validated 2026-07-27: a cashflow session weighed as a build produced serious design
+   reasoning but zero code shipped, zero bank connected — the user called it "tempo
+   buttato"). This is not a full retrospective audit — just a one-line note per mismatch,
+   feeding Phase 3's report. A repeated mismatch on the same recurring commitment across
+   multiple weeks is worth surfacing explicitly, not just noting once and dropping.
 
 Output of this sub-phase: a short reconciliation summary (what was done, what wasn't,
-what re-enters as open) — feeds directly into Phase 3's report.
+what re-enters as open, and any load mismatch) — feeds directly into Phase 3's report.
 
 ### Phase 1b — New material
 
@@ -162,12 +171,17 @@ Structure of the report:
 - **Consuntivo settimana scorsa** — from Phase 1a: what was done, what was partial, what
   was not touched, each with its evidence. Unresolved captures list explicitly what
   they're becoming this week (a placed event, a dropped item) — never "we'll look at it
-  in retro" when no retro ritual actually owns that slot.
+  in retro" when no retro ritual actually owns that slot. Include any load mismatch
+  flagged in Phase 1a step 5 (predicted handoff/light, actual cognitive/heavy or vice
+  versa) — one line each, not a full audit.
 - **Hard deadlines of the week** (dated, with consequence).
 - **Golden Rule** of the week (the one priority of priorities, highlighted first).
 - **Priorities**, ordered by the Phase 2 sort (P1..Pn with a one-line why each).
 - **Mon-Fri grid** — for each fascia (10-12, 16-18), the event placed there with its
   one-line weighing (Glody-time + load type). Show the reasoning, not just the grid.
+- **Cognitive vs handoff count** — how many blocks this week's grid places in each load
+  type (Phase 2 attribute 3). A number, not a judgment — it makes visible whether the
+  week leans toward deep/cognitive or shallow/handoff work without another audit.
 - **Actionable emails** (from Phase 1, with the action + date).
 - **Conflicts / notes** — anything that didn't fit, moved to next week, or needs a Glody
   decision.
@@ -231,12 +245,14 @@ tags:
 Then these sections, filled from Phases 2-3 (omit a section only if genuinely empty):
 - `## Contesto` — one paragraph on the week's situation.
 - `## Consuntivo settimana scorsa` — from Phase 1a: done / partial / not touched, with
-  evidence, and where each unresolved capture landed this week.
+  evidence, and where each unresolved capture landed this week. Include load mismatches
+  (predicted vs actual) as one line each.
 - `## Scadenze legali dure della settimana` — dated hard deadlines with consequence.
 - `## Golden Rule della settimana` — the one priority of priorities.
 - `## Priorità della settimana (ordine dettato dalle scadenze)` — P1..Pn, one why each.
 - `## Griglia Lun-Ven (blocchi: mattina 10-12, pomeriggio 16-18)` — the weighed grid,
   one line per event (Glody-time + load type).
+- `## Bilancio cognitive/handoff della settimana` — the count from Phase 3.
 - `## Email azionabili (scan Gmail ultimi 7gg)` — actionable emails with action + date.
 - `## Segnalazioni / conflitti` — anything moved to next week or needing a decision.
 
