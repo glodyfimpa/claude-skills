@@ -233,7 +233,7 @@ as the reference). Required frontmatter (mandatory `created` + `updated`, per va
 title: "Piano settimana — <Monday date in configured language>"
 created: '<today ISO>'
 updated: '<today ISO>'
-tipo: weekly
+doc_type: log
 week: <ISO week, e.g. 2026-W29>
 quarter: <e.g. Q3>
 notion_url: null

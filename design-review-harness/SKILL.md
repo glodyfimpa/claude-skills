@@ -146,7 +146,7 @@ a design-time: il primo sintomo è la skill che si richiama da sola.
 ---
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
-tipo: verdetto
+doc_type: log
 fase: spec
 slug: <stem>-verdetto
 esito: APPROVATA | BOCCIATA | SALTO_MOTIVATO

@@ -42,7 +42,7 @@ L'utente dice (esempi):
 
    ```markdown
    ---
-   tipo: inbox
+   doc_type: log
    created: <data YYYY-MM-DD, es. 2026-05-28 — string, NON datetime YAML>
    source: claude-capture
    captured_at: <ISO8601 con timezone, es. 2026-05-28T10:42:15+02:00>
@@ -52,7 +52,7 @@ L'utente dice (esempi):
    ```
 
    **Importante**:
-   - `tipo: inbox` (senza suffisso `-raw`): l'unico valore allowlisted dallo schema vault. Distingui la provenance con `source:`, non con `tipo:`.
+   - `doc_type: log`: una cattura è un registro datato, non un fatto stabile. Distingui la provenance con `source:`, non con il campo doc_type.
    - `created:` deve essere stringa `YYYY-MM-DD` (es. `2026-05-28`), NON datetime YAML completo, altrimenti `validate_vault` rifiuta.
    - Se vuoi precisione al minuto, usa `captured_at:` come campo aggiuntivo (libero).
 
@@ -67,7 +67,7 @@ L'utente dice (esempi):
 
 ```markdown
 ---
-tipo: inbox
+doc_type: log
 created: 2026-05-28
 source: claude-capture
 captured_at: 2026-05-28T10:42:00+02:00
@@ -85,7 +85,7 @@ devo richiamare il commercialista per la chiusura fiscale 2025
 
 ```markdown
 ---
-tipo: inbox
+doc_type: log
 created: 2026-05-28
 source: claude-capture
 captured_at: 2026-05-28T11:00:00+02:00
@@ -106,7 +106,7 @@ idea: micro-servizio Telegram per riassumere PDF lunghi via Claude API
 ## Regole vincolanti
 
 - **NON parafrasare** il testo dell'utente. Va integrale nel body.
-- **NON classificare**. Niente tag, niente `area:`, niente decisione tipo `resource` vs altro. Sempre `tipo: inbox`.
+- **NON classificare**. Niente tag, niente `area:`, niente decisione tipo `resource` vs altro. Sempre `doc_type: log`.
 - **NON arricchire**. Niente link wiki, niente backlinks, niente sotto-cartelle. Solo `brain/inbox/<filename>.md`.
 - **NON chiedere conferma** prima di scrivere. È capture rapida, attrito zero.
 - **Validate post-write**: il file deve esistere ed essere leggibile (Read dopo Write). Se Write fallisce, riportare l'errore senza ritentare.
