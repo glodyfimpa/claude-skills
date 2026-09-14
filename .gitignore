@@ -24,3 +24,9 @@ docs/plans/
 
 # Packaged plugins (build artifacts, like *.skill/*.zip above)
 *.plugin
+
+# Personal identifying data (CF, IBAN, indirizzo, credenziali) — mai su repo pubblico.
+# Il file resta nello schema del repo coi placeholder [da completare]; i valori reali
+# vivono solo in locale, mai committati.
+pa-data-vault/references/personal/
+pa-data-vault/references/bnb-*/
