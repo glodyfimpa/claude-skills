@@ -35,6 +35,25 @@ Consolidated 2026-07-15 from memory (Fronte 1 audit).
 - Every plugin repo MUST have `.claude-plugin/marketplace.json` next to `plugin.json` (single-plugin marketplace pattern), created at the same time as `plugin.json` — without it `claude plugin marketplace add` fails with "Marketplace file not found".
 - Writing-style guide applies inside the README (no emojis, em-dashes, "Not X but Y", hyperbole). Cross-check against an existing correct README (bnb-investment-toolkit was first to get it right).
 
+## Dati personali/sensibili — mai nel repo pubblico
+
+Questo repo è pubblico (showcase, vedi sezione README sync sopra). Una skill che scrive dati
+reali dell'utente in un path fisso (CF, IBAN, credenziali, indirizzo — es. `pa-data-vault`)
+deve avere quel path escluso in `.gitignore` **prima** che ci finisca il primo dato vero, non
+dopo. Un file con placeholder `[da completare]` sembra innocuo e passa inosservato al primo
+commit; il rischio si materializza solo quando qualcuno completa i campi in una sessione
+successiva, quando il collegamento "questo path è nel repo pubblico" è meno visibile.
+
+Verificato 2026-09-14: `pa-data-vault/references/personal/glody.md` era tracciato con
+placeholder dal commit `fde6f13`; una sessione successiva ha completato i campi (CF, nascita,
+indirizzo, IBAN) senza che nulla segnalasse il rischio, ed erano a un push di distanza dal
+finire su GitHub pubblico. Fix: `references/personal/` e `references/bnb-*/` in `.gitignore`,
+file rimosso dal tracking (`git rm --cached`), dati reali restano solo locali sul disco.
+
+**Checklist da applicare a ogni nuova skill che introduce un file `references/*` con dati
+reali dell'utente**: prima del primo utilizzo con un dato vero (non placeholder), verificare
+che il path sia già in `.gitignore` di questo repo.
+
 ## Skill design principles
 Validated 2026-05-15 against Anthropic docs, "Building Effective Agents", Simon Willison, IFScale (arXiv 2507.11538) — the popular guides dress real principles in invented numbers.
 1. **Description is semantic, not imperative.** A skill triggers on density and specificity of triggers ("what it does + when + real phrases"), not on imperative tone ("USE ALWAYS"). Anthropic: "what it does AND when to use it" + explicit triggers/contexts (max 1024 chars).
