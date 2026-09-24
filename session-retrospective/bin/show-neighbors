@@ -38,6 +38,19 @@ def main(argv=None):
     vault = Path(args.vault) if args.vault and Path(args.vault).is_dir() else None
     skills = Path(args.skills) if args.skills and Path(args.skills).is_dir() else None
 
+    # A missing source shrinks the search silently and "nessun vicino" turns into
+    # a false "è nuova": say which part of the perimeter was not searched.
+    missing = []
+    if vault is None:
+        missing.append(f"vault {args.vault}")
+    else:
+        missing.extend(neighbors.missing_perimeter(vault))
+    if skills is None:
+        missing.append(f"skills {args.skills}")
+    for name in missing:
+        print(f"show-neighbors: ATTENZIONE, non trovato nel perimetro: {name} "
+              "— i vicini da lì non sono stati cercati", file=sys.stderr)
+
     sources = neighbors.collect_sources(vault_root=vault, skills_root=skills)
     hits = neighbors.find_neighbors(args.spark, sources,
                                     top_n=args.top, min_overlap=args.min_overlap)

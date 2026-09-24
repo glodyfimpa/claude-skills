@@ -7,11 +7,14 @@ already built. Lexical token-overlap ranking: deterministic, testable, no
 embeddings (an embedding engine would be non-deterministic, heavy to install,
 and impossible to reproduce at cold-read — against the audit's whole point).
 
-Perimeter (decided with Glody, Fronte 2): principles/*.md (where a LESSON lives),
-memory/MEMORY.md (the always-loaded index), areas/**/CLAUDE.md (area rules), and
-installed skill descriptions (~/.claude/skills/*/SKILL.md — for "already covered
-by a tool"). Ranking by shared-token count keeps irrelevant area rules out on a
-global spark for free: few shared tokens -> below threshold -> excluded.
+Perimeter (decided with Glody, Fronte 2): .brain/principles/*.md (where a LESSON
+lives), .brain/memory/MEMORY.md (the always-loaded index), areas/**/CLAUDE.md
+(area rules), and installed skill descriptions (~/.claude/skills/*/SKILL.md — for
+"already covered by a tool"). Principles and memory moved under .brain/ in the L2
+migration (2026-09-01); the pre-L2 layout (principles/, memory/ at the vault
+root) is still read as a fallback. Ranking by shared-token count keeps irrelevant
+area rules out on a global spark for free: few shared tokens -> below threshold
+-> excluded.
 """
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -137,24 +140,49 @@ def _skill_description(skill_md: str) -> str:
     return ""
 
 
+def _brain_path(vault_root: Path, *parts: str) -> Path:
+    """Resolve a vault meta path: .brain/<parts> if it exists, else the pre-L2
+    root-level <parts>. Mirrors the vault's .brain/system/hooks/bin/brain-system-path.sh."""
+    current = vault_root.joinpath(".brain", *parts)
+    return current if current.exists() else vault_root.joinpath(*parts)
+
+
+def missing_perimeter(vault_root) -> list[str]:
+    """Names of the vault perimeter sources that do not exist, in either layout.
+
+    collect_sources skips an absent source without a word, so a moved directory
+    silently shrinks the search to whatever is left (L2 regression: principles
+    and memory vanished, area rules still matched). Callers report this list.
+    """
+    vault_root = Path(vault_root)
+    expected = [
+        (_brain_path(vault_root, "principles"), ".brain/principles/"),
+        (_brain_path(vault_root, "memory", "MEMORY.md"), ".brain/memory/MEMORY.md"),
+        (vault_root / "areas", "areas/"),
+    ]
+    return [label for path, label in expected if not path.exists()]
+
+
 def collect_sources(vault_root=None, skills_root=None) -> list[Source]:
     """Gather the searchable perimeter into Source objects.
 
-    vault_root -> principles/*.md, memory/MEMORY.md, areas/**/CLAUDE.md.
+    vault_root -> .brain/principles/*.md, .brain/memory/MEMORY.md (pre-L2 root
+    layout as fallback), areas/**/CLAUDE.md.
     skills_root -> */SKILL.md descriptions. Either may be None (skipped).
+    Absent sources are skipped here; use missing_perimeter() to report them.
     """
     sources: list[Source] = []
 
     if vault_root is not None:
         vault_root = Path(vault_root)
 
-        principles = vault_root / "principles"
+        principles = _brain_path(vault_root, "principles")
         if principles.is_dir():
             for p in sorted(principles.glob("*.md")):
                 sources.append(Source(path=str(p), kind="principle",
                                       title=p.stem, text=_read(p)))
 
-        memory_index = vault_root / "memory" / "MEMORY.md"
+        memory_index = _brain_path(vault_root, "memory", "MEMORY.md")
         if memory_index.is_file():
             sources.append(Source(path=str(memory_index), kind="memory",
                                   title="MEMORY", text=_read(memory_index)))

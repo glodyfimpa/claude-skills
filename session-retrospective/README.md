@@ -25,8 +25,10 @@ centrato su un backlog-cimitero) aveva il default invertito (pretendeva output �
 
 - **Strumento**: ricerca lessicale (overlap di token significativi), non embedding — deterministica,
   testabile a freddo, zero dipendenze, riproducibile.
-- **Perimetro**: `principles/*.md` + `memory/MEMORY.md` + `areas/**/CLAUDE.md` + `~/.claude/skills/*/SKILL.md`.
-  Esclusi i sottoalberi effimeri/vendored (`.claude/worktrees`, `node_modules`, ecc.).
+- **Perimetro**: `.brain/principles/*.md` + `.brain/memory/MEMORY.md` + `areas/**/CLAUDE.md` +
+  `~/.claude/skills/*/SKILL.md`. Layout pre-L2 (`principles/`, `memory/` alla root) letto come
+  fallback. Esclusi i sottoalberi effimeri/vendored (`.claude/worktrees`, `node_modules`, ecc.).
+  Ogni sorgente mancante è segnalata su stderr, mai saltata in silenzio.
 - **Soglia**: top-5 sopra ≥2 token condivisi. Barra alta: pochi vicini forti, non molti deboli.
   Il ranking tiene fuori da solo le regole d'area quando la scintilla è globale (pochi token → sotto soglia).
 

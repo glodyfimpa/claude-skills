@@ -52,6 +52,27 @@ teardown() { rm -rf "$VAULT" "$SKILLS"; }
   echo "$output" | grep -qi "nessun vicino"
 }
 
+@test "finds principles in the .brain/ layout (post L2 migration)" {
+  mkdir -p "$VAULT/.brain"
+  mv "$VAULT/principles" "$VAULT/memory" "$VAULT/.brain/"
+  run "$CLI" --vault "$VAULT" --skills "$SKILLS" "design review gate su una nuova spec"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q ".brain/principles/engineering-lessons.md"
+}
+
+@test "warns on stderr when a perimeter source is missing" {
+  rm -rf "$VAULT/principles"
+  run "$CLI" --vault "$VAULT" --skills "$SKILLS" "design review gate su una nuova spec"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "attenzione.*principles"
+}
+
+@test "warns on stderr when the vault itself does not exist" {
+  run "$CLI" --vault "$VAULT/nope" --skills "$SKILLS" "cattura veloce di una nota vault"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "attenzione.*vault"
+}
+
 @test "requires a spark argument" {
   run "$CLI" --vault "$VAULT" --skills "$SKILLS"
   [ "$status" -ne 0 ]

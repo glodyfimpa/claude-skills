@@ -65,9 +65,12 @@ I default sono già giusti (`--vault ~/Documents/brain`, `--skills ~/.claude/ski
 `--vault`/`--skills` solo per puntare altrove nei test.
 
 Stampa i frammenti del brain che condividono più parole-chiave con la scintilla, dal più
-simile, dentro il perimetro: `principles/*.md` (dove vive una LEZIONE), `memory/MEMORY.md`
-(l'indice sempre caricato), `areas/**/CLAUDE.md` (regole d'area), e le skill installate
-(`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento").
+simile, dentro il perimetro: `.brain/principles/*.md` (dove vive una LEZIONE),
+`.brain/memory/MEMORY.md` (l'indice sempre caricato), `areas/**/CLAUDE.md` (regole d'area),
+e le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento").
+Se una di queste sorgenti non esiste, lo dice su stderr (`ATTENZIONE, non trovato nel
+perimetro`): in quel caso un "nessun vicino" NON prova che la scintilla sia nuova — cerca a
+mano nella sorgente mancante prima di salvare.
 
 Il mostra-vicini fa **tre lavori in un gesto**:
 
@@ -86,7 +89,7 @@ vicino la copre già del tutto → **è già coperta, non salvare** (dillo a Glo
 scintilla (dopo il mostra-vicini)
    │
    ├─ LEZIONE — cambia il giudizio dove ripaghi un errore
-   │     → principles/ (globale) o CLAUDE.md d'area (trasversale d'area) o un hook.
+   │     → .brain/principles/ (globale) o CLAUDE.md d'area (trasversale d'area) o un hook.
    │       Si salva GUARDANDO i vicini: fondi/aggiorni un simile invece di duplicare.
    │       (Questo ramo assorbe il vecchio revise-claude-md — vedi sotto.)
    │
@@ -114,7 +117,7 @@ davanti (che revise-claude-md non aveva):
 2. **Guarda i vicini** (Passo 2): se un principle/CLAUDE.md/memory già simile esiste, **fondi lì**
    (aggiorna la riga, aggiungi l'occorrenza) invece di scriverne una nuova.
 3. **Scegli la casa** (dall'albero d'instradamento del brain):
-   - regola che regge FUORI dal suo dominio d'origine → `principles/` (globale);
+   - regola che regge FUORI dal suo dominio d'origine → `.brain/principles/` (globale);
    - regola trasversale a un'area → `CLAUDE.md` di quella cartella d'area;
    - gesto-predicato deterministico (un check su un path, un campo, un diff) → un **hook**,
      non una regola-testo (una regola-testo su un gesto-predicato è un ponte provvisorio).

@@ -118,6 +118,60 @@ def test_collect_sources_reads_principles_and_memory_and_areas(tmp_path):
     assert {"principle", "memory", "area-rule"} <= kinds
 
 
+def _brain_layout(root):
+    """Vault layout after the L2 migration (2026-09-01): meta under .brain/."""
+    (root / ".brain" / "principles").mkdir(parents=True)
+    (root / ".brain" / "principles" / "engineering-lessons.md").write_text(
+        "# Engineering\n- gate fail-closed sul file bersaglio\n", encoding="utf-8")
+    (root / ".brain" / "memory").mkdir()
+    (root / ".brain" / "memory" / "MEMORY.md").write_text(
+        "- [Verify-before-react](feedback_verify.md) — guarda il dato\n", encoding="utf-8")
+
+
+def test_collect_sources_reads_brain_layout(tmp_path):
+    # Since L2 principles and the memory index live under .brain/. The collector
+    # skipped them silently for weeks because it only looked at the old paths.
+    _brain_layout(tmp_path)
+
+    sources = neighbors.collect_sources(vault_root=tmp_path, skills_root=None)
+    by_kind = {s.kind: s.path for s in sources}
+
+    assert by_kind["principle"].endswith(".brain/principles/engineering-lessons.md")
+    assert by_kind["memory"].endswith(".brain/memory/MEMORY.md")
+
+
+def test_collect_sources_prefers_brain_layout_over_old_one(tmp_path):
+    # Same resolution as the vault's brain-system-path.sh: .brain/<x> wins.
+    _brain_layout(tmp_path)
+    (tmp_path / "principles").mkdir()
+    (tmp_path / "principles" / "stale.md").write_text("# stale\n", encoding="utf-8")
+
+    sources = neighbors.collect_sources(vault_root=tmp_path, skills_root=None)
+    principle_paths = [s.path for s in sources if s.kind == "principle"]
+
+    assert principle_paths and all("/.brain/principles/" in p for p in principle_paths)
+
+
+def test_missing_perimeter_names_each_absent_vault_source(tmp_path):
+    # Only area rules present: principles and memory index are gone. A per-source
+    # report is what would have caught the L2 regression (areas still matched).
+    (tmp_path / "areas" / "x").mkdir(parents=True)
+    (tmp_path / "areas" / "x" / "CLAUDE.md").write_text("# x\n", encoding="utf-8")
+
+    missing = neighbors.missing_perimeter(tmp_path)
+
+    assert any("principles" in m for m in missing)
+    assert any("MEMORY.md" in m for m in missing)
+    assert all("areas" not in m for m in missing)
+
+
+def test_missing_perimeter_empty_on_complete_vault(tmp_path):
+    _brain_layout(tmp_path)
+    (tmp_path / "areas").mkdir()
+
+    assert neighbors.missing_perimeter(tmp_path) == []
+
+
 def test_collect_sources_skips_ephemeral_worktrees_and_vendored_dirs(tmp_path):
     # Real vault has .claude/worktrees/ (ephemeral checkouts) and node_modules
     # nested under areas/. rglob("CLAUDE.md") would surface duplicate/noise copies
