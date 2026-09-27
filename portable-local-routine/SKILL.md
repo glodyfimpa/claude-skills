@@ -162,6 +162,10 @@ criterio 7 cerca di diagnosticare. È robustezza più che portabilità, ma è il
 che rende affidabile il resto: una routine portabile ma che ingoia i propri errori è
 portabile e rotta su ogni macchina invece che su una sola.
 
+**macOS, repo sotto ~/Documents:** plist con `/bin/bash` come primo argomento e log in
+`~/Library/Logs`, altrimenti exit 78 silenzioso (TCC). Verifica: `launchctl kickstart`,
+poi "last exit code" ≠ 78.
+
 ### 6. Niente dipendenza da bridge cloud quando il target è locale
 Se la routine gira in locale, le notifiche e le API vanno chiamate **dirette** (`curl` a
 Telegram, `gh` diretto), non attraverso i bridge che servono solo in sandbox CCR (dove
