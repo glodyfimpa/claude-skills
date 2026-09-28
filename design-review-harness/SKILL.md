@@ -104,8 +104,13 @@ Quando la spec è nata, un hook ha registrato un **testimone**: un file che dice
 attende il giro»*. È ciò che permette al gate di bloccare l'implementazione di una spec non
 revisionata — il gate, da solo, non potrebbe *scoprire* su quale spec stai lavorando.
 
-**Scritto il verdetto, chiudi il testimone.** Se non lo fai, il gate continuerà a bloccare
-per sempre una spec che hai già revisionato.
+**Scritto il verdetto con `Write`, il testimone si chiude da solo:** l'hook che lo apre lo
+chiude quando nasce un `<stem>-verdetto.md` valido accanto alla spec (dal 2026-09-28). Il
+comando manuale sotto serve solo quando il verdetto nasce in altro modo (`Edit`, `git mv`,
+copia da shell) o per chiudere a posteriori un testimone rimasto aperto. Se la spec è
+**superata**, basta dichiararlo nel suo frontmatter (`lifecycle: historical` o
+`superseded_by:`): il gate la ignora. Un testimone aperto da più di 7 giorni compare
+nell'health check di SessionStart come `MALE RIAPPARSO`.
 
 ```bash
 python3 ~/Documents/brain/areas/ai-automation/design-review-harness/chiudi_testimone.py <path-della-spec>
