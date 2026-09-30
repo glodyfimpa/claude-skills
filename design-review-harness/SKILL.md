@@ -98,6 +98,13 @@ rispondere, l'N-1 era l'ultimo utile.
 Si smette quando i residui sono di **dettaglio implementativo**: lì il ciclo RED→GREEN li espone
 a costo minore di una review, e insistere tocca il blind-spot del perfezionismo.
 
+**Segnale concreto: la stessa zona due giri di fila.** Se lo stesso punto della spec (un
+algoritmo, una macchina a stati) produce un difetto «strutturale» in due giri consecutivi, non
+è più una zona da review: è comportamento da provare eseguendolo. Adotta la correzione più
+semplice proposta dai reviewer, mettine i casi nel DoD come test, e chiudi con SALTO_MOTIVATO.
+Validato 2026-09-28 (routine-dashboard F1: 4 versioni, §6.2 riaperta da ogni giro, chiusa con
+una regola che toglieva rami invece di aggiungerne).
+
 ## Chiudere il testimone (obbligatorio, quando scrivi il verdetto)
 
 Quando la spec è nata, un hook ha registrato un **testimone**: un file che dice *«questa spec
