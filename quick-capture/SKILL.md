@@ -1,6 +1,6 @@
 ---
 name: quick-capture
-description: Cattura veloce di un'idea, nota o memo in `~/Documents/brain/inbox/` con frontmatter minimo. Usa questa skill quando Glody dice "appunta", "ricorda", "annota", "capture <testo>", "quick capture", "/capture", "salva questa idea", "scrivi in inbox" o varianti. Zero classificazione manuale — la nota va in inbox come `inbox-raw`, lo smistamento lo fa il Distill agentico in un secondo momento. NON usare per task strutturati (life-os ha skill dedicate), pagine progetto vive (vault `projects/`), o decisioni architetturali (vault `system/decisions.log`).
+description: Cattura veloce di un'idea, nota o memo in `~/Documents/brain/inbox/` con frontmatter minimo. Usa questa skill quando Glody dice "appunta", "ricorda", "annota", "capture <testo>", "quick capture", "/capture", "salva questa idea", "scrivi in inbox" o varianti. Zero classificazione manuale — la nota va in inbox come `inbox-raw`, lo smistamento lo fa il Distill agentico in un secondo momento. NON usare per task strutturati (life-os ha skill dedicate), pagine progetto vive (vault `projects/`), o decisioni architetturali (vault `.brain/system/decisions.log`).
 ---
 
 # Quick Capture
