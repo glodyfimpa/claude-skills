@@ -78,7 +78,7 @@ This section applies **only when `notes_tool = vault_filesystem`** in config. It
 With the default `vault_only`, the save-actions below already write to the vault — the resolver makes that contract explicit and reversible (flip `mode` in config, no code change).
 
 **Path convention:**
-- Weekly file: `<vault_path>/weekly/YYYY-Www.md` (ISO week, e.g. `2026-W21.md`)
+- Weekly file: `<vault_path>/.brain/weekly/YYYY-Www.md` (ISO week, e.g. `2026-W21.md`)
 
 The weekly file MUST already exist. If missing, fall back to chat mode and tell the user the file isn't there yet.
 
@@ -93,7 +93,7 @@ from pathlib import Path
 from life_os.weekly_review import append_weekly_review_sections, WeeklyReviewPayload, ProjectStatus
 
 append_weekly_review_sections(
-    Path('<vault_path>/weekly/YYYY-Www.md'),
+    Path('<vault_path>/.brain/weekly/YYYY-Www.md'),
     WeeklyReviewPayload(
         quick_capture=['<item 1>', '<item 2>'],
         inbox_processed=['<task A → action>', '<task B → action>'],
@@ -116,7 +116,7 @@ from pathlib import Path
 from life_os.planning_review_system import append_planning_review_sections, PlanningReviewPayload
 
 append_planning_review_sections(
-    Path('<vault_path>/weekly/YYYY-Www.md'),
+    Path('<vault_path>/.brain/weekly/YYYY-Www.md'),
     PlanningReviewPayload(
         quarter='Q<1-4>',
         completamento='<NN>%',

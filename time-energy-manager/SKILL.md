@@ -75,8 +75,8 @@ This section applies **only when `notes_tool = vault_filesystem`** in config. It
 With the default `vault_only`, the four save-actions below already write to the vault — the resolver makes that contract explicit and reversible (flip `mode` in config, no code change).
 
 **Path conventions:**
-- Daily file: `<vault_path>/daily/plans/YYYY-MM-DD-daily.md`
-- Weekly file: `<vault_path>/weekly/YYYY-Www.md`
+- Daily file: `<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md`
+- Weekly file: `<vault_path>/.brain/weekly/YYYY-Www.md`
 
 The daily file MUST already exist (created by an earlier morning plan or manually) — these helpers only APPEND sections, they don't create files. If the file is missing, fall back to chat mode (`notes_tool = none` behavior) and tell the user the file isn't there yet.
 
@@ -92,7 +92,7 @@ from datetime import date
 from life_os.morning_plan import append_morning_plan_section, MorningPlanPayload, Block
 
 append_morning_plan_section(
-    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    Path('<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md'),
     MorningPlanPayload(
         data=date(YYYY, MM, DD),
         energia_mattutina=<1-5>,
@@ -123,7 +123,7 @@ from pathlib import Path
 from life_os.time_energy_manager import append_afternoon_check_section, AfternoonCheckPayload
 
 append_afternoon_check_section(
-    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    Path('<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md'),
     AfternoonCheckPayload(
         skipped=False,
         energia_pomeriggio=<1-5>,
@@ -149,7 +149,7 @@ from pathlib import Path
 from life_os.time_energy_manager import append_afternoon_check_section, AfternoonCheckPayload
 
 append_afternoon_check_section(
-    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    Path('<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md'),
     AfternoonCheckPayload(
         skipped=False,
         energia_pomeriggio=<current energy 1-5>,
@@ -175,7 +175,7 @@ from pathlib import Path
 from life_os.evening_close import append_evening_close_section, EveningClosePayload
 
 append_evening_close_section(
-    Path('<vault_path>/daily/plans/YYYY-MM-DD-daily.md'),
+    Path('<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md'),
     EveningClosePayload(
         energia_sera=<1-5>,
         completati='<comma list>',
@@ -191,7 +191,7 @@ Same conflict semantics as the other actions: if a different evening close exist
 
 ### Read-back actions (Phase 1 Step 1, Phase 2 Step 2, Phase 3 Step 2, Phase 4 Step 1)
 
-These read sections from the daily file (e.g., "Read today's Plan page"). Use the standard `Read` tool on `<vault_path>/daily/plans/YYYY-MM-DD-daily.md` and grep for the relevant heading (`## Plan `, `### Afternoon Check-in`, `### Evening Close`). For weekly review lookups, look in `<vault_path>/weekly/YYYY-Www.md`.
+These read sections from the daily file (e.g., "Read today's Plan page"). Use the standard `Read` tool on `<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md` and grep for the relevant heading (`## Plan `, `### Afternoon Check-in`, `### Evening Close`). For weekly review lookups, look in `<vault_path>/.brain/weekly/YYYY-Www.md`.
 
 ## Critical Filters
 
