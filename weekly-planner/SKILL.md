@@ -51,7 +51,7 @@ happened. Skipping this step is how commitments quietly vanish (validated 2026-0
 "prenota appuntamento INPS" sat as an all-day reminder in the 2026-07-20 plan and was
 never done — nobody reopened it because no ritual re-surfaced it).
 
-1. **Read last week's plan**: `<vault_path>/weekly/<last-monday>-weekly.md`. This is the
+1. **Read last week's plan**: `<vault_path>/.brain/weekly/<last-monday>-weekly.md`. This is the
    commitment list to check against reality, not to trust at face value.
 2. **Read the week's Claude sessions**: scan `~/.claude/projects/*/*.jsonl` for user
    turns dated within the past week. Read the closing turns of each session (where
@@ -217,7 +217,7 @@ If `calendar_tool = none`: skip calendar export.
 
 ### Write the weekly note
 **If `notes_tool = vault_filesystem`:** write the approved plan directly to
-`<vault_path>/weekly/YYYY-MM-DD-weekly.md` with the **Write tool** (plain markdown — no
+`<vault_path>/.brain/weekly/YYYY-MM-DD-weekly.md` with the **Write tool** (plain markdown — no
 Python helper: the `weekly_review.py` helper renders *review* sections, Quick
 Capture / Inbox / Projects Status, which are the wrong shape for a *plan*).
 
@@ -225,7 +225,7 @@ Capture / Inbox / Projects Status, which are the wrong shape for a *plan*).
 vault convention for the **filename** — NOT ISO `YYYY-Www`. (The ISO week still appears
 *inside* the frontmatter as the `week:` field — the ban is on the filename only.)
 
-Mirror the existing weekly-plan format (see `<vault_path>/weekly/2026-07-06-weekly.md`
+Mirror the existing weekly-plan format (see `<vault_path>/.brain/weekly/2026-07-06-weekly.md`
 as the reference). Required frontmatter (mandatory `created` + `updated`, per vault rules):
 
 ```yaml

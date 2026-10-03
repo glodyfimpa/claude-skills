@@ -76,7 +76,7 @@ With the default `vault_only`, the four save-actions below already write to the 
 
 **Path conventions:**
 - Daily file: `<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md`
-- Weekly file: `<vault_path>/.brain/weekly/YYYY-Www.md`
+- Weekly file: `<vault_path>/.brain/weekly/YYYY-MM-DD-weekly.md` (`YYYY-MM-DD` = Monday of the week, e.g. `2026-09-15-weekly.md`; the same file weekly-planner writes)
 
 The daily file MUST already exist (created by an earlier morning plan or manually) — these helpers only APPEND sections, they don't create files. If the file is missing, fall back to chat mode (`notes_tool = none` behavior) and tell the user the file isn't there yet.
 
@@ -191,7 +191,7 @@ Same conflict semantics as the other actions: if a different evening close exist
 
 ### Read-back actions (Phase 1 Step 1, Phase 2 Step 2, Phase 3 Step 2, Phase 4 Step 1)
 
-These read sections from the daily file (e.g., "Read today's Plan page"). Use the standard `Read` tool on `<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md` and grep for the relevant heading (`## Plan `, `### Afternoon Check-in`, `### Evening Close`). For weekly review lookups, look in `<vault_path>/.brain/weekly/YYYY-Www.md`.
+These read sections from the daily file (e.g., "Read today's Plan page"). Use the standard `Read` tool on `<vault_path>/.brain/daily/plans/YYYY-MM-DD-daily.md` and grep for the relevant heading (`## Plan `, `### Afternoon Check-in`, `### Evening Close`). For weekly review lookups, look in `<vault_path>/.brain/weekly/YYYY-MM-DD-weekly.md`.
 
 ## Critical Filters
 
