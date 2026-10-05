@@ -68,6 +68,11 @@ un design innocuo, deve trovare qualcosa per giustificarsi.
    e l'ordine di **scrivere lui stesso il referto** in `<stem>-referto-<n>-<mandato>.md` accanto
    all'artefatto. Il referto è **grezzo**: cosa ha aperto, cosa ci ha visto, cosa ne conclude.
    Non passa da te.
+   **Il referto nasce per primo e cresce man mano**: il prompt ordina di creare il file subito
+   dopo la lettura dell'artefatto, di aggiungere ogni rilievo appena trovato e di restare sotto
+   un tetto di ~10-20 tool call. Così un reviewer ucciso dal watchdog lascia un referto parziale
+   invece di niente (2026-10-05: 4/4 bloccati a 600 s senza file al primo lancio, 6/6 completati
+   col pattern).
 4. **Riconcilia** (vedi sotto).
 5. **Scrivi il verdetto** in `<stem>-verdetto.md`.
 
