@@ -55,7 +55,8 @@ INPUT: url portale, profilo utente (da pa-data-vault)
 
 2. NAVIGAZIONE
    - Apri url portale con browser adapter (Tier 1 → 2 → 3)
-   - Login con credenziali da profilo pa-data-vault
+   - La sessione autenticata arriva dal browser component (spec in progress: areas/ai-automation/docs/superpowers/specs/2026-10-07-browser-component-design.md); il login al portale (CIE/SPID) lo fa sempre Glody a mano. L'agente non digita mai credenziali, CAPTCHA o 2FA.
+   - Se il portale mostra il login: STOP con allarme bloccante a Glody (e' presente), checkpoint, riprendi dal checkpoint quando dice "fatto"
    - Naviga al form target
 
 3. COMPILAZIONE
@@ -63,7 +64,7 @@ INPUT: url portale, profilo utente (da pa-data-vault)
      a. Risolvi selettore con id-mapper (label-first → catalog → discovery manuale)
      b. Compila valore dal profilo
      c. Salva checkpoint ogni 5 campi e ogni cambio pagina
-   - Se HTTP 401 / redirect login → checkpoint + prompt resume
+   - Se HTTP 401 / redirect login → checkpoint + allarme bloccante a Glody (login a mano), resume al "fatto"
 
 4. SUBMIT
    - Verifica riassunto form prima di submit
@@ -168,7 +169,8 @@ Quando rilevato: salva checkpoint immediato + interrompe compilazione + mostra p
 
 ```
 Sessione scaduta su {portale}. Checkpoint salvato.
-Vuoi riprendere dal campo '{ultimo_campo_compilato}'? [s/n]
+Serve il login a mano (CIE/SPID): fallo nel browser e scrivi "fatto".
+Riprendo dal campo '{ultimo_campo_compilato}'.
 ```
 
 ### Resume Esplicito
@@ -226,5 +228,5 @@ Vedi `references/portals-catalog.yaml` per le entry esempio (soggiorniamoMilano,
 | FAQ non disponibile | URL 404 | Avvisa utente, procedi chiedendo conferma manuale dei campi |
 | Browser non disponibile | Nessun tier attivo | Stop + istruzioni per installare Playwright MCP o abilitare Computer Use |
 | Campo non trovato | ID dinamico non in catalog | Attiva discovery manuale id-mapper |
-| HTTP 401 / redirect login | Session timeout Keycloak | Salva checkpoint, prompt resume |
+| HTTP 401 / redirect login | Session timeout Keycloak | Salva checkpoint, allarme bloccante: login a mano di Glody, resume al "fatto" |
 | Submit fallito | Errore form / validazione PA | Mostra messaggio errore, lascia form aperto per correzione manuale |
