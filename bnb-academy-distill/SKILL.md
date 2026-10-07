@@ -126,7 +126,7 @@ aggiorna un solo posto.
 
 1. **Toolchain offline verde**: `ffmpeg`, `whisper-cli` in PATH, modello in
    `~/.cache/whisper/ggml-small.bin`. Se manca, fermarsi e segnalarlo.
-2. **Chrome loggato su BnB Academy** col profilo che ha l'accesso **pagato** (NON Arc).
+2. **Sessione BnB Academy con l'accesso pagato** (requisito d'identità; NON Arc). Scegli il browser con la regola: identità del componente browser se registrata, poi browser integrato, poi Chrome dell'utente, poi chiedi a Glody; il login lo fa sempre Glody.
    ⚠️ **`0/233` NON significa "account sbagliato"** (corretto 2026-06-15): l'account giusto
    può mostrare `0/233` perché è un **render stantio** della SPA (contatore prima che il
    progresso si idrati). Non fermarsi su quel dato: attendere l'idratazione, oppure
@@ -218,8 +218,8 @@ Per ogni lezione del gruppo, nell'ordine del tracker:
 >    senza gonfiare. whisper su 3h aggiunge spesso un loop allucinato in coda (artefatto noto, nulla
 >    perso). Costo alto, resa bassa: valutare con Glody se distillarli o lasciarli come allegato-hash.
 
-> ⚠️ **Un solo Chrome.** Mai parallelizzare la Fase 1 con sub-agenti: collisione
-> Playwright/Chrome (vedi environment-macos). I download `curl` di `fetch_audio.py` sono già
+> ⚠️ **Un solo browser.** Mai parallelizzare la Fase 1 con sub-agenti: collisione
+> sulla stessa sessione/profilo. I download `curl` di `fetch_audio.py` sono già
 > veloci e sequenziali; il rate-limit 429 del CDN è gestito dal retry dello script.
 
 ### Fase 2 · TRASCRIVI — main, SERIALE OBBLIGATO
