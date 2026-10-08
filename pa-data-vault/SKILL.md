@@ -14,7 +14,7 @@ I dati vivono in file Markdown sotto `references/`. Lo schema usa il segnaposto 
 ```
 pa-data-vault/references/
 ├── personal/
-│   └── glody.md                    profilo personale (CF, PEC, credenziali portali)
+│   └── glody.md                    profilo personale (CF, PEC, codici; mai password: il login ai portali lo fa Glody a mano)
 └── bnb-via-braida/
     └── structure.md                dati struttura (CIN, codici, capacità, certificazioni)
 ```
