@@ -101,6 +101,12 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
   already read the past week in detail for reconciliation; this widens the window to 2
   weeks for threads not tied to last week's specific plan.)
 
+- **Future directions** (`<vault_path>/areas/glody/knowledge/direzioni-future.md`, if it
+  exists): for each direction, is there a new real signal this week (an email, a session,
+  a contact)? Is any direction dead, or is a new one emerging from what Glody said? Pick
+  at most one item from its Radar section that could get a small slot this week. Report
+  proposed edits to the file in Phase 3; never edit directions without Glody's OK.
+
 Output of Phase 1 is raw material plus the reconciliation summary, not yet a plan. Do
 not schedule anything here.
 
