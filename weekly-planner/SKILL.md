@@ -1,7 +1,7 @@
 ---
 name: weekly-planner
 description: |
-  Plans Glody's upcoming week end to end: reconciles last week's plan against what actually happened (done/partial/not touched, from Claude sessions and direct fact-check), collects state (tasks, projects, quarterly — including the yearly plan's current-quarter section, email, recent Claude sessions, calendar), weighs and prioritizes every commitment, presents a readable plan, and STOPS at a human gate before touching the calendar. Only after explicit approval does it apply the plan to the calendar and write the weekly note to the vault. Use this skill when the user says "pianifichiamo la settimana", "/weekly-planner", "pianificazione settimanale", "prepara la settimana", or when the Monday planning routine fires. Complements planning-review-system (backward-looking weekly review) and time-energy-manager (daily execution): weekly-planner looks forward across the whole week. Works with any task database, calendar, and email MCP, or in chat-only mode. Do NOT use for a single-day plan (use time-energy-manager) or a retrospective weekly review (use planning-review-system).
+  Plans Glody's upcoming week end to end: reconciles last week's plan against what actually happened (done/partial/not touched, from Claude sessions and direct fact-check), collects state (tasks, projects, quarterly — including the yearly plan's current-quarter section, email, recent Claude sessions, calendar), weighs and prioritizes every commitment, writes the collected state and the proposed focus into the week's note, and STOPS at a human gate before touching the calendar. Only after explicit approval does it apply the plan to the calendar and mark the focus as confirmed. Use this skill when the user says "pianifichiamo la settimana", "/weekly-planner", "pianificazione settimanale", "prepara la settimana", or when the Monday planning routine fires. Complements planning-review-system (backward-looking weekly review) and time-energy-manager (daily execution): weekly-planner looks forward across the whole week. Works with any task database, calendar, and email MCP, or in chat-only mode. Do NOT use for a single-day plan (use time-energy-manager) or a retrospective weekly review (use planning-review-system).
 ---
 
 # Weekly Planner
@@ -38,21 +38,56 @@ ambiguous. All dates below use that Monday as the anchor.
 
 ---
 
+## Phase 0 — Open the week's note (FIRST step, before anything else)
+
+The week's note must exist on disk whether or not Glody ever answers the gate. A plan
+that lives only in the chat is lost when the session goes idle (validated 2026-10-09: 8
+Monday runs out of 12 presented a full plan, waited for an OK that never came, and left
+no file, because the note was written only in Phase 4).
+
+**If `notes_tool = vault_filesystem` and `<vault_path>/.brain/system/vault_lint/review.py`
+exists** (the vault's rhythm chain, contract in `<vault_path>/.brain/system/schema/ritmi.md`):
+
+```bash
+PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python \
+  -m vault_lint.review apri <vault_path> --date <target Monday>
+```
+
+- **exit 0**: the command created the levels that were due (the week's note, and the
+  monthly or quarter drafts if missing) and printed their paths. Work on those files.
+- **exit 2**: the week's note already exists and nothing else is due. Work on that file.
+- **any other exit, or the venv is missing**: stop and report the output. Do not create
+  the note by hand.
+
+Then run `… -m vault_lint.review stato <vault_path>` (read-only) and keep its signals
+for Phase 3. If the command opened a monthly or quarter draft, say so in Phase 3: those
+levels follow `<vault_path>/areas/glody/procedure/revisione-ritmi.md`, not this skill.
+
+The note is `<vault_path>/.brain/weekly/<target Monday>-weekly.md`. Never overwrite it
+and never rewrite its frontmatter: edit sections in place (see "Writing into the note").
+
+**Otherwise** (no rhythm chain, or `notes_tool` is not the vault): skip Phase 0; the note
+is written in Phase 3 as described under "Writing into the note".
+
+---
+
 ## Phase 1 — Collect
 
 Gather everything the week's plan depends on. Skip any source whose tool is `none`.
 (This phase reuses the read logic of the sibling life-os skills; if they aren't loaded,
 the steps below are self-contained enough to run directly.)
 
-### Phase 1a — Consuntivo (runs FIRST, before collecting anything new)
+### Phase 1a — Consuntivo (runs first in Phase 1, before collecting anything new)
 
 Before gathering new material, reconcile the previous plan against what actually
 happened. Skipping this step is how commitments quietly vanish (validated 2026-07-27:
 "prenota appuntamento INPS" sat as an all-day reminder in the 2026-07-20 plan and was
 never done — nobody reopened it because no ritual re-surfaced it).
 
-1. **Read last week's plan**: `<vault_path>/.brain/weekly/<last-monday>-weekly.md`. This is the
-   commitment list to check against reality, not to trust at face value.
+1. **Read last week's plan**: `<vault_path>/.brain/weekly/<last-monday>-weekly.md`, its
+   `## Focus settimana` first (older notes: Golden Rule and priorities). This is the
+   commitment list to check against reality, not to trust at face value. If last week
+   has no note, take the most recent one and say how many weeks are missing.
 2. **Read the week's Claude sessions**: scan `~/.claude/projects/*/*.jsonl` for user
    turns dated within the past week. Read the closing turns of each session (where
    completion/handoff is usually declared) — a grep on file mtimes alone is not enough:
@@ -88,9 +123,11 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
 - **Tasks / projects / quarterly** (`task_tool`): reuse planning-review-system's collect.
   Read open tasks with due dates, active projects and their status, quarterly goals and
   progress. If `task_tool = vault_filesystem` / `notion`, read from there per config.
-  If `<vault_path>/system/piano-annuale-2026.md` (or equivalent yearly-plan file) exists,
-  read the current quarter's section from there — it is the source of truth for
-  quarterly goals, not the Notion `goals_page_url` fallback.
+  If `<vault_path>/.brain/system/piano-annuale-<year>.md` (or equivalent yearly-plan file)
+  exists, read the current quarter's section from there — it is the source of truth for
+  quarterly goals, not the Notion `goals_page_url` fallback. Read also
+  `## Priorità del mese` from `<vault_path>/.brain/monthly/<YYYY-MM>-monthly.md`: each
+  focus of the week must serve one of those priorities.
 - **Email** (`email_tool`): scan the last 7 days (config `email_scan_labels`, default
   INBOX; apply `email_exclude_patterns`). Extract only actionable items with a date or
   a decision — not newsletters.
@@ -171,7 +208,11 @@ with a one-line weighing (Glody-time + load type), respecting the rules above.
 
 ## Phase 3 — Report + GATE (handoff stop)
 
-Present a readable plan, then **STOP**. Do not touch the calendar or write any file yet.
+First write the week's note (see "Writing into the note" below): the collected state and
+the proposed focus, marked as a proposal. This is local and reversible, and it is what
+survives if the gate is never answered. Commit + push only that file (vault: the
+default branch, see the vault's git rules). Then present a readable plan and **STOP**. Do not
+touch the calendar and do not mark the focus as confirmed yet.
 
 Structure of the report:
 - **Consuntivo settimana scorsa** — from Phase 1a: what was done, what was partial, what
@@ -190,12 +231,13 @@ Structure of the report:
   week leans toward deep/cognitive or shallow/handoff work without another audit.
 - **Actionable emails** (from Phase 1, with the action + date).
 - **Conflicts / notes** — anything that didn't fit, moved to next week, or needs a Glody
-  decision.
+  decision, plus the `review stato` signals from Phase 0.
+- **Where the note is** — the path of the week's note just written.
 
 Then end with an explicit gate line:
 
-> "Questo è il piano. Dimmi OK per applicarlo al calendario e scrivere il weekly, oppure
-> dimmi cosa cambiare."
+> "Questo è il piano, già scritto come proposta in `<path della weekly>`. Dimmi OK per
+> applicarlo al calendario e confermare il focus, oppure dimmi cosa cambiare."
 
 **Wait for explicit approval.** Do NOT proceed to Phase 4 on anything less than a clear OK.
 If Glody asks for changes, revise Phase 2/3 and re-present the gate.
@@ -221,63 +263,63 @@ Only after explicit approval:
 
 If `calendar_tool = none`: skip calendar export.
 
-### Write the weekly note
-**If `notes_tool = vault_filesystem`:** write the approved plan directly to
-`<vault_path>/.brain/weekly/YYYY-MM-DD-weekly.md` with the **Write tool** (plain markdown — no
-Python helper: the `weekly_review.py` helper renders *review* sections, Quick
-Capture / Inbox / Projects Status, which are the wrong shape for a *plan*).
+### Confirm the focus in the note
+Edit `## Focus settimana` in the week's note: replace the proposal marker with the
+focus Glody approved (with his changes, if any). Touch only that section and the
+`updated:` date in the frontmatter.
 
-`YYYY-MM-DD` is the target **Monday** date (e.g. `2026-07-13-weekly.md`). This is the
-vault convention for the **filename** — NOT ISO `YYYY-Www`. (The ISO week still appears
-*inside* the frontmatter as the `week:` field — the ban is on the filename only.)
+If Glody asks for changes before the OK, update the proposal in the note too, then
+re-present the gate.
 
-Mirror the existing weekly-plan format (see `<vault_path>/.brain/weekly/2026-07-06-weekly.md`
-as the reference). Required frontmatter (mandatory `created` + `updated`, per vault rules):
+### Commit
+Commit + push the note again after confirming the focus (only that file).
 
-```yaml
 ---
-title: "Piano settimana — <Monday date in configured language>"
-created: '<today ISO>'
-updated: '<today ISO>'
-doc_type: log
-week: <ISO week, e.g. 2026-W29>
-quarter: <e.g. Q3>
-notion_url: null
-tags:
-  - weekly-plan
----
-```
 
-Then these sections, filled from Phases 2-3 (omit a section only if genuinely empty):
-- `## Contesto` — one paragraph on the week's situation.
-- `## Consuntivo settimana scorsa` — from Phase 1a: done / partial / not touched, with
-  evidence, and where each unresolved capture landed this week. Include load mismatches
-  (predicted vs actual) as one line each.
-- `## Scadenze legali dure della settimana` — dated hard deadlines with consequence.
-- `## Golden Rule della settimana` — the one priority of priorities.
-- `## Priorità della settimana (ordine dettato dalle scadenze)` — P1..Pn, one why each.
-- `## Griglia Lun-Ven (blocchi: mattina 10-12, pomeriggio 16-18)` — the weighed grid,
-  one line per event (Glody-time + load type).
-- `## Bilancio cognitive/handoff della settimana` — the count from Phase 3.
-- `## Email azionabili (scan Gmail ultimi 7gg)` — actionable emails with action + date.
-- `## Segnalazioni / conflitti` — anything moved to next week or needing a decision.
+## Writing into the note
 
-If the file already exists (e.g. hand-written earlier this week), read it first and
-merge rather than overwrite — never destroy hand-written content; if unsure, ask.
+**If `notes_tool = vault_filesystem`:** the note is
+`<vault_path>/.brain/weekly/<target Monday>-weekly.md` (filename = the Monday date,
+never ISO `YYYY-Www`). Phase 0 created it, or it already existed: read it first and
+edit sections in place with the Edit tool. Never overwrite the file, never rewrite its
+frontmatter (only bump `updated:`), never delete what a person wrote there.
+
+Write the plan only into the five fixed sections of the vault's rhythm contract
+(`<vault_path>/.brain/system/schema/ritmi.md`):
+
+- `## Consuntivo` — from Phase 1a: done / partial / not touched, with evidence, where
+  each unresolved capture landed this week, and load mismatches (one line each).
+- `## Calendario` — from Phase 1b: the week's events and hard deadlines (dated, with
+  consequence), and what the next two weeks already hold.
+- `## Appunti della settimana` — open captures and inbox items, each with a proposed
+  title and folder. Keep what the command pre-filled; add, do not duplicate.
+- `## Progetti da guardare` — projects past deadline, stalled, or without a goal, each
+  with the suggested action.
+- `## Focus settimana` — at most three items, each `N. <focus> — serve: <priorità del
+  mese>`; the first one is the week's Golden Rule. Before the gate, open the section
+  with the line `Proposta del <date>, da confermare:`. Phase 4 replaces that line once
+  Glody approves.
+
+Extra sections are allowed after the fixed ones, for what the contract does not cover:
+`## Griglia Lun-Ven (mattina 10-12, pomeriggio 16-18)` with one weighing line per event,
+`## Bilancio cognitive/handoff`, `## Email azionabili`, `## Segnalazioni / conflitti`.
+Priorities are written only in `## Focus settimana`, never in an extra section.
+
+No external send happens here: email and messages stay drafts.
+
+**If the rhythm chain does not exist** (Phase 0 skipped): create the note with the
+Write tool, frontmatter `doc_type: log`, `created`/`updated` = today, `week: <ISO
+week>`, then the same five fixed sections and the extras.
 
 **If `notes_tool = notion`:** create/update the week's page under `output_page_url` with
 the same sections.
 
-**If `notes_tool = none`:** present the final plan in chat as formatted markdown.
-
-### Commit
-If the vault note was written, commit + push it (vault-autosave handles this on session
-end, or commit explicitly if the user asked to save now).
+**If `notes_tool = none`:** present the plan in chat as formatted markdown.
 
 ---
 
 ## Trigger Mapping
 
-- "pianifichiamo la settimana" / "prepara la settimana" → full run, Phases 1-4.
+- "pianifichiamo la settimana" / "prepara la settimana" → full run, Phases 0-4.
 - "/weekly-planner" → full run.
 - Monday planning routine → full run (the routine is a 3-line trigger, all logic is here).
