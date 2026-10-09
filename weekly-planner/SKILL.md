@@ -296,9 +296,11 @@ Write the plan only into the five fixed sections of the vault's rhythm contract
 - `## Progetti da guardare` — projects past deadline, stalled, or without a goal, each
   with the suggested action.
 - `## Focus settimana` — at most three items, each `N. <focus> — serve: <priorità del
-  mese>`; the first one is the week's Golden Rule. Before the gate, open the section
-  with the line `Proposta del <date>, da confermare:`. Phase 4 replaces that line once
-  Glody approves.
+  mese>`; the first one is the week's Golden Rule. Before the gate the section opens
+  with a proposal line: keep the one `review apri` pre-fills ("Proposta dalle priorità
+  del mese …, da confermare …"), or write `Proposta del <date>, da confermare:` if there
+  is none. Replace the pre-filled items, do not append a second list. Phase 4 replaces
+  the proposal line once Glody approves.
 
 Extra sections are allowed after the fixed ones, for what the contract does not cover:
 `## Griglia Lun-Ven (mattina 10-12, pomeriggio 16-18)` with one weighing line per event,
