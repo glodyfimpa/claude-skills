@@ -224,9 +224,11 @@ outside these two fascia.** They are two separate islands, not one continuous bl
 gaps.
 
 **Planning rules file (read it before weighing anything).** If
-`<vault_path>/areas/glody/knowledge/assi-e-regole-pianificazione.md` exists, it overrides the
-defaults below for: the axes, the execution tiers, the DoD requirement, the capacity target
-and the one-theme-per-day rule. Apply it as written: axes are the main ones, not the only
+`<vault_path>/areas/glody/procedure/regole-di-pianificazione.md` exists, it overrides the
+defaults below for: the execution tiers, the DoD requirement, the capacity target
+and the one-theme-per-day rule. The axes are the ordered `## Priorità del mese` of the
+current monthly note (`<vault_path>/.brain/monthly/<YYYY-MM>-monthly.md`), not a separate
+list. Apply the file as written: axes are the main ones, not the only
 ones, and an urgent or deadline item outside any axis is still done, with no hour cap.
 Delegated work still costs Glody 10-15 minutes of checkpoint. An activity with no DoD is
 not placed: propose one and let Glody approve it. List, in the report, every activity that
