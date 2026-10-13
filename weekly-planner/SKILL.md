@@ -67,6 +67,10 @@ levels follow `<vault_path>/areas/glody/procedure/revisione-ritmi.md`, not this 
 The note is `<vault_path>/.brain/weekly/<target Monday>-weekly.md`. Never overwrite it
 and never rewrite its frontmatter: edit sections in place (see "Writing into the note").
 
+Then read the learning signal: run `conta` and act on its verdict as described in
+"Learning signal" below (`adatta` is applied during this run, `promuovi` is only
+proposed).
+
 **Otherwise** (no rhythm chain, or `notes_tool` is not the vault): skip Phase 0; the note
 is written in Phase 3 as described under "Writing into the note".
 
@@ -138,6 +142,9 @@ never done — nobody reopened it because no ritual re-surfaced it).
    buttato"). This is not a full retrospective audit — just a one-line note per mismatch,
    feeding Phase 3's report. A repeated mismatch on the same recurring commitment across
    multiple weeks is worth surfacing explicitly, not just noting once and dropping.
+   Register each mismatch as one learning-signal row (`registra --origine consuntivo
+   --classe carico-stimato-male --fase 2`, see "Learning signal"); `--testo` is Glody's
+   words if he named it, else the mismatch line with the commitment and the week.
 
 Output of this sub-phase: a short reconciliation summary (what was done, what wasn't,
 what re-enters as open, and any load mismatch) — feeds directly into Phase 3's report.
@@ -252,8 +259,9 @@ then rewrite `## Consuntivo`. Do not present the gate until the check passes. On
 the aggregator has no sessions at all in the window, the section may carry the explicit
 token `sessioni:nessuna`.
 
-Then commit + push only the note (vault: the default branch, see the vault's git
-rules). Present a readable plan and **STOP**. Do not touch the calendar and do not mark
+Then commit + push only the note, plus the learning-signal files if they changed (vault:
+the default branch, see the vault's git rules). Present a readable plan and **STOP**.
+Do not touch the calendar and do not mark
 the focus as confirmed yet.
 
 Structure of the report:
@@ -286,10 +294,16 @@ Structure of the report:
 Then end with an explicit gate line:
 
 > "Questo è il piano, già scritto come proposta in `<path della weekly>`. Dimmi OK per
-> applicarlo al calendario e confermare il focus, oppure dimmi cosa cambiare."
+> applicarlo al calendario e confermare il focus, oppure dimmi cosa cambiare.
+> Se vuoi: cosa ti è sfuggito o ho pesato male?"
 
 **Wait for explicit approval.** Do NOT proceed to Phase 4 on anything less than a clear OK.
 If Glody asks for changes, revise Phase 2/3 and re-present the gate.
+
+Each change Glody asks for at the gate, and each answer to the optional question, is
+feedback: classify it and `registra` it with `--origine gate` before revising (see
+"Learning signal"). If the OK comes and no change was asked during the whole gate,
+register one neutral row (`--esito identica`).
 
 ---
 
@@ -350,7 +364,7 @@ is confirmed. If it does not, say so instead of reporting success.
 
 ### Commit
 Commit + push the note and the Decision YAML after confirming the focus (only those two
-files).
+files, plus the learning-signal files if they changed).
 
 ---
 
@@ -413,6 +427,55 @@ week>`, then the same five fixed sections and the extras.
 the same sections.
 
 **If `notes_tool = none`:** present the plan in chat as formatted markdown.
+
+---
+
+## Learning signal
+
+Every piece of feedback Glody gives on the planner becomes one row of an append-only log,
+and the counts decide what this skill adapts to. Vault only: it needs
+`<vault_path>/.brain/system/learning_signal/weekly.py` (README next to it); without it,
+skip this section. Both commands run as
+`PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python -m learning_signal.weekly <command>`.
+
+**Register: whenever Glody gives feedback on the planner, at any point** (the gate, the
+retro, a later chat, another session), register it before moving on. One row per request,
+not per message and not per section touched: split a message that carries two requests.
+
+```bash
+… registra --origine gate|retro|consuntivo --classe <class> --fase 0|1a|1b|2|3|4 \
+  [--fonte <source>] --testo - <<'EOF'
+<his words, verbatim>
+EOF
+```
+
+`--testo -` reads the text from the heredoc, verbatim: Italian apostrophes ("l'hai")
+break a single-quoted `--testo='…'`.
+
+- Classes (closed list): `fonte-mancata` (a source was not read; add `--fonte
+  sessione|mail|calendario|nota|scadenza|altro`), `peso-sbagliato`, `scadenza-mancata`,
+  `carico-stimato-male`, `fascia-sbagliata`, `troppo-lungo`, `formato`. Use `altro` when
+  none fits: it stays readable but never counts. Do not force a class to make it count.
+- `--fase` is the phase whose output was wrong. A gate approved with no change:
+  `registra --origine gate --esito identica`.
+- Exit 2 = refused, the reason is on stderr. "already registered" means the same gesture
+  is already in the log: nothing to do.
+
+**Read (Phase 0): `… conta`** returns `adatta`, `promuovi`, `richieste`, `problemi`.
+
+- `adatta` (same place and class at least 3 times): read those rows' `testo_orig` in
+  the log and apply the correction in that phase during this run. Say it in ONE line in
+  the Phase 3 report.
+- `adatta` empty: change nothing and say nothing about the signal.
+- `promuovi` (at least 5 times over at least 14 days): propose to Glody, in the Phase 3
+  report, the edit to this skill that would make the correction permanent. Never edit
+  the skill yourself. Once proposed, add `"<dove>:<classe>"` to the JSON list in
+  `suggeriti.json` next to the log (create it if missing), so it is not proposed again.
+- `problemi` not empty (exit 1): name them in one line and go on. Never rewrite past
+  rows. If the command fails, plan without adaptation and say so in one line.
+
+The log and `suggeriti.json` are versioned: commit them with the next commit of the run,
+or on their own when the feedback comes outside a run.
 
 ---
 

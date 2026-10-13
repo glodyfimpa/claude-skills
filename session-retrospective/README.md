@@ -19,7 +19,7 @@ centrato su un backlog-cimitero) aveva il default invertito (pretendeva output �
 | `bin/show-neighbors` | CLI: `show-neighbors "<scintilla>"` → i vicini nel brain, dal più simile. |
 | `tests/test_neighbors.py` | TDD della libreria (tokenize, score, find_neighbors, collect_sources). |
 | `tests/test_show_neighbors.bats` | Integrazione della CLI su un finto vault. |
-| `tests/eval-cases.md` | Casi-spec del giudizio del rito (6 TC). |
+| `tests/eval-cases.md` | Casi-spec del giudizio del rito (7 TC). |
 
 ## Meccanica del mostra-vicini (decisa nel Fronte 2)
 

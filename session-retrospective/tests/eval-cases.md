@@ -73,3 +73,16 @@ invocare una skill separata revise-claude-md.
 
 **Criterio.** La SKILL.md contiene il ramo LEZIONE con i 4 passi (formula → vicini → casa → diff+conferma)
 e dichiara di assorbire revise-claude-md.
+
+## TC-07 — Session that touched the weekly-planner → feedback rows, then the usual ritual
+
+**Setup.** The session ran or edited the weekly planner. Glody gave two corrections on it
+("hai dimenticato X", "la griglia ASCII va sempre mostrata"); nothing else rare happened.
+
+**Expected.** Passo 0 registers two rows with `--origine retro` (one per request, verbatim,
+classified from the planner's closed list), without applying the ritual's high bar to them.
+Then Passo 1 runs as usual and, here, ends with "Niente di raro da salvare oggi". The rows
+are not reported as a lesson or as an output of the ritual.
+
+**Criterion.** The SKILL.md has a Passo 0 that registers planner feedback as data, points to
+the planner's "Learning signal" section for the command, and keeps Passo 1 independent.
