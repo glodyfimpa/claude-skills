@@ -223,19 +223,34 @@ them is NOT work time — it is life, not "free holes to fill". **Never place a 
 outside these two fascia.** They are two separate islands, not one continuous block with
 gaps.
 
-**The 4 hours get FILLED inside the two fascia, not emptied.** Glody works 4h/day (a cap,
+**Planning rules file (read it before weighing anything).** If
+`<vault_path>/areas/glody/knowledge/assi-e-regole-pianificazione.md` exists, it overrides the
+defaults below for: the axes, the execution tiers, the DoD requirement, the capacity target
+and the one-theme-per-day rule. Apply it as written: axes are the main ones, not the only
+ones, and an urgent or deadline item outside any axis is still done, with no hour cap.
+Delegated work still costs Glody 10-15 minutes of checkpoint. An activity with no DoD is
+not placed: propose one and let Glody approve it. List, in the report, every activity that
+is delegable together with the prep-run that would prepare it the day before. If the file
+is missing, use the defaults below.
+
+**Default capacity (when the rules file is missing): the 4 hours get FILLED inside the two
+fascia, not emptied.** Glody works 4h/day (a cap,
 but also a target). There is no "park it outside the fascia" shortcut for a valuable event.
 If a valuable event conflicts inside the fascia, fit it by weighing; if it doesn't fit this
 week by priority/space, move it to next week (a real date, not outside the fascia). If it
 has no value, delete it. Deferrable meta-tooling that doesn't fit and clutters the view →
 move to next week, don't leave it in the fascia or the gaps.
 
-**Ordering:**
+**Ordering** (with the rules file: its tiers, then its axes as tie-break inside a tier;
+without it, the defaults here):
 - Sort by hard deadline first (legal/economic consequences lead).
 - Then by the week's Golden Rule (the single "priority of priorities").
+- Group by theme: one theme per day when possible, delegated runs included. Fixed events
+  that cannot move (a loop with a dependency) stay; say so and put their checkpoint at the
+  start of the fascia.
 - Never two COGNITIVE blocks back-to-back — alternate cognitive ↔ handoff/physical/light.
   Handoff work an LLM can carry doesn't compete for focus; cognitive work is isolated and
-  protected.
+  protected. With one theme per day the alternation happens inside the theme.
 
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (Glody-time + load type), respecting the rules above.
