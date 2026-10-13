@@ -162,6 +162,12 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
   a decision — not newsletters.
 - **Calendar** (`calendar_tool`): read every event already on the target week. These are
   existing commitments — they get weighed too (Phase 2), not just worked around.
+- **Open deadlines** (deadlines other systems keep in their own files: project MOCs,
+  pricing-agent proposals; vault only): run `PYTHONPATH=<vault_path>/.brain/system
+  <vault_path>/.brain/system/.venv/bin/python -m vault_lint.review scadenze <vault_path>
+  --date <target Monday> --giorni 21 --json`. Every row in `scadenze` (overdue included) is
+  a hard deadline candidate: weigh it in Phase 2 and list it in Phase 3's "Hard deadlines
+  of the week" with its Rome time; report every `problemi` entry. Exit 2 = bad arguments.
 - **Recent agent sessions**: query the aggregator again with `--since <2 weeks ago>` (same
   command as Phase 1a, same staleness rule) to surface threads still open (a build
   mid-flight, a deferred follow-up) that deserve a slot this week. Use metadata and
@@ -214,12 +220,11 @@ is not automatically high priority just because it's old — weigh it like anyth
 weight, ask Glody** instead of guessing. A targeted question beats a wrong classification.
 
 **The two work fascia — ONLY two, distinct, read from the config, never typed here:**
-`work_morning_block` and `work_afternoon_block` in the life-os config (their sum should
-match `daily_work_cap_hours`). Read them in the Config Guard and use them everywhere below ("the morning fascia", "the afternoon fascia"). If a
-key is missing, ask Glody instead of assuming. The time between the two and outside
-them is NOT work time — it is life, not "free holes to fill". **Never place a work event
-outside these two fascia.** They are two separate islands, not one continuous block with
-gaps.
+`work_morning_block` and `work_afternoon_block` in the life-os config (sum =
+`daily_work_cap_hours`). Read them in the Config Guard and use them everywhere below ("the
+morning fascia", "the afternoon fascia"); if a key is missing, ask Glody instead of assuming.
+The time between and outside them is NOT work time — it is life, not "free holes to fill".
+**Never place a work event outside these two fascia:** two separate islands, not one block.
 
 **Planning rules file (read it before weighing anything).** If
 `<vault_path>/areas/glody/procedure/regole-di-pianificazione.md` exists, it overrides the
@@ -273,9 +278,8 @@ the aggregator has no sessions at all in the window, the section may carry the e
 token `sessioni:nessuna`.
 
 Then commit + push only the note, plus the learning-signal files if they changed (vault:
-the default branch, see the vault's git rules). Present a readable plan and **STOP**.
-Do not touch the calendar and do not mark
-the focus as confirmed yet.
+the default branch, see the vault's git rules). Present a readable plan and **STOP**: do
+not touch the calendar and do not mark the focus as confirmed yet.
 
 Structure of the report:
 - **Consuntivo settimana scorsa** — from Phase 1a: what was done, what was partial, what
@@ -425,8 +429,7 @@ Write the plan only into the five fixed sections of the vault's rhythm contract
 
 Extra sections are allowed after the fixed ones, for what the contract does not cover:
 `## Griglia Lun-Ven` (name the two fascia with the times read from the config) with one
-weighing line per event followed by the same ASCII calendar proposal shown in the
-report,
+weighing line per event followed by the same ASCII calendar proposal shown in the report,
 `## Bilancio cognitive/handoff`, `## Email azionabili`, `## Segnalazioni / conflitti`.
 Priorities are written only in `## Focus settimana`, never in an extra section.
 
@@ -437,9 +440,7 @@ Write tool, frontmatter `doc_type: log`, `created`/`updated` = today, `week: <IS
 week>`, then the same five fixed sections and the extras.
 
 **If `notes_tool = notion`:** create/update the week's page under `output_page_url` with
-the same sections.
-
-**If `notes_tool = none`:** present the plan in chat as formatted markdown.
+the same sections. **If `notes_tool = none`:** present the plan in chat as formatted markdown.
 
 ---
 
@@ -462,8 +463,7 @@ not per message and not per section touched: split a message that carries two re
 EOF
 ```
 
-`--testo -` reads the text from the heredoc, verbatim: Italian apostrophes ("l'hai")
-break a single-quoted `--testo='…'`.
+`--testo -` reads the heredoc verbatim: apostrophes ("l'hai") break `--testo='…'`.
 
 - Classes (closed list): `fonte-mancata` (a source was not read; add `--fonte
   sessione|mail|calendario|nota|scadenza|altro`), `peso-sbagliato`, `scadenza-mancata`,
@@ -487,8 +487,7 @@ break a single-quoted `--testo='…'`.
 - `problemi` not empty (exit 1): name them in one line and go on. Never rewrite past
   rows. If the command fails, plan without adaptation and say so in one line.
 
-The log and `suggeriti.json` are versioned: commit them with the next commit of the run,
-or on their own when the feedback comes outside a run.
+The log and `suggeriti.json` are versioned: commit them with the next commit of the run, or alone outside a run.
 
 ---
 
