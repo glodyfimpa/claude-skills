@@ -9,7 +9,8 @@ description: |
 Forward-looking weekly planning in 4 phases. Collects the week's state, weighs every
 commitment, proposes a plan, gates on human approval, then applies it. A facade: it
 reuses planning-review-system's collect and time-energy-manager's calendar-export
-pattern, and writes the weekly plan as plain markdown. No new code.
+pattern, and writes the weekly plan as plain markdown. Its few helpers live in the vault
+(`consuntivo-check`, `agent_activity`, `learning_signal`, `confirm_decision`).
 
 **Principle:** a full calendar is not a planned week. Weigh every event, or you are just
 filling holes.
@@ -84,15 +85,14 @@ the steps below are self-contained enough to run directly.)
 
 ### Phase 1a — Consuntivo (runs first in Phase 1, before collecting anything new)
 
-Before gathering new material, reconcile the previous plan against what actually
-happened. Skipping this step is how commitments quietly vanish (validated 2026-07-27:
-"prenota appuntamento INPS" sat as an all-day reminder in the 2026-07-20 plan and was
-never done — nobody reopened it because no ritual re-surfaced it).
+Before gathering new material, reconcile the previous plan against what happened.
+Skipping this is how commitments quietly vanish (validated 2026-07-27: "prenota
+appuntamento INPS" sat as a reminder in the 2026-07-20 plan and was never done).
 
 1. **Read last week's plan**: `<vault_path>/.brain/weekly/<last-monday>-weekly.md`, its
-   `## Focus settimana` first (older notes: Golden Rule and priorities). This is the
-   commitment list to check against reality, not to trust at face value. If last week
-   has no note, take the most recent one and say how many weeks are missing.
+   `## Focus settimana` first (older notes: Golden Rule and priorities): the commitment
+   list to check against reality. If last week has no note, take the most recent one and
+   say how many weeks are missing.
 2. **Read the week's agent sessions through the aggregator** (all agents it indexes:
    Claude Code local, Cursor, and the git-based cloud adapters), never by guessing from
    file dates. When `notes_tool = vault_filesystem` and
@@ -134,17 +134,15 @@ never done — nobody reopened it because no ritual re-surfaced it).
    (a call to book, a cancellation with a window), it becomes a **calendar event**, not
    a reminder — a reminder with no slot is how it gets missed twice.
 5. **Check predicted load vs actual load**: for each commitment marked DONE or PARTIAL,
-   compare the load type it was weighed as (Phase 2's attribute 3: handoff vs cognitive)
-   against what the session evidence shows it actually took. Flag a mismatch when a
-   commitment predicted as light/handoff turned out cognitive-heavy with no deliverable
-   (validated 2026-07-27: a cashflow session weighed as a build produced serious design
-   reasoning but zero code shipped, zero bank connected — the user called it "tempo
-   buttato"). This is not a full retrospective audit — just a one-line note per mismatch,
-   feeding Phase 3's report. A repeated mismatch on the same recurring commitment across
-   multiple weeks is worth surfacing explicitly, not just noting once and dropping.
-   Register each mismatch as one learning-signal row (`registra --origine consuntivo
-   --classe carico-stimato-male --fase 2`, see "Learning signal"); `--testo` is Glody's
-   words if he named it, else the mismatch line with the commitment and the week.
+   compare the load type it was weighed as (Phase 2, attribute 3) with what the session
+   evidence shows it took. Flag a commitment predicted as light/handoff that turned out
+   cognitive-heavy with no deliverable (validated 2026-07-27: a cashflow session weighed as
+   a build produced design reasoning but no code, and Glody called it "tempo buttato").
+   One line per mismatch, feeding Phase 3's report; a mismatch repeated across weeks on the
+   same recurring commitment is surfaced explicitly. Register each one as a learning-signal
+   row (`registra --origine consuntivo --classe carico-stimato-male --fase 2`, see
+   "Learning signal"); `--testo` is Glody's words if he named it, else the mismatch line
+   with the commitment and the week.
 
 Output of this sub-phase: a short reconciliation summary (what was done, what wasn't,
 what re-enters as open, and any load mismatch) — feeds directly into Phase 3's report.
@@ -203,12 +201,12 @@ is not automatically high priority just because it's old — weigh it like anyth
    subagent (he approves output ~15min) → his real time ~1-1.5h scattered. Always separate
    machine-time (mine + subagent, runs while Glody does other things) from Glody-time
    (checkpoints) and weigh the event ONLY on the second.
-3. **Load type** — **handoff** (an LLM carries it with little supervision: a message, an
-   extraction, a wait, a routine to launch, OR the code part of an assisted build) vs
-   **cognitive** (Glody must be present and focused, even if LLM-assisted: approving a
-   design, a strategic decision) vs **physical/out-of-house** (going somewhere, an errand).
-   A single "project" decomposes into phases of different load — don't weigh the whole
-   project with one load type.
+3. **Load type** — **delegated** (a person or an agent owns it end to end; Glody only
+   spends the 10-15 minute checkpoint) vs **handoff** (an LLM carries it with little
+   supervision: a message, an extraction, a routine to launch, the code part of an assisted
+   build) vs **cognitive** (Glody must be present and focused: approving a design, a strategic
+   decision) vs **physical/out-of-house** (an errand). A project decomposes into phases of
+   different load: weigh each phase, not the whole project.
 4. **Real weight / priority** — hard deadline? legal/economic consequence? or deferrable?
 5. **Where** — at the desk / out / with people.
 
@@ -235,13 +233,11 @@ not placed: propose one and let Glody approve it. List, in the report, every act
 is delegable together with the prep-run that would prepare it the day before. If the file
 is missing, use the defaults below.
 
-**Default capacity (when the rules file is missing): the 4 hours get FILLED inside the two
-fascia, not emptied.** Glody works 4h/day (a cap,
-but also a target). There is no "park it outside the fascia" shortcut for a valuable event.
-If a valuable event conflicts inside the fascia, fit it by weighing; if it doesn't fit this
-week by priority/space, move it to next week (a real date, not outside the fascia). If it
-has no value, delete it. Deferrable meta-tooling that doesn't fit and clutters the view →
-move to next week, don't leave it in the fascia or the gaps.
+**Default capacity (when the rules file is missing): fill the 4 hours inside the two
+fascia.** The cap is also a target, and there is no "park it outside the fascia" shortcut.
+If a valuable event does not fit this week by priority or space, move it to next week (a
+real date); if it has no value, delete it. Deferrable meta-tooling that clutters the view
+moves to next week too.
 
 **Ordering** (with the rules file: its tiers, then its axes as tie-break inside a tier;
 without it, the defaults here):
