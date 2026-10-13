@@ -42,10 +42,9 @@ ambiguous. All dates below use that Monday as the anchor.
 
 ## Phase 0 — Open the week's note (FIRST step, before anything else)
 
-The week's note must exist on disk whether or not Glody ever answers the gate. A plan
-that lives only in the chat is lost when the session goes idle (validated 2026-10-09: 8
-Monday runs out of 12 presented a full plan, waited for an OK that never came, and left
-no file, because the note was written only in Phase 4).
+The week's note must exist on disk whether or not Glody ever answers the gate: a plan only
+in the chat is lost when the session goes idle (validated 2026-10-09: 8 Monday runs out of
+12 waited for an OK that never came and left no file, because the note was written in Phase 4).
 
 **If `notes_tool = vault_filesystem` and `<vault_path>/.brain/system/vault_lint/review.py`
 exists** (the vault's rhythm chain, contract in `<vault_path>/.brain/system/schema/ritmi.md`):
@@ -66,11 +65,8 @@ for Phase 3. If the command opened a monthly or quarter draft, say so in Phase 3
 levels follow `<vault_path>/areas/glody/procedure/revisione-ritmi.md`, not this skill.
 
 The note is `<vault_path>/.brain/weekly/<target Monday>-weekly.md`. Never overwrite it
-and never rewrite its frontmatter: edit sections in place (see "Writing into the note").
-
-Then read the learning signal: run `conta` and act on its verdict as described in
-"Learning signal" below (`adatta` is applied during this run, `promuovi` is only
-proposed).
+or rewrite its frontmatter: edit sections in place (see "Writing into the note").
+Then run `conta` and act on its verdict ("Learning signal" below).
 
 **Otherwise** (no rhythm chain, or `notes_tool` is not the vault): skip Phase 0; the note
 is written in Phase 3 as described under "Writing into the note".
@@ -149,12 +145,11 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
 
 ### Phase 1b — New material
 
-- **Tasks / projects / quarterly** (`task_tool`): reuse planning-review-system's collect.
-  Read open tasks with due dates, active projects and their status, quarterly goals and
-  progress. If `task_tool = vault_filesystem` / `notion`, read from there per config.
-  If `<vault_path>/.brain/system/piano-annuale-<year>.md` (or equivalent yearly-plan file)
-  exists, read the current quarter's section from there — it is the source of truth for
-  quarterly goals, not the Notion `goals_page_url` fallback. Read also
+- **Tasks / projects / quarterly** (`task_tool`): reuse planning-review-system's collect:
+  open tasks with due dates, active projects and their status, quarterly goals and progress,
+  from `task_tool` per config. If `<vault_path>/.brain/system/piano-annuale-<year>.md` (or
+  equivalent) exists, read the current quarter's section from there: it is the source of
+  truth for quarterly goals, not the Notion `goals_page_url` fallback. Read also
   `## Priorità del mese` from `<vault_path>/.brain/monthly/<YYYY-MM>-monthly.md`: each
   focus of the week must serve one of those priorities.
 - **Email** (`email_tool`): scan the last 7 days (config `email_scan_labels`, default
@@ -169,12 +164,9 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
   a hard deadline candidate: weigh it in Phase 2 and list it in Phase 3's "Hard deadlines
   of the week" with its Rome time; report every `problemi` entry. Exit 2 = bad arguments.
 - **Recent agent sessions**: query the aggregator again with `--since <2 weeks ago>` (same
-  command as Phase 1a, same staleness rule) to surface threads still open (a build
+  command, staleness rule and fallback as Phase 1a) to surface threads still open (a build
   mid-flight, a deferred follow-up) that deserve a slot this week. Use metadata and
-  `title_or_first_message` to spot open threads, not to judge delivery. (Phase 1a already
-  read the past week in detail; this widens the window to 2 weeks for threads not tied to
-  last week's specific plan.) Same fallback as Phase 1a if the aggregator is unavailable.
-
+  `title_or_first_message` to spot open threads, not to judge delivery.
 - **Future directions** (`<vault_path>/areas/glody/knowledge/direzioni-future.md`, if it
   exists): for each direction, is there a new real signal this week (an email, a session,
   a contact)? Is any direction dead, or is a new one emerging from what Glody said? Pick
@@ -300,9 +292,13 @@ Structure of the report:
   existing event Phase 4 would change (say what changes and why), and `.` free. Under the
   grid list every `[+]` and `[~]` with title, day, start-end, `busy`/`free`. Show it also
   when the gate is re-presented by "Resume the gate", after re-reading the calendar.
-- **Cognitive vs handoff count** — how many blocks this week's grid places in each load
-  type (Phase 2 attribute 3). A number, not a judgment — it makes visible whether the
-  week leans toward deep/cognitive or shallow/handoff work without another audit.
+- **Cognitive vs handoff count** — blocks per load type (Phase 2 attribute 3), as a plain
+  number, to show whether the week leans cognitive or handoff.
+- **Prep-runs (always, proactive)** — for every cognitive block and every delegable
+  activity, the one-shot delegated run that prepares it the day before: what it produces,
+  its DoD, when it fires (weekday, before the block). Mark them `(p)` in the ASCII grid.
+  Never stop at listing a problem: each one comes with a next action, and anything
+  answerable from mail, chats, logs or files is looked up, not asked.
 - **Actionable emails** (from Phase 1, with the action + date).
 - **Conflicts / notes** — anything that didn't fit, moved to next week, or needs a Glody
   decision, plus the `review stato` signals from Phase 0.
@@ -344,6 +340,11 @@ Only after explicit approval:
 - Confirm: "Fatto — [N] blocchi aggiunti al calendario."
 
 If `calendar_tool = none`: skip calendar export.
+
+### Prep-runs
+The OK covers the prep-runs listed in the report: create each as a one-shot scheduled task on a
+weekday (versioned prompt in the vault, loop pattern, DoD in the prompt; see
+`gotcha-routine-scheduling`) with its calendar event, and tell Glody which exist.
 
 ### Confirm the focus in the note
 Edit `## Focus settimana` in the week's note: replace the proposal marker with the
@@ -446,10 +447,9 @@ the same sections. **If `notes_tool = none`:** present the plan in chat as forma
 
 ## Learning signal
 
-Every piece of feedback Glody gives on the planner becomes one row of an append-only log,
-and the counts decide what this skill adapts to. Vault only: it needs
-`<vault_path>/.brain/system/learning_signal/weekly.py` (README next to it); without it,
-skip this section. Both commands run as
+Every piece of feedback Glody gives on the planner becomes one row of an append-only log;
+the counts decide what this skill adapts to. Vault only: needs
+`<vault_path>/.brain/system/learning_signal/weekly.py` (README next to it), else skip. Run
 `PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python -m learning_signal.weekly <command>`.
 
 **Register: whenever Glody gives feedback on the planner, at any point** (the gate, the
@@ -467,8 +467,8 @@ EOF
 
 - Classes (closed list): `fonte-mancata` (a source was not read; add `--fonte
   sessione|mail|calendario|nota|scadenza|altro`), `peso-sbagliato`, `scadenza-mancata`,
-  `carico-stimato-male`, `fascia-sbagliata`, `troppo-lungo`, `formato`. Use `altro` when
-  none fits: it stays readable but never counts. Do not force a class to make it count.
+  `carico-stimato-male`, `fascia-sbagliata`, `troppo-lungo`, `formato`; `altro` never counts.
+  Do not force a class to make it count.
 - `--fase` is the phase whose output was wrong. A gate approved with no change:
   `registra --origine gate --esito identica`.
 - Exit 2 = refused, the reason is on stderr. "already registered" means the same gesture
@@ -476,9 +476,8 @@ EOF
 
 **Read (Phase 0): `… conta`** returns `adatta`, `promuovi`, `richieste`, `problemi`.
 
-- `adatta` (same place and class at least 3 times): read those rows' `testo_orig` in
-  the log and apply the correction in that phase during this run. Say it in ONE line in
-  the Phase 3 report.
+- `adatta` (same place and class at least 3 times): read those rows' `testo_orig` and
+  apply the correction in that phase during this run; say it in ONE line in the report.
 - `adatta` empty: change nothing and say nothing about the signal.
 - `promuovi` (at least 5 times over at least 14 days): propose to Glody, in the Phase 3
   report, the edit to this skill that would make the correction permanent. Never edit
@@ -487,7 +486,7 @@ EOF
 - `problemi` not empty (exit 1): name them in one line and go on. Never rewrite past
   rows. If the command fails, plan without adaptation and say so in one line.
 
-The log and `suggeriti.json` are versioned: commit them with the next commit of the run, or alone outside a run.
+The log and `suggeriti.json` are versioned: commit them with the run's next commit.
 
 ---
 
