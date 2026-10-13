@@ -1,7 +1,7 @@
 ---
 name: weekly-planner
 description: |
-  Plans Glody's upcoming week end to end: reconciles last week's plan against what actually happened (done/partial/not touched, from Claude sessions and direct fact-check), collects state (tasks, projects, quarterly — including the yearly plan's current-quarter section, email, recent Claude sessions, calendar), weighs and prioritizes every commitment, writes the collected state and the proposed focus into the week's note, and STOPS at a human gate before touching the calendar. Only after explicit approval does it apply the plan to the calendar and mark the focus as confirmed. Use this skill when the user says "pianifichiamo la settimana", "/weekly-planner", "pianificazione settimanale", "prepara la settimana", or when the Monday planning routine fires. Complements planning-review-system (backward-looking weekly review) and time-energy-manager (daily execution): weekly-planner looks forward across the whole week. Works with any task database, calendar, and email MCP, or in chat-only mode. Do NOT use for a single-day plan (use time-energy-manager) or a retrospective weekly review (use planning-review-system).
+  Plans Glody's upcoming week end to end: reconciles last week's plan against what actually happened (done/partial/not touched, from agent sessions of every indexed agent and direct fact-check), collects state (tasks, projects, quarterly — including the yearly plan's current-quarter section, email, recent agent sessions, calendar), weighs and prioritizes every commitment, writes the collected state and the proposed focus into the week's note, and STOPS at a human gate before touching the calendar. Only after explicit approval does it apply the plan to the calendar and mark the focus as confirmed. Use this skill when the user says "pianifichiamo la settimana", "/weekly-planner", "pianificazione settimanale", "prepara la settimana", or when the Monday planning routine fires. Complements planning-review-system (backward-looking weekly review) and time-energy-manager (daily execution): weekly-planner looks forward across the whole week. Works with any task database, calendar, and email MCP, or in chat-only mode. Do NOT use for a single-day plan (use time-energy-manager) or a retrospective weekly review (use planning-review-system).
 ---
 
 # Weekly Planner
@@ -20,7 +20,8 @@ filling holes.
 
 **If a config file exists:** read `task_tool`, `calendar_tool`, `notes_tool`, and
 `email_tool` from the frontmatter, plus `vault_path` when
-`notes_tool = vault_filesystem`. These decide MCP vs conversational fallback.
+`notes_tool = vault_filesystem`. These decide MCP vs conversational fallback. Read also
+`work_morning_block` and `work_afternoon_block` (the only work fascia, used in Phases 2-4).
 
 **If NO config file exists:** run the same mini-setup as planning-review-system /
 time-energy-manager (auto-detect tools, ask language + tools + schedule, save to
@@ -66,6 +67,10 @@ levels follow `<vault_path>/areas/glody/procedure/revisione-ritmi.md`, not this 
 The note is `<vault_path>/.brain/weekly/<target Monday>-weekly.md`. Never overwrite it
 and never rewrite its frontmatter: edit sections in place (see "Writing into the note").
 
+Then read the learning signal: run `conta` and act on its verdict as described in
+"Learning signal" below (`adatta` is applied during this run, `promuovi` is only
+proposed).
+
 **Otherwise** (no rhythm chain, or `notes_tool` is not the vault): skip Phase 0; the note
 is written in Phase 3 as described under "Writing into the note".
 
@@ -88,13 +93,36 @@ never done — nobody reopened it because no ritual re-surfaced it).
    `## Focus settimana` first (older notes: Golden Rule and priorities). This is the
    commitment list to check against reality, not to trust at face value. If last week
    has no note, take the most recent one and say how many weeks are missing.
-2. **Read the week's Claude sessions**: scan `~/.claude/projects/*/*.jsonl` for user
-   turns dated within the past week. Read the closing turns of each session (where
-   completion/handoff is usually declared) — a grep on file mtimes alone is not enough:
-   work can be finished and delivered on the same day a source file was last touched,
-   with no file-level trace of the delivery itself (validated 2026-07-27: a capstone's
-   source files were dated the same day it was delivered; only the session's closing
-   turn confirmed delivery — file dates alone would have wrongly read it as unfinished).
+2. **Read the week's agent sessions through the aggregator** (all agents it indexes:
+   Claude Code local, Cursor, and the git-based cloud adapters), never by guessing from
+   file dates. When `notes_tool = vault_filesystem` and
+   `<vault_path>/.brain/system/agent_activity/` exists:
+   ```bash
+   V=<vault_path>
+   PYTHONPATH=$V/.brain/system $V/.brain/system/.venv/bin/python -m agent_activity.collect --vault $V
+   PYTHONPATH=$V/.brain/system $V/.brain/system/.venv/bin/python -m agent_activity.query \
+     --vault $V --since <start of last week, ISO UTC>
+   ```
+   Run `collect` first: the LaunchAgent runs it once a day, so today's sessions are
+   missing otherwise. The query returns `sessions` (id, agent, project, title, turns,
+   `closing_excerpt`, `source_path`), `collector_staleness_days` and `warnings`.
+   - For every session judge delivery from `closing_excerpt` (where completion/handoff is
+     usually declared). File mtimes are not evidence: files get touched without new work
+     (validated 2026-10-13), and work can be delivered the same day a source file was last
+     touched (validated 2026-07-27).
+   - An empty `closing_excerpt` (cloud/git sessions, or not collected) is reported as
+     "estratto assente", never silently skipped and never replaced by a guess.
+   - **Drill down**: for each session whose title or excerpt touches an open commitment
+     from step 1, or that has no usable excerpt, open the transcript at `source_path`
+     and read the part that matters (search the commitment's keywords, then read around
+     the hits). The excerpt is the map, the transcript is the evidence.
+   - Report `collector_staleness_days` when it is `null` or above 3.
+   - If the aggregator is missing or the command fails, say so in the note and fall back
+     to scanning `~/.claude/projects/*/*.jsonl` (closing turns of each session in the
+     window), stating that Cursor and cloud sessions were not covered.
+   - **Cite what you used** in `## Consuntivo` as `sessione:<first 8 chars of the
+     session_id>` next to each judgment (see Phase 3: the gate refuses a Consuntivo with
+     no citation).
 3. **Reconcile line by line**: for each commitment in last week's plan, mark DONE /
    PARTIAL / NOT TOUCHED, with the evidence (session excerpt, commit, or file) — not an
    assumption. If a commitment turns out already resolved by direct fact-check (e.g. the
@@ -114,6 +142,9 @@ never done — nobody reopened it because no ritual re-surfaced it).
    buttato"). This is not a full retrospective audit — just a one-line note per mismatch,
    feeding Phase 3's report. A repeated mismatch on the same recurring commitment across
    multiple weeks is worth surfacing explicitly, not just noting once and dropping.
+   Register each mismatch as one learning-signal row (`registra --origine consuntivo
+   --classe carico-stimato-male --fase 2`, see "Learning signal"); `--testo` is Glody's
+   words if he named it, else the mismatch line with the commitment and the week.
 
 Output of this sub-phase: a short reconciliation summary (what was done, what wasn't,
 what re-enters as open, and any load mismatch) — feeds directly into Phase 3's report.
@@ -133,10 +164,12 @@ what re-enters as open, and any load mismatch) — feeds directly into Phase 3's
   a decision — not newsletters.
 - **Calendar** (`calendar_tool`): read every event already on the target week. These are
   existing commitments — they get weighed too (Phase 2), not just worked around.
-- **Recent Claude sessions**: scan the last 2 weeks of work to surface threads still open
-  (a build mid-flight, a deferred follow-up) that deserve a slot this week. (Phase 1a
-  already read the past week in detail for reconciliation; this widens the window to 2
-  weeks for threads not tied to last week's specific plan.)
+- **Recent agent sessions**: query the aggregator again with `--since <2 weeks ago>` (same
+  command as Phase 1a, same staleness rule) to surface threads still open (a build
+  mid-flight, a deferred follow-up) that deserve a slot this week. Use metadata and
+  `title_or_first_message` to spot open threads, not to judge delivery. (Phase 1a already
+  read the past week in detail; this widens the window to 2 weeks for threads not tied to
+  last week's specific plan.) Same fallback as Phase 1a if the aggregator is unavailable.
 
 - **Future directions** (`<vault_path>/areas/glody/knowledge/direzioni-future.md`, if it
   exists): for each direction, is there a new real signal this week (an email, a session,
@@ -182,24 +215,44 @@ is not automatically high priority just because it's old — weigh it like anyth
 **The judgment is yours to make, but when genuinely in doubt about an event's nature or
 weight, ask Glody** instead of guessing. A targeted question beats a wrong classification.
 
-**The two work fascia — ONLY two, distinct: morning 10:00-12:00 + afternoon 16:00-18:00**
-(= 4h/day). 12:00-16:00 and after 18:00 are NOT work time — they are life, not "free holes
-to fill". **Never place a work event outside these two fascia** (e.g. 14-16 is forbidden).
-They are two separate islands, not a continuous 10-18 block with gaps.
+**The two work fascia — ONLY two, distinct, read from the config, never typed here:**
+`work_morning_block` and `work_afternoon_block` in the life-os config (their sum should
+match `daily_work_cap_hours`). Read them in the Config Guard and use them everywhere below ("the morning fascia", "the afternoon fascia"). If a
+key is missing, ask Glody instead of assuming. The time between the two and outside
+them is NOT work time — it is life, not "free holes to fill". **Never place a work event
+outside these two fascia.** They are two separate islands, not one continuous block with
+gaps.
 
-**The 4 hours get FILLED inside the two fascia, not emptied.** Glody works 4h/day (a cap,
+**Planning rules file (read it before weighing anything).** If
+`<vault_path>/areas/glody/procedure/regole-di-pianificazione.md` exists, it overrides the
+defaults below for: the execution tiers, the DoD requirement, the capacity target
+and the one-theme-per-day rule. The axes are the ordered `## Priorità del mese` of the
+current monthly note (`<vault_path>/.brain/monthly/<YYYY-MM>-monthly.md`), not a separate
+list. Apply the file as written: axes are the main ones, not the only
+ones, and an urgent or deadline item outside any axis is still done, with no hour cap.
+Delegated work still costs Glody 10-15 minutes of checkpoint. An activity with no DoD is
+not placed: propose one and let Glody approve it. List, in the report, every activity that
+is delegable together with the prep-run that would prepare it the day before. If the file
+is missing, use the defaults below.
+
+**Default capacity (when the rules file is missing): the 4 hours get FILLED inside the two
+fascia, not emptied.** Glody works 4h/day (a cap,
 but also a target). There is no "park it outside the fascia" shortcut for a valuable event.
 If a valuable event conflicts inside the fascia, fit it by weighing; if it doesn't fit this
 week by priority/space, move it to next week (a real date, not outside the fascia). If it
 has no value, delete it. Deferrable meta-tooling that doesn't fit and clutters the view →
 move to next week, don't leave it in the fascia or the gaps.
 
-**Ordering:**
+**Ordering** (with the rules file: its tiers, then its axes as tie-break inside a tier;
+without it, the defaults here):
 - Sort by hard deadline first (legal/economic consequences lead).
 - Then by the week's Golden Rule (the single "priority of priorities").
+- Group by theme: one theme per day when possible, delegated runs included. Fixed events
+  that cannot move (a loop with a dependency) stay; say so and put their checkpoint at the
+  start of the fascia.
 - Never two COGNITIVE blocks back-to-back — alternate cognitive ↔ handoff/physical/light.
   Handoff work an LLM can carry doesn't compete for focus; cognitive work is isolated and
-  protected.
+  protected. With one theme per day the alternation happens inside the theme.
 
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (Glody-time + load type), respecting the rules above.
@@ -210,9 +263,23 @@ with a one-line weighing (Glody-time + load type), respecting the rules above.
 
 First write the week's note (see "Writing into the note" below): the collected state and
 the proposed focus, marked as a proposal. This is local and reversible, and it is what
-survives if the gate is never answered. Commit + push only that file (vault: the
-default branch, see the vault's git rules). Then present a readable plan and **STOP**. Do not
-touch the calendar and do not mark the focus as confirmed yet.
+survives if the gate is never answered. Then run the evidence check on the note:
+
+```bash
+PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python \
+  -m vault_lint.review consuntivo-check <vault_path> --date <target Monday>
+```
+
+Exit 0 = `## Consuntivo` cites at least one real session (`sessione:<8 chars>` found in
+the aggregator index). Any other exit = Phase 1a step 2 was not done: go back and do it,
+then rewrite `## Consuntivo`. Do not present the gate until the check passes. Only when
+the aggregator has no sessions at all in the window, the section may carry the explicit
+token `sessioni:nessuna`.
+
+Then commit + push only the note, plus the learning-signal files if they changed (vault:
+the default branch, see the vault's git rules). Present a readable plan and **STOP**.
+Do not touch the calendar and do not mark
+the focus as confirmed yet.
 
 Structure of the report:
 - **Consuntivo settimana scorsa** — from Phase 1a: what was done, what was partial, what
@@ -224,8 +291,15 @@ Structure of the report:
 - **Hard deadlines of the week** (dated, with consequence).
 - **Golden Rule** of the week (the one priority of priorities, highlighted first).
 - **Priorities**, ordered by the Phase 2 sort (P1..Pn with a one-line why each).
-- **Mon-Fri grid** — for each fascia (10-12, 16-18), the event placed there with its
-  one-line weighing (Glody-time + load type). Show the reasoning, not just the grid.
+- **Mon-Fri grid** — for each fascia (the two blocks from the config), the event placed
+  there with its one-line weighing (Glody-time + load type). Show the reasoning, not just the grid.
+- **Calendar proposal in ASCII (always, with every presentation of the plan)** — a
+  Mon-Fri grid with the two fascia from the config as rows, built from the same list
+  Phase 4 will write, so what Glody approves is what gets created. Mark each cell:
+  `[=]` already on the calendar (not touched), `[+]` Phase 4 will create it, `[~]` an
+  existing event Phase 4 would change (say what changes and why), and `.` free. Under the
+  grid list every `[+]` and `[~]` with title, day, start-end, `busy`/`free`. Show it also
+  when the gate is re-presented by "Resume the gate", after re-reading the calendar.
 - **Cognitive vs handoff count** — how many blocks this week's grid places in each load
   type (Phase 2 attribute 3). A number, not a judgment — it makes visible whether the
   week leans toward deep/cognitive or shallow/handoff work without another audit.
@@ -237,10 +311,16 @@ Structure of the report:
 Then end with an explicit gate line:
 
 > "Questo è il piano, già scritto come proposta in `<path della weekly>`. Dimmi OK per
-> applicarlo al calendario e confermare il focus, oppure dimmi cosa cambiare."
+> applicarlo al calendario e confermare il focus, oppure dimmi cosa cambiare.
+> Se vuoi: cosa ti è sfuggito o ho pesato male?"
 
 **Wait for explicit approval.** Do NOT proceed to Phase 4 on anything less than a clear OK.
 If Glody asks for changes, revise Phase 2/3 and re-present the gate.
+
+Each change Glody asks for at the gate, and each answer to the optional question, is
+feedback: classify it and `registra` it with `--origine gate` before revising (see
+"Learning signal"). If the OK comes and no change was asked during the whole gate,
+register one neutral row (`--esito identica`).
 
 ---
 
@@ -252,8 +332,10 @@ Only after explicit approval:
 **MANDATORY when `calendar_tool != none`.** Reuse time-energy-manager's Step 4.5 pattern:
 - Use `calendar_id` from config (same calendar read in Phase 1). Optionally ask if a
   different calendar is wanted.
-- For each planned block NOT already a calendar event (skip events that came from the
-  calendar in Phase 1 — they already exist), create an event:
+- Idempotent: list the target week's events first. Skip a planned block when an event
+  with the same title and the same fascia already exists (a resumed gate must never
+  duplicate events). For each planned block NOT already a calendar event (skip events
+  that came from the calendar in Phase 1 — they already exist), create an event:
   - **Title:** block name (e.g. "Deep Focus: [task]", "Handoff: [routine]", "Reminder: [x]").
   - **Start/End:** the fascia times from the plan.
   - **Description:** brief context (priority, load type).
@@ -271,8 +353,51 @@ focus Glody approved (with his changes, if any). Touch only that section and the
 If Glody asks for changes before the OK, update the proposal in the note too, then
 re-present the gate.
 
+### Record the Decision
+`review stato` and the briefing do not read the note: they read the confirmed Decision
+YAML of the current ISO week (`read_confirmed_focus`). Editing only the note leaves them
+saying "focus non confermato" after a real OK. So write the Decision too:
+
+```bash
+PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python - <<'EOF'
+from pathlib import Path
+from vault_lint.focus import confirm_decision
+week = "<ISO year>-W<ISO week>"            # e.g. 2026-W42
+focus = [("<slug of focus 1>", "<label of focus 1>")]  # the approved items, max 3
+confirm_decision(
+    Path("<vault_path>"), f"week-{week}",
+    decision_override={
+        "horizon": "week", "arco_id": week,
+        "focus": [{"ref": r, "label": l, "tempo": None} for r, l in focus],
+        "delega": [], "lascia": [], "refs": [r for r, _ in focus],
+    },
+)
+EOF
+```
+
+It writes `.brain/system/decisions/focus-week-<week>.yaml` with `status: confirmed`; it
+refuses an empty focus. Then run `review stato <vault_path>`: it must now say the focus
+is confirmed. If it does not, say so instead of reporting success.
+
 ### Commit
-Commit + push the note again after confirming the focus (only that file).
+Commit + push the note and the Decision YAML after confirming the focus (only those two
+files, plus the learning-signal files if they changed).
+
+---
+
+## Resume the gate (any later session)
+
+The note and its commit exist before the gate on purpose, so the gate survives an idle
+or closed session. A later session resumes it from the note, without redoing Phases 1-2:
+
+- **Trigger**: "ok weekly", "applica la weekly", "riprendi la weekly", or the briefing
+  signal `focus della settimana non confermato`.
+- Read `<vault_path>/.brain/weekly/<target Monday>-weekly.md`. If `## Focus settimana`
+  still carries the proposal marker ("da confermare"), re-present the Phase 3 report
+  from the note (re-read the calendar for the week first: it may have changed, and say
+  what changed), wait for the OK, then run Phase 4. Phase 4 is idempotent, so a repeated
+  resume is safe.
+- If the focus is already confirmed (the Decision YAML says so), do nothing and say so.
 
 ---
 
@@ -303,7 +428,9 @@ Write the plan only into the five fixed sections of the vault's rhythm contract
   the proposal line once Glody approves.
 
 Extra sections are allowed after the fixed ones, for what the contract does not cover:
-`## Griglia Lun-Ven (mattina 10-12, pomeriggio 16-18)` with one weighing line per event,
+`## Griglia Lun-Ven` (name the two fascia with the times read from the config) with one
+weighing line per event followed by the same ASCII calendar proposal shown in the
+report,
 `## Bilancio cognitive/handoff`, `## Email azionabili`, `## Segnalazioni / conflitti`.
 Priorities are written only in `## Focus settimana`, never in an extra section.
 
@@ -320,8 +447,58 @@ the same sections.
 
 ---
 
+## Learning signal
+
+Every piece of feedback Glody gives on the planner becomes one row of an append-only log,
+and the counts decide what this skill adapts to. Vault only: it needs
+`<vault_path>/.brain/system/learning_signal/weekly.py` (README next to it); without it,
+skip this section. Both commands run as
+`PYTHONPATH=<vault_path>/.brain/system <vault_path>/.brain/system/.venv/bin/python -m learning_signal.weekly <command>`.
+
+**Register: whenever Glody gives feedback on the planner, at any point** (the gate, the
+retro, a later chat, another session), register it before moving on. One row per request,
+not per message and not per section touched: split a message that carries two requests.
+
+```bash
+… registra --origine gate|retro|consuntivo --classe <class> --fase 0|1a|1b|2|3|4 \
+  [--fonte <source>] --testo - <<'EOF'
+<his words, verbatim>
+EOF
+```
+
+`--testo -` reads the text from the heredoc, verbatim: Italian apostrophes ("l'hai")
+break a single-quoted `--testo='…'`.
+
+- Classes (closed list): `fonte-mancata` (a source was not read; add `--fonte
+  sessione|mail|calendario|nota|scadenza|altro`), `peso-sbagliato`, `scadenza-mancata`,
+  `carico-stimato-male`, `fascia-sbagliata`, `troppo-lungo`, `formato`. Use `altro` when
+  none fits: it stays readable but never counts. Do not force a class to make it count.
+- `--fase` is the phase whose output was wrong. A gate approved with no change:
+  `registra --origine gate --esito identica`.
+- Exit 2 = refused, the reason is on stderr. "already registered" means the same gesture
+  is already in the log: nothing to do.
+
+**Read (Phase 0): `… conta`** returns `adatta`, `promuovi`, `richieste`, `problemi`.
+
+- `adatta` (same place and class at least 3 times): read those rows' `testo_orig` in
+  the log and apply the correction in that phase during this run. Say it in ONE line in
+  the Phase 3 report.
+- `adatta` empty: change nothing and say nothing about the signal.
+- `promuovi` (at least 5 times over at least 14 days): propose to Glody, in the Phase 3
+  report, the edit to this skill that would make the correction permanent. Never edit
+  the skill yourself. Once proposed, add `"<dove>:<classe>"` to the JSON list in
+  `suggeriti.json` next to the log (create it if missing), so it is not proposed again.
+- `problemi` not empty (exit 1): name them in one line and go on. Never rewrite past
+  rows. If the command fails, plan without adaptation and say so in one line.
+
+The log and `suggeriti.json` are versioned: commit them with the next commit of the run,
+or on their own when the feedback comes outside a run.
+
+---
+
 ## Trigger Mapping
 
 - "pianifichiamo la settimana" / "prepara la settimana" → full run, Phases 0-4.
 - "/weekly-planner" → full run.
+- "ok weekly" / "applica la weekly" / "riprendi la weekly" → "Resume the gate" section.
 - Monday planning routine → full run (the routine is a 3-line trigger, all logic is here).

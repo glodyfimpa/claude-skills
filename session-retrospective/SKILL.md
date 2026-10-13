@@ -28,6 +28,18 @@ ti spingeva a produrre output da ogni sessione → rumore, cimiteri, cose che es
 non chiedi "cosa automatizzo?" (che pretende un output): chiedi "è successo qualcosa di raro?"
 (che si aspetta un no).
 
+## Passo 0 — weekly-planner feedback rows (data, not lessons)
+
+If this session touched the `weekly-planner` skill or its Monday routine
+(`pianificazione-settimanale`), register each real feedback gesture Glody gave on the
+planner in this session as one row of the planner's learning signal, with `--origine retro`.
+Command, closed class list and the one-row-per-request rule: section "Learning signal" of
+`~/.claude/skills/weekly-planner/SKILL.md`. These rows are data for the planner's own
+counter, not lessons of this ritual: the high bar below does not apply to them, and they
+are not an output of the ritual. A gesture already registered at the gate is refused as
+"already registered": expected, move on. Then go to Passo 1 as usual; its outcome is
+independent of this step.
+
 ## Passo 1 — la scintilla (o niente)
 
 Ripercorri la sessione e cerca UNA scintilla: una lezione pagata con un errore, una frizione
