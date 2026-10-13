@@ -268,6 +268,13 @@ Structure of the report:
 - **Priorities**, ordered by the Phase 2 sort (P1..Pn with a one-line why each).
 - **Mon-Fri grid** — for each fascia (the two blocks from the config), the event placed
   there with its one-line weighing (Glody-time + load type). Show the reasoning, not just the grid.
+- **Calendar proposal in ASCII (always, with every presentation of the plan)** — a
+  Mon-Fri grid with the two fascia from the config as rows, built from the same list
+  Phase 4 will write, so what Glody approves is what gets created. Mark each cell:
+  `[=]` already on the calendar (not touched), `[+]` Phase 4 will create it, `[~]` an
+  existing event Phase 4 would change (say what changes and why), and `.` free. Under the
+  grid list every `[+]` and `[~]` with title, day, start-end, `busy`/`free`. Show it also
+  when the gate is re-presented by "Resume the gate", after re-reading the calendar.
 - **Cognitive vs handoff count** — how many blocks this week's grid places in each load
   type (Phase 2 attribute 3). A number, not a judgment — it makes visible whether the
   week leans toward deep/cognitive or shallow/handoff work without another audit.
@@ -391,7 +398,8 @@ Write the plan only into the five fixed sections of the vault's rhythm contract
 
 Extra sections are allowed after the fixed ones, for what the contract does not cover:
 `## Griglia Lun-Ven` (name the two fascia with the times read from the config) with one
-weighing line per event,
+weighing line per event followed by the same ASCII calendar proposal shown in the
+report,
 `## Bilancio cognitive/handoff`, `## Email azionabili`, `## Segnalazioni / conflitti`.
 Priorities are written only in `## Focus settimana`, never in an extra section.
 
