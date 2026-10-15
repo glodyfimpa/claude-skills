@@ -89,7 +89,8 @@ appuntamento INPS" sat as a reminder in the 2026-07-20 plan and was never done).
    `## Focus settimana` first (older notes: Golden Rule and priorities): the commitment
    list to check against reality. If last week has no note, take the most recent one and
    say how many weeks are missing.
-2. **Read the week's agent sessions through the aggregator** (all agents it indexes:
+2. **Read last week's diary first** (`.brain/weekly/<last-monday>-diario.md`, see `references/diario.md`):
+   the aggregator below is then needed only for the days it leaves open. **Then read the week's agent sessions through the aggregator** (all agents it indexes:
    Claude Code local, Cursor, and the git-based cloud adapters), never by guessing from
    file dates. When `notes_tool = vault_filesystem` and
    `<vault_path>/.brain/system/agent_activity/` exists:
@@ -212,8 +213,8 @@ is not automatically high priority just because it's old — weigh it like anyth
 weight, ask Glody** instead of guessing. A targeted question beats a wrong classification.
 
 **The two work fascia — ONLY two, distinct, read from the config, never typed here:**
-`work_morning_block` and `work_afternoon_block` in the life-os config (sum =
-`daily_work_cap_hours`). Read them in the Config Guard and use them everywhere below ("the
+`work_morning_block` and `work_afternoon_block` in the life-os config; the day's cap is
+`daily_work_cap_hours`, read from the config, never the sum of the fasce. Read them in the Config Guard and use them everywhere below ("the
 morning fascia", "the afternoon fascia"); if a key is missing, ask Glody instead of assuming.
 The time between and outside them is NOT work time — it is life, not "free holes to fill".
 **Never place a work event outside these two fascia:** two separate islands, not one block.
