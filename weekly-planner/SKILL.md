@@ -46,7 +46,7 @@ The week's note must exist on disk whether or not Glody ever answers the gate: a
 in the chat is lost when the session goes idle (validated 2026-10-09: 8 Monday runs out of
 12 waited for an OK that never came and left no file, because the note was written in Phase 4).
 
-**If `notes_tool = vault_filesystem` and `<vault_path>/.brain/system/vault_lint/review.py`
+**If `notes_tool = vault_filesystem` and the directory `<vault_path>/.brain/system/vault_lint/review/`
 exists** (the vault's rhythm chain, contract in `<vault_path>/.brain/system/schema/ritmi.md`):
 
 ```bash
