@@ -23,7 +23,7 @@ Standalone skills covering GTD planning, energy-adaptive scheduling, Java clean 
 | [pa-data-vault](./pa-data-vault/) | Gestisce dati identificativi (CF, PEC, CIN, P.IVA, codici portali) per strutture BnB e profilo personale. Rileva campi mancanti ([da completare]), salva nuovi valori, restituisce un bundle strutturato alle altre skill PA. |
 | [pa-form-filler](./pa-form-filler/) | Compila form di portali PA italiani con browser automation (Playwright→Chrome→Computer Use). Scansiona FAQ PDF per identificare i soli campi obbligatori per legge, gestisce ID dinamici Keycloak con strategia label-first + catalog fallback, salva progressi con checkpoint per resistere a timeout di sessione. |
 | [pa-legal-clause-analyzer](./pa-legal-clause-analyzer/) | Analizza autocertificazioni PA italiane, estrae riferimenti normativi (art. X, comma Y D.L. Z/YYYY), incrocia con il profilo pa-data-vault per identificare clausole di esonero applicabili. Output: tabella markdown Clausola/Obbligatoria?/Norma/Valore suggerito. |
-| [forfettario-tax-calculator](./forfettario-tax-calculator/) | Calcola il netto reale per un libero professionista italiano in regime forfettario, partendo dal fatturato annuo. Mostra la catena completa: imponibile lordo, contributi INPS, imponibile netto, imposta sostitutiva, netto finale. Include script Python con test. |
+| [forfettario-tax-calculator](./forfettario-tax-calculator/) | Calcolatore deterministico per un libero professionista in regime forfettario, con regole certificate sulle istruzioni Redditi PF e sulle circolari INPS: imposta sostitutiva e contributi Gestione Separata dagli incassi dell'anno (deducendo i contributi versati nell'anno), coefficiente per codice ATECO, sanzione del ravvedimento INPS e quanto reddito coprono gli acconti già versati. Script Python con test. |
 | [portable-local-routine](./portable-local-routine/) | Gate di portabilità per routine/agenti schedulati locali (script launchd/cron, non cloud). 7 criteri (path assoluti, shebang, scheduler OS-detect, segreti clonabili, preflight+set -e, niente bridge cloud, fire diagnosticabile) in due modalità: build (checklist mentre costruisci) e audit (report `[OK]/[FIX]/[N/A]` su una routine esistente). Check + report, no auto-fix. Distinta da bash-portability-linter (sintassi) per l'asse "schedulato o no". |
 
 ## Usage
@@ -94,16 +94,18 @@ claude-skills/
 ├── pa-legal-clause-analyzer/
 │   └── SKILL.md                                     analisi clausole e esoneri su autocertificazioni PA
 ├── forfettario-tax-calculator/
-│   ├── SKILL.md                                     forfettario tax breakdown workflow
-│   └── scripts/
-│       └── forfettario_calc.py                      calculate() + format_breakdown() functions
+│   ├── SKILL.md                                     forfettario tax calculator, certified sources
+│   ├── scripts/
+│   │   └── forfettario_calc.py                      calculate(), coefficiente_per_ateco(), ravvedimento, acconti
+│   └── tests/
+│       └── test_forfettario_calc.py                 certified-rules tests (11, unittest)
 ├── portable-local-routine/
 │   ├── SKILL.md                                     portability gate for locally-scheduled routines
 │   └── README.md                                    7 criteria + Gate 0 (form A/B/C) summary
 ├── tests/
 │   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
 │   ├── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
-│   └── test_forfettario_calc.py                     test suite forfettario calculator (6 test, pytest)
+│   └── test_forfettario_calc.py                     test suite forfettario calculator (13 test, pytest)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
