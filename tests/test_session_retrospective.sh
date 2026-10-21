@@ -1,110 +1,117 @@
 #!/usr/bin/env bats
-# Test suite per session-retrospective/SKILL.md.
-# Verifica i pattern testuali introdotti dal fix degli anti-pattern emersi
-# nella retro 2026-05-13:
-#   1. Phase 1.7 imperativa con bash command esplicito + tabella decisionale
-#   2. Nuova Phase 3.5 Self-evaluation gate prima di Phase 4
-#   3. Phase 4 con single-confirmation default + menu 3-opzioni come eccezione
+# Contract tests for session-retrospective/SKILL.md (the one-question rite).
+# The skill is prose judged by an agent, so these tests pin the load-bearing
+# contract only: the single question with "nothing" as default outcome, the
+# written self-check before the neighbor-finder, the neighbor-finder outcomes,
+# the three destinations, and the frontmatter triggers.
+# Behavior of the neighbor-finder CLI itself lives in
+# session-retrospective/tests/test_show_neighbors.bats.
 
 REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
-SKILL_FILE="$REPO_ROOT/session-retrospective/SKILL.md"
+SKILL_DIR="$REPO_ROOT/session-retrospective"
+SKILL_FILE="$SKILL_DIR/SKILL.md"
 
-# Helper: estrae il blocco testuale di una Phase data, fino alla prossima ### Phase
-# Usage: phase_block <phase_id>   e.g. phase_block "1.7"
-phase_block() {
-  local phase_id="$1"
-  awk -v ph="### Phase $phase_id" '
-    $0 ~ "^" ph { in_block=1; next }
-    in_block && /^### Phase / { exit }
-    in_block { print }
+# Prints a section from its heading line (exclusive) to the next heading of the
+# same or higher level. Usage: section_block "## Passo 2" | section_block "### Ramo LEZIONE"
+section_block() {
+  local heading="$1"
+  local level="${heading%% *}"
+  awk -v h="$heading" -v lvl="$level" '
+    index($0, h) == 1 { in_block=1; next }
+    in_block {
+      if (match($0, /^#+ /)) {
+        cur = substr($0, 1, RLENGTH - 1)
+        if (length(cur) <= length(lvl)) exit
+      }
+      print
+    }
   ' "$SKILL_FILE"
 }
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Phase 1.7 — imperative bash command + decision table
-# ──────────────────────────────────────────────────────────────────────────────
-
-@test "Phase 1.7: comando 'npx skills find' presente e marcato REQUIRED" {
-  block="$(phase_block "1.7")"
-  echo "$block" | grep -q "npx skills find"
-  echo "$block" | grep -q "REQUIRED"
-}
-
-@test "Phase 1.7: tabella decisionale markdown coverage→azione presente" {
-  block="$(phase_block "1.7")"
-  # La tabella decisionale ha header con pipe + righe con pipe.
-  # Header atteso include "Coverage" e "Azione" (o "Action").
-  echo "$block" | grep -qE "\|.*[Cc]overage.*\|"
-  echo "$block" | grep -qiE "\|.*(azione|action).*\|"
-  # Almeno una riga della tabella con discard silently
-  echo "$block" | grep -qE "\|.*discard silently.*\|"
-}
-
-@test "Phase 1.7: partial coverage 50–89% in riga di tabella con regola 'extend' senza alternativa standalone" {
-  block="$(phase_block "1.7")"
-  # Estrae righe-tabella (con | iniziale o intermedio) che contengono 50 + 89
-  partial_rows="$(echo "$block" | grep -E "\|.*50.{0,5}89.*\|")"
-  [ -n "$partial_rows" ]
-  # La riga deve contenere "extend" o "estendi"
-  echo "$partial_rows" | grep -qiE "extend|estendi"
+# Same block joined on one line, for phrases that wrap across lines in the prose.
+flat_block() {
+  section_block "$1" | tr '\n' ' ' | tr -s ' '
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Phase 3.5 — Self-evaluation gate (nuova sezione)
+# Frontmatter: name and triggers (no silent breaking change on activation)
 # ──────────────────────────────────────────────────────────────────────────────
 
-@test "Phase 3.5: sezione Self-evaluation gate esiste con header ### Phase 3.5" {
-  # Header del paragrafo nello SKILL.md
-  grep -qiE "^### Phase 3\.5.*[Ss]elf.?[Ee]valuation" "$SKILL_FILE"
-}
-
-@test "Phase 3.5: 5 euristiche deterministiche con condizioni chiave" {
-  block="$(phase_block "3.5")"
-  # ≥2 occorrenze
-  echo "$block" | grep -qE "≥2 occorrenze|≥2 occurrences"
-  # 1 occorrenza
-  echo "$block" | grep -qE "1 occorrenza|1 occurrence"
-  # ≥90% coverage
-  echo "$block" | grep -qE "≥90%"
-  # partial coverage 50-89% (accetta en-dash o hyphen, o termine "Partial coverage")
-  echo "$block" | grep -qiE "50.{1,3}89%|partial coverage"
-  # ≥3 in sessione singola
-  echo "$block" | grep -qE "≥3"
-}
-
-@test "Phase 3.5: prescrive 'procedi a Phase 4 SOLO con create_now o save_idea'" {
-  block="$(phase_block "3.5")"
-  echo "$block" | grep -qiE "Phase 4 SOLO|only.*Phase 4"
-  echo "$block" | grep -q "create_now"
-  echo "$block" | grep -q "save_idea"
-}
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Phase 4 — single-confirmation default + menu come eccezione
-# ──────────────────────────────────────────────────────────────────────────────
-
-@test "Phase 4: clausola single-confirmation come default presente" {
-  block="$(phase_block "4")"
-  echo "$block" | grep -qiE "single.?confirmation|una conferma|single confirmation"
-}
-
-@test "Phase 4: riferimento esplicito a feedback_retro_no_menu_theater.md (memory file)" {
-  block="$(phase_block "4")"
-  echo "$block" | grep -qF "feedback_retro_no_menu_theater"
-}
-
-@test "Phase 4: menu 3-opzioni dichiarato come caso eccezionale, non default" {
-  block="$(phase_block "4")"
-  echo "$block" | grep -qiE "caso eccezionale|exceptional case|exception"
-}
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Frontmatter invariato — no breaking change su trigger
-# ──────────────────────────────────────────────────────────────────────────────
-
-@test "Frontmatter: name e prima riga description preservati" {
-  # name: session-retrospective
+@test "Frontmatter: name and current description opening preserved" {
   grep -q "^name: session-retrospective$" "$SKILL_FILE"
-  # description multi-line con la frase di apertura originale
-  grep -qF "Analyzes the current session to identify repetitive patterns" "$SKILL_FILE"
+  grep -qF "Rito di fine sessione, una domanda sola" "$SKILL_FILE"
+  grep -qF '"/session-retrospective"' "$SKILL_FILE"
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# The single question, default outcome "nothing"
+# ──────────────────────────────────────────────────────────────────────────────
+
+@test "Rite: one question, and 'niente' is the declared normal outcome" {
+  grep -qF "È successo qualcosa di raro che cambia il domani in meglio?" "$SKILL_FILE"
+  grep -qE "esito normale.{0,10}NIENTE" "$SKILL_FILE"
+}
+
+@test "Passo 1: no spark or failed self-check closes with the explicit sentence" {
+  block="$(flat_block "## Passo 1")"
+  echo "$block" | grep -qF "Niente di raro da salvare oggi."
+  echo "$block" | grep -qiE "non procedere al mostra-vicini"
+}
+
+@test "Passo 1: self-check is written BEFORE running the neighbor-finder" {
+  block="$(section_block "## Passo 1")"
+  echo "$block" | grep -qiE "self-check obbligatorio"
+  echo "$block" | grep -qE "PRIMA di eseguire il mostra-vicini"
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Passo 2: neighbor-finder (replaces the old 'npx skills find' coverage check)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@test "Passo 2: invokes show-neighbors by absolute path, and that CLI exists in the repo" {
+  block="$(section_block "## Passo 2")"
+  echo "$block" | grep -qF "~/.claude/skills/session-retrospective/bin/show-neighbors"
+  [ -x "$SKILL_DIR/bin/show-neighbors" ]
+}
+
+@test "Passo 2: neighbor outcomes map to new / merge / already covered" {
+  block="$(section_block "## Passo 2")"
+  echo "$block" | grep -qF '"nessun vicino"'
+  echo "$block" | grep -qiE "fondi/aggiorna quel file"
+  echo "$block" | grep -qiE "già coperta, non salvare"
+}
+
+@test "Passo 2: a missing perimeter source means 'no neighbors' proves nothing" {
+  block="$(section_block "## Passo 2")"
+  echo "$block" | grep -qF "non trovato nel"
+  echo "$block" | grep -qE "NON prova che la scintilla sia nuova"
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Passo 3: three outcomes, each with its destination; nothing is parked
+# ──────────────────────────────────────────────────────────────────────────────
+
+@test "Passo 3: three outcomes with their destinations, undecided is not parked" {
+  block="$(section_block "## Passo 3")"
+  echo "$block" | grep -qE "LEZIONE.*"
+  echo "$block" | grep -qF ".brain/principles/"
+  echo "$block" | grep -qE "SEME-DI-STRUMENTO forma-A"
+  echo "$block" | grep -qF "build-queue.md"
+  echo "$block" | grep -qE "SERVE-LA-TUA-TESTA"
+  echo "$block" | grep -qiE "APPUNTAMENTO in calendario"
+  echo "$block" | grep -qF "NON si parcheggia"
+}
+
+@test "Ramo LEZIONE: diff shown to Glody before writing, applied only on confirmation" {
+  block="$(section_block "### Ramo LEZIONE")"
+  echo "$block" | grep -qE "Mostra il diff"
+  echo "$block" | grep -qE "prima di scrivere"
+  echo "$block" | grep -qE "solo su conferma"
+}
+
+@test "Ramo SEME-STRUMENTO: queue XOR calendar, 'added' left to append_voice" {
+  block="$(flat_block "### Ramo SEME-STRUMENTO")"
+  echo "$block" | grep -qF "queue_parser.append_voice"
+  echo "$block" | grep -qF "coda XOR calendario"
+  echo "$block" | grep -qE "Il campo \`added\`.*auto-compila"
 }
