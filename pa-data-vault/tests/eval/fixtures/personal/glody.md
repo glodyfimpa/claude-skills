@@ -1,4 +1,4 @@
-# Profilo Personale — Utente di Esempio
+# Profilo Personale — Utente di Prova
 
 FIXTURE DI TEST: tutti i valori sono inventati. Stessa struttura del profilo reale
 (`pa-data-vault/references/personal/glody.md`, gitignored). Non inserire dati reali qui.
@@ -10,7 +10,7 @@ Campi marcati `[da completare]` vanno inseriti prima del primo utilizzo.
 
 ```
 nome: Mario
-cognome: Rossi
+cognome: Quagliarello
 codice_fiscale: [da completare]
 data_nascita: 01/01/1980
 luogo_nascita: Roma
@@ -25,13 +25,13 @@ provincia_residenza: RM
 ```
 partita_iva: [da completare]
 regime_fiscale: forfettario
-pec: mario.rossi@pec.example.invalid
+pec: m.quagliarello@pec.example.invalid
 ```
 
 ## Contatti
 
 ```
-email: mario.rossi@example.invalid
+email: m.quagliarello@example.invalid
 telefono: 000 0000000
 ```
 

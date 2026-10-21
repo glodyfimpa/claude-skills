@@ -17,39 +17,17 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   grep -q "^description:" "$skill_file"
 }
 
-# Il profilo reale (references/personal/glody.md) e' gitignored: contiene dati personali
-# e non esiste in un checkout pulito (CI, worktree). I test sul profilo girano su una
-# fixture committata con dati finti e lo stesso schema del file reale.
-PROFILE_FIXTURE_REL="tests/fixtures/pa-data-vault/personal/glody.md"
-
-@test "pa-data-vault: SKILL.md documenta il profilo personale e ne esiste uno schema di riferimento" {
-  grep -q "personal/glody" "$REPO_ROOT/pa-data-vault/SKILL.md"
-  [ -f "$REPO_ROOT/$PROFILE_FIXTURE_REL" ]
-}
-
 @test "pa-data-vault: references/bnb-via-braida/structure.md esiste" {
   [ -f "$REPO_ROOT/pa-data-vault/references/bnb-via-braida/structure.md" ]
-}
-
-@test "pa-data-vault: caricamento reference esistente restituisce dati" {
-  profile="$REPO_ROOT/$PROFILE_FIXTURE_REL"
-  # Verifica che contenga almeno una chiave: valore nel code-fence
-  grep -q "nome:" "$profile"
-  grep -q "email:" "$profile"
-}
-
-@test "pa-data-vault: detection campi [da completare] nel profilo" {
-  profile="$REPO_ROOT/$PROFILE_FIXTURE_REL"
-  # Il profilo deve avere campi da completare (e' uno scaffold intenzionale)
-  grep -q "\[da completare\]" "$profile"
-  # E il SKILL.md deve documentare la detection
-  grep -q "da completare" "$REPO_ROOT/pa-data-vault/SKILL.md"
 }
 
 @test "pa-data-vault: errore controllato su profilo inesistente" {
   # Verifica che SKILL.md documenti l'error handling per profilo non trovato
   grep -q "non trovato\|not found\|Profili disponibili" "$REPO_ROOT/pa-data-vault/SKILL.md"
 }
+
+# Profile behavior (load / missing-field detection / save) is covered by model-backed evals:
+#   RUN_EVALS=1 bats pa-data-vault/tests/eval/profile.eval.bats
 
 # ──────────────────────────────────────────────────────────────────────────────
 # pa-form-filler (core + id-mapper + checkpoint)
