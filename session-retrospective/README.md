@@ -20,6 +20,9 @@ centrato su un backlog-cimitero) aveva il default invertito (pretendeva output �
 | `tests/test_neighbors.py` | TDD della libreria (tokenize, score, find_neighbors, collect_sources). |
 | `tests/test_show_neighbors.bats` | Integrazione della CLI su un finto vault. |
 | `tests/eval-cases.md` | Casi-spec del giudizio del rito (7 TC). |
+| `tests/eval/contracts.eval.bats` | Eval dei contratti del giudizio (costa chiamate al modello, gira solo con `RUN_EVALS=1`). |
+| `tests/eval/lib.bash` | Mondo fixture isolato: vault git, skill installate, `show-neighbors` che registra le chiamate, stub calendario. |
+| `tests/eval/mutate.py` | Varianti rotte di `SKILL.md` per il RED: ognuna toglie la regola che un test protegge. |
 
 ## Meccanica del mostra-vicini (decisa nel Fronte 2)
 
@@ -39,4 +42,26 @@ python3 -m pytest tests/test_neighbors.py -v
 bats tests/test_show_neighbors.bats
 ```
 
-Suite: 12 (pytest) + 4 (bats) = 16 test.
+Suite veloce, senza modello: `test_neighbors.py` (pytest) e `test_show_neighbors.bats`.
+
+### Eval dei contratti (giudizio del rito)
+
+Sette test GIVEN/WHEN/THEN: una sessione fixture e un vault fixture, un Claude headless
+nuovo (`claude -p --safe-mode`) esegue il rito da `SKILL.md`, il test guarda solo gli
+effetti (file cambiati nel vault rispetto al commit fixture, chiamate a `show-neighbors`,
+voci in `build-queue.md` validate da `queue_parser`, eventi sullo stub calendario).
+
+```
+RUN_EVALS=1 bats tests/eval/contracts.eval.bats
+EVAL_MUTANT=always-a-spark RUN_EVALS=1 bats -f 'contract a' tests/eval/contracts.eval.bats   # RED
+```
+
+Serve: `claude` loggato, `jq`, un python3 con PyYAML (`EVAL_PYTHON`), `queue_parser.py` del
+brain (`EVAL_QUEUE_PARSER`, default `~/Documents/brain/areas/ai-automation/autonomous-agents/`).
+Modello di default `sonnet` (`EVAL_MODEL`). Costo misurato il 2026-10-21 con sonnet: da 0,05 a 0,20 USD per test,
+0,80 USD per l'intera suite (i test con conferma fanno due turni). Senza `RUN_EVALS=1` i test sono skip.
+
+Seam: il calendario reale (evento Google Calendar) è sostituito dalla CLI stub `gcal-event`,
+annunciata nel prompt del run; la conferma di Glody è un secondo turno sulla stessa
+sessione (`--resume`). Una sola esecuzione per test: il giudizio è di un modello, quindi un
+rosso isolato va rilanciato prima di leggerlo come regressione.

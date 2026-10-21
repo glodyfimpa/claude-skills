@@ -9,7 +9,7 @@ description: >
   serve-la-tua-testa → appuntamento in calendario. Assorbe revise-claude-md nel ramo LEZIONE.
   Triggers (Italian): "retrospettiva sessione", "session retrospective", "cosa salvo di oggi?",
   "è emerso qualcosa da tenere?", "chiudiamo la sessione", "/session-retrospective",
-  "pattern da automatizzare", "cosa posso automatizzare?". Non è un magazzino: la barra è alta,
+  "pattern da automatizzare". Non è un magazzino: la barra è alta,
   l'esito più frequente e più onorevole è "niente da salvare".
 ---
 
