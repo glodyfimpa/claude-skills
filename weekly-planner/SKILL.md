@@ -297,7 +297,8 @@ Structure of the report:
   number, to show whether the week leans cognitive or handoff.
 - **Prep-runs (always, proactive)** — for every cognitive block and every delegable
   activity, the one-shot delegated run that prepares it the day before: what it produces,
-  its DoD, when it fires (weekday, before the block). Mark them `(p)` in the ASCII grid.
+  its DoD, when it fires (weekday, before the block). Mark them `(p)` in the ASCII grid, and
+  each work-item loop (prompt path, fire time, gates; `references/work-item-loops.md`) `(L)`.
   Never stop at listing a problem: each one comes with a next action, and anything
   answerable from mail, chats, logs or files is looked up, not asked.
 - **Actionable emails** (from Phase 1, with the action + date).
@@ -343,9 +344,8 @@ Only after explicit approval:
 If `calendar_tool = none`: skip calendar export.
 
 ### Prep-runs and work-item loops
-The OK covers the prep-runs in the report and every multi-step work item: each becomes a
-one-shot weekday task at its block time launching a versioned `/loop` prompt (state file, human
-gate), linked from its event. How: `references/work-item-loops.md`. Tell Glody which exist.
+The OK covers the prep-runs and the `(L)` loops in the report: each loop is a one-shot weekday
+task launching a versioned `/loop` prompt, linked from its event (`references/work-item-loops.md`).
 
 ### Confirm the focus in the note
 Edit `## Focus settimana` in the week's note: replace the proposal marker with the
