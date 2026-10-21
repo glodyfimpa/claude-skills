@@ -342,10 +342,10 @@ Only after explicit approval:
 
 If `calendar_tool = none`: skip calendar export.
 
-### Prep-runs
-The OK covers the prep-runs listed in the report: create each as a one-shot scheduled task on a
-weekday (versioned prompt in the vault, loop pattern, DoD in the prompt; see
-`gotcha-routine-scheduling`) with its calendar event, and tell Glody which exist.
+### Prep-runs and work-item loops
+The OK covers the prep-runs in the report and every multi-step work item: each becomes a
+one-shot weekday task at its block time launching a versioned `/loop` prompt (state file, human
+gate), linked from its event. How: `references/work-item-loops.md`. Tell Glody which exist.
 
 ### Confirm the focus in the note
 Edit `## Focus settimana` in the week's note: replace the proposal marker with the
