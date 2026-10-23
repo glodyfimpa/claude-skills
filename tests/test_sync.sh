@@ -202,6 +202,39 @@ test_remove_skill_nonexistent_fails() {
 }
 run_test test_remove_skill_nonexistent_fails
 
+test_sync_skill_skips_symlinked_dest() {
+    setup
+    create_source_skill "linked-skill" "from sync source"
+    mkdir -p "$TEST_TMP/owner/linked-skill" "$TEST_TMP/dest"
+    echo "owner copy" > "$TEST_TMP/owner/linked-skill/SKILL.md"
+    ln -s "$TEST_TMP/owner/linked-skill" "$TEST_TMP/dest/linked-skill"
+
+    sync_skill "linked-skill" "$TEST_TMP/source" "$TEST_TMP/dest" || true
+    local content
+    content="$(cat "$TEST_TMP/owner/linked-skill/SKILL.md")"
+    assert_eq "owner copy" "$content" "sync must not write through a symlinked install" || return 1
+    if [ ! -L "$TEST_TMP/dest/linked-skill" ]; then
+        echo -e "  ${RED}FAIL${RESET}: symlink should be kept" >&2; return 1
+    fi
+    teardown
+}
+run_test test_sync_skill_skips_symlinked_dest
+
+test_remove_skill_keeps_symlinked_dest() {
+    setup
+    mkdir -p "$TEST_TMP/owner/linked-skill" "$TEST_TMP/dest"
+    echo "owner copy" > "$TEST_TMP/owner/linked-skill/SKILL.md"
+    ln -s "$TEST_TMP/owner/linked-skill" "$TEST_TMP/dest/linked-skill"
+
+    remove_skill "linked-skill" "$TEST_TMP/dest" || true
+    if [ ! -L "$TEST_TMP/dest/linked-skill" ]; then
+        echo -e "  ${RED}FAIL${RESET}: symlinked install must not be removed" >&2; return 1
+    fi
+    assert_file_exists "$TEST_TMP/owner/linked-skill/SKILL.md" "owner copy must survive" || return 1
+    teardown
+}
+run_test test_remove_skill_keeps_symlinked_dest
+
 test_write_manifest_creates_valid_json() {
     setup
     write_manifest "$TEST_TMP/manifest.json" "/dest/cc" "/dest/cowork" "skill-a" "skill-b"
