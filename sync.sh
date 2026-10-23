@@ -54,6 +54,12 @@ sync_skill() {
         return 1
     fi
 
+    # A symlinked install is owned elsewhere (e.g. the brain vault): never write through it.
+    if [ -L "$dest_dir/$skill_name" ]; then
+        warn "$skill_name: $dest_dir/$skill_name is a symlink, left untouched"
+        return 0
+    fi
+
     mkdir -p "$dest_dir/$skill_name"
     rsync -a --checksum --delete --exclude='.git' --exclude='.DS_Store' \
         "$source_dir/$skill_name/" "$dest_dir/$skill_name/"
@@ -62,6 +68,11 @@ sync_skill() {
 remove_skill() {
     local skill_name="$1"
     local dest_dir="$2"
+
+    if [ -L "$dest_dir/$skill_name" ]; then
+        warn "$skill_name: $dest_dir/$skill_name is a symlink, not removed"
+        return 1
+    fi
 
     if [ -d "$dest_dir/$skill_name" ]; then
         rm -rf "$dest_dir/$skill_name"
