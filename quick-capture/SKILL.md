@@ -46,6 +46,8 @@ L'utente dice (esempi):
    created: <data YYYY-MM-DD, es. 2026-05-28 — string, NON datetime YAML>
    source: claude-capture
    captured_at: <ISO8601 con timezone, es. 2026-05-28T10:42:15+02:00>
+   up: "[[overview]]"
+   voice: glody
    ---
 
    <testo originale dell'utente, integrale, niente parafrasi>
@@ -55,6 +57,8 @@ L'utente dice (esempi):
    - `doc_type: log`: una cattura è un registro datato, non un fatto stabile. Distingui la provenance con `source:`, non con il campo doc_type.
    - `created:` deve essere stringa `YYYY-MM-DD` (es. `2026-05-28`), NON datetime YAML completo, altrimenti `validate_vault` rifiuta.
    - Se vuoi precisione al minuto, usa `captured_at:` come campo aggiuntivo (libero).
+   - `voice: glody`: è un pensiero tuo (contratto Catturare / [[capture-flow]]); Distill salta il gate «fonte esterna».
+   - `up:` obbligatorio per `validate_vault`.
 
 4. **Conferma all'utente** in 1 riga: "Capturato in `inbox/<filename>`." Nient'altro.
 
@@ -71,6 +75,8 @@ doc_type: log
 created: 2026-05-28
 source: claude-capture
 captured_at: 2026-05-28T10:42:00+02:00
+up: "[[overview]]"
+voice: glody
 ---
 
 devo richiamare il commercialista per la chiusura fiscale 2025
@@ -89,6 +95,8 @@ doc_type: log
 created: 2026-05-28
 source: claude-capture
 captured_at: 2026-05-28T11:00:00+02:00
+up: "[[overview]]"
+voice: glody
 ---
 
 idea: micro-servizio Telegram per riassumere PDF lunghi via Claude API
