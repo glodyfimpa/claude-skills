@@ -166,6 +166,16 @@ portabile e rotta su ogni macchina invece che su una sola.
 `~/Library/Logs`, altrimenti exit 78 silenzioso (TCC). Verifica: `launchctl kickstart`,
 poi "last exit code" ≠ 78.
 
+**Rete al primo fire:** `RunAtLoad` (e il recupero di un fire perso nello sleep) parte al
+login o al risveglio, secondi prima che il DNS risponda. Una routine che usa la rete e non
+aspetta fallisce con "Could not resolve host" e resta rossa fino al fire successivo, che per
+una routine giornaliera è domani. Fix: prima del primo passo di rete, un'attesa limitata
+(poll `curl -I` su un host noto, timeout ~3 min); se resta offline, salta il fire con exit 0
+e una riga di log, senza heartbeat: offline è l'ambiente, non un difetto della routine, e un
+blackout lungo emerge lo stesso come heartbeat mancante. I passi che non usano la rete
+(cancellazioni GDPR, pulizie locali) restano prima dell'attesa. In **audit**: una routine
+con `RunAtLoad` e chiamate di rete senza attesa è `[FIX]`.
+
 ### 6. Niente dipendenza da bridge cloud quando il target è locale
 Se la routine gira in locale, le notifiche e le API vanno chiamate **dirette** (`curl` a
 Telegram, `gh` diretto), non attraverso i bridge che servono solo in sandbox CCR (dove
