@@ -32,8 +32,10 @@ time, gates. Mark it `(L)` in the ASCII grid.
    last step it waits for, and checks that step is done in the other state file before starting.
 3. **Slot.** Pick the time from Glody's real fasce for that day (calendar and
    `life-os.local.md`), not a fixed hour: a gate fired while he is away waits for him anyway.
-   Never fire between 14:00 and 20:00 (peak). If the block sits in that window, fire before
-   14:00 the same day and let the loop stop at its gate; Glody answers at the block.
+   Never fire in peak hours. The window is defined once, in Pacific time, in
+   `.brain/system/vault_lint/peak_hours.py`; check the slot with
+   `python -m vault_lint.peak_hours check <ISO datetime>`. If it is peak, fire before 13:00
+   the same day and let the loop stop at its gate; Glody answers at the block.
 4. **One-shot task.** `create_scheduled_task` with `fireAt` at the slot. The task file is a
    shell: it invokes the `loop` skill with "Read <prompt path> and execute one iteration as it
    describes", then reads and executes
