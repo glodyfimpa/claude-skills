@@ -1,4 +1,4 @@
-# Struttura — BnB Via Braida
+# Struttura — BnB <property>
 
 Dati identificativi della struttura ricettiva per compilazione portali PA.
 Campi marcati `[da completare]` vanno inseriti prima del primo utilizzo.

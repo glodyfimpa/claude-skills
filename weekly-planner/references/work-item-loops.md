@@ -39,7 +39,7 @@ time, gates. Mark it `(L)` in the ASCII grid.
 4. **One-shot task.** `create_scheduled_task` with `fireAt` at the slot. The task file is a
    shell: it invokes the `loop` skill with "Read <prompt path> and execute one iteration as it
    describes", then reads and executes
-   `/Users/figlody_mac/Documents/brain/areas/ai-automation/routines/routine-closing.md`. All
+   `~/Documents/brain/areas/ai-automation/routines/routine-closing.md`. All
    logic stays in the versioned prompt.
 5. **Event.** Create the task first, then `update_event` on the item's calendar block (created
    by the calendar export) to add the prompt path and the taskId to its description, so Glody

@@ -107,7 +107,7 @@ Expected: the literal is gone from the two SKILL.md, present in `_shared-refs/co
 
 ```bash
 # NOTE: system python3 is 3.9 — the helpers use `X | None` (needs 3.11+). Use a 3.11 venv:
-cd /Users/figlody_mac/Documents/brain/projects/second-brain-migration
+cd ~/Documents/brain/projects/second-brain-migration
 python3.11 -m venv /tmp/sbm-venv && /tmp/sbm-venv/bin/pip install -q pyyaml pytest
 /tmp/sbm-venv/bin/python -m pytest tests/skills/ -q
 ```
@@ -191,15 +191,15 @@ fi
 - [ ] **Step 3: Run the sync** from the claude-skills source path:
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
-./scripts/sync-skills.sh /Users/figlody_mac/Documents/brain/areas/tooling/skills/claude-skills
+cd ~/Documents/brain/areas/tooling/plugins/life-os
+./scripts/sync-skills.sh ~/Documents/brain/areas/tooling/skills/claude-skills
 ```
 Expected output lists `weekly-planner/SKILL.md` and `_shared-refs/*`.
 
 - [ ] **Step 4: Verify the citation path resolves in the synced copy** (the #1 risk):
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
+cd ~/Documents/brain/areas/tooling/plugins/life-os
 ls skills/_shared-refs/config-lookup.md skills/_shared-refs/language.md skills/_shared-refs/source-resolution.md
 ls skills/weekly-planner/SKILL.md
 # a skill at skills/weekly-planner/ citing ../_shared-refs/ resolves to skills/_shared-refs/ — confirm it exists:
@@ -210,7 +210,7 @@ Expected: all files exist, `PATH OK`.
 - [ ] **Step 5: Commit (life-os repo, feat/weekly-planner branch)**
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
+cd ~/Documents/brain/areas/tooling/plugins/life-os
 git add scripts/sync-skills.sh skills/
 git commit -m "feat: sync weekly-planner skill + _shared-refs into plugin
 
@@ -231,7 +231,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 1: Read the pattern** from an existing thin command:
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os && cat commands/weekly-review.md
+cd ~/Documents/brain/areas/tooling/plugins/life-os && cat commands/weekly-review.md
 ```
 
 - [ ] **Step 2: Create `commands/weekly-planner.md`** matching that pattern: frontmatter + "Before starting, read connected tools from config. Invoke the `weekly-planner` skill." Minimal arg parse (no-arg → full 4-phase run). Zero logic.
@@ -239,7 +239,7 @@ cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os && cat comma
 - [ ] **Step 3: Verify it's thin** (a trigger, not logic):
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
+cd ~/Documents/brain/areas/tooling/plugins/life-os
 wc -l commands/weekly-planner.md   # expect small, ~10-20 lines
 grep -c "weekly-planner skill" commands/weekly-planner.md   # expect >= 1
 ```
@@ -248,7 +248,7 @@ Expected: small line count, skill referenced.
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
+cd ~/Documents/brain/areas/tooling/plugins/life-os
 git add commands/weekly-planner.md
 git commit -m "feat: /weekly-planner command trigger
 
@@ -271,7 +271,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os
+cd ~/Documents/brain/areas/tooling/plugins/life-os
 git add docs/weekly-planner-routine.md
 git commit -m "docs: weekly-planner routine spec (instantiate post-canary)
 
@@ -289,8 +289,8 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - [ ] **Step 2: Push both branches**
 
 ```bash
-cd /Users/figlody_mac/Documents/brain/areas/tooling/skills/claude-skills && git push -u origin feat/weekly-planner
-cd /Users/figlody_mac/Documents/brain/areas/tooling/plugins/life-os && git push -u origin feat/weekly-planner
+cd ~/Documents/brain/areas/tooling/skills/claude-skills && git push -u origin feat/weekly-planner
+cd ~/Documents/brain/areas/tooling/plugins/life-os && git push -u origin feat/weekly-planner
 ```
 
 - [ ] **Step 3: Open both PRs** (claude-skills: core + skill; life-os: sync + command + routine doc + the earlier Vault-FS commit). Use `gh pr create --body-file` to avoid quoting issues.

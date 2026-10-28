@@ -27,7 +27,7 @@ claude-skills/
 │   └── references/
 │       ├── personal/
 │       │   └── glody.md          # CF, doc identità, PEC, tel, indirizzo
-│       └── bnb-via-braida/
+│       └── bnb-property/
 │           └── structure.md      # CIN, ATECO, P.IVA, codici portali PA
 │
 ├── pa-form-filler/
@@ -64,9 +64,9 @@ Telefono: [da completare]
 Email: glodyfimpa@gmail.com
 ```
 
-**`references/bnb-via-braida/structure.md`**
+**`references/bnb-property/structure.md`**
 ```
-# Struttura BnB — Via Braida
+# Struttura BnB — <property>
 CIN: [da completare]
 P.IVA: [da completare]
 Codice ATECO: [da completare]

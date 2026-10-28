@@ -7,9 +7,9 @@
 
 ## Problema
 
-Glody sta lanciando il suo PRIMO BnB (Via Braida, Milano) entro fine maggio 2026 in regime Locazione Turistica non imprenditoriale (LT C204 LNI). Ha programmato un **2° BnB a settembre 2026** (4 mesi). Nella sessione del 14/05/2026 è stata costruita su misura una dashboard kanban acquisti go-live (`~/Documents/1.PROJECTS/BNB_LIVE_Q1_VIA_BRAIDA/ACQUISTI_DASHBOARD.html`, 765 righe) con decisioni operative LT vs CAV (kit cortesia, servizi consumabili) e mapping responsabilità host vs servizio pulizia.
+Glody sta lanciando il suo PRIMO BnB (l'appartamento, Milano) entro fine maggio 2026 in regime Locazione Turistica non imprenditoriale (LT C204 LNI). Ha programmato un **2° BnB a settembre 2026** (4 mesi). Nella sessione del 14/05/2026 è stata costruita su misura una dashboard kanban acquisti go-live (`<project-folder>/ACQUISTI_DASHBOARD.html`, 765 righe) con decisioni operative LT vs CAV (kit cortesia, servizi consumabili) e mapping responsabilità host vs servizio pulizia.
 
-Quel lavoro vive solo nel filesystem del progetto Via Braida. Senza estrazione in skill: (a) a settembre andrà rifatto da zero al 2° BnB, perdendo ~8-15h, (b) le decisioni legali maturate (riferimenti DL 145/2023, L.R. Lombardia 27/2015) e operative non sono richiamabili in altre sessioni, (c) la conoscenza scappa.
+Quel lavoro vive solo nel filesystem del progetto dell'appartamento. Senza estrazione in skill: (a) a settembre andrà rifatto da zero al 2° BnB, perdendo ~8-15h, (b) le decisioni legali maturate (riferimenti DL 145/2023, L.R. Lombardia 27/2015) e operative non sono richiamabili in altre sessioni, (c) la conoscenza scappa.
 
 Stessa logica del Bureaucratic Research Assistant (PR #19, 2026-05-13): pattern operativo italiano ripetibile va distillato in skill richiamabile invece di rieseguito manualmente. Backlog Notion conferma 3ª occorrenza in 8 giorni (06/05, 13/05, 14/05) → soglia rule of three superata.
 
@@ -79,7 +79,7 @@ version: 0.1.0
 
 ### Asset: `shopping-dashboard-template.html`
 
-Clone "scheletro" della dashboard Via Braida con:
+Clone "scheletro" della dashboard dell'appartamento con:
 - Stessa struttura visuale (3 colonne kanban ready/decide/research, dark theme, localStorage state, filtri categoria+canale, calcolo totale "Spesa pronta al click")
 - Titolo placeholder "BnB — Dashboard Acquisti"
 - localStorage key generico `bnb-shopping-dashboard-state` (sostituibile per multi-BnB)
@@ -97,7 +97,7 @@ Clone "scheletro" della dashboard Via Braida con:
   11. Asciugacapelli (elettrodomestici, P3)
   12. Kit cortesia welcome (kit cortesia, P4) — nota "una tantum, vedi LT vs CAV decision tree"
   13. Ciabatta multipresa (consumabili, P4)
-- Scrub Via Braida-isms: rimuovere ASIN reali (B0DZHQV7RT, B0D4ZHPWC4, B0CX5GZV1T), prezzi reali, nomi specifici (Jorge), path filesystem (`TROVARE_CUSCINI/`), brand specifici (PALUPLUS, SEBSON, KORGMOTT)
+- Scrub dei riferimenti all'appartamento: rimuovere ASIN reali (B0DZHQV7RT, B0D4ZHPWC4, B0CX5GZV1T), prezzi reali, nomi specifici di persone, path filesystem (`TROVARE_CUSCINI/`), brand specifici (PALUPLUS, SEBSON, KORGMOTT)
 
 ### Reference: `lt-vs-cav-decision-tree.md`
 
@@ -180,9 +180,9 @@ Test suite in `claude-skills/tests/test_bnb_operations.sh` (bats), pattern come 
 - [ ] `T1.3` Contains 13 skeleton items in JS array `ITEMS`
 - [ ] `T1.4` All 13 items have `status: "research"` (verifica grep)
 - [ ] `T1.5` Nessun ASIN Amazon reale presente (no match per regex `B0[A-Z0-9]{8}`)
-- [ ] `T1.6` Nessun nome "Jorge" / "PALUPLUS" / "SEBSON" / "KORGMOTT" presente
+- [ ] `T1.6` Nessun nome di persona reale / "PALUPLUS" / "SEBSON" / "KORGMOTT" presente
 - [ ] `T1.7` Nessun path `TROVARE_CUSCINI/` presente
-- [ ] `T1.8` localStorage key = `bnb-shopping-dashboard-state` (non `bnb_braida_acquisti_state_v1`)
+- [ ] `T1.8` localStorage key = `bnb-shopping-dashboard-state` (non la chiave originale della dashboard)
 
 **Group 2 — SKILL.md structure**
 - [ ] `T2.1` `bnb-operations/SKILL.md` esiste con header YAML valido
@@ -252,7 +252,7 @@ Alternativa: la sessione può procedere con `bnb-operations` usando sync locale 
 |---|---|
 | Test bats suite (~20 test cases, scrivere PRIMA) | 40 min |
 | SKILL.md | 25 min |
-| shopping-dashboard-template.html | 20 min (clone Via Braida + scrub) |
+| shopping-dashboard-template.html | 20 min (clone dashboard dell'appartamento + scrub) |
 | lt-vs-cav-decision-tree.md | 20 min (verifica normativa) |
 | host-vs-cleaning-service-responsibilities.md | 12 min |
 | post-golive-checklist.md | 15 min |
@@ -275,7 +275,7 @@ Compatibile con sessione mirata di ~3h, includendo overhead autopilot.
 
 ## Source di riferimento (read-only durante implementazione)
 
-- `~/Documents/1.PROJECTS/BNB_LIVE_Q1_VIA_BRAIDA/ACQUISTI_DASHBOARD.html` — source per template HTML (765 righe, scrubbing necessario)
+- `<project-folder>/ACQUISTI_DASHBOARD.html` — source per template HTML (765 righe, scrubbing necessario)
 - `claude-skills/short-term-rental-analyzer/SKILL.md` e `claude-skills/property-acquisition-tracker/SKILL.md` — pattern di stile/lunghezza
 - `claude-skills/tests/test_bureaucratic_research_assistant.sh` — pattern test bats
 - `claude-skills/sync.sh` (untracked, locale) — tool battle-tested per propagazione skill→plugin

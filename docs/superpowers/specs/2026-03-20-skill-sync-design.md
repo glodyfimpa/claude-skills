@@ -54,7 +54,7 @@ Estrae la cartella `skills/` dal primo match. Se non trova nulla, sync solo vers
   "last_sync": "2026-03-20T15:30:00",
   "managed_skills": ["session-retrospective", "document-collector"],
   "destinations": {
-    "claude_code": "/Users/figlody_mac/.claude/skills",
+    "claude_code": "~/.claude/skills",
     "cowork": "/path/trovato/dinamicamente/skills"
   }
 }

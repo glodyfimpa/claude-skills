@@ -69,7 +69,7 @@ Per ogni riferimento normativo estratto:
 ```markdown
 | Clausola | Obbligatoria? | Norma citata | Valore suggerito |
 |----------|--------------|--------------|-----------------|
-| Punto 1 — Denominazione struttura | Sì | — | BnB Via Braida |
+| Punto 1 — Denominazione struttura | Sì | — | BnB <property> |
 | Punto 2 — Rilevatore CO/gas | No (esonerata) | comma 7 art. 13-ter DL 145/2023 | N/A |
 | Punto 3 — CIN | Sì | art. 13-ter DL 145/2023 | [da completare] |
 ```

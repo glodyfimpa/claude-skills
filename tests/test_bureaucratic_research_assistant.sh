@@ -17,8 +17,8 @@ REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   grep -q "^description:" "$skill_file"
 }
 
-@test "pa-data-vault: references/bnb-via-braida/structure.md esiste" {
-  [ -f "$REPO_ROOT/pa-data-vault/references/bnb-via-braida/structure.md" ]
+@test "pa-data-vault: references/bnb-property/structure.md esiste" {
+  [ -f "$REPO_ROOT/pa-data-vault/references/bnb-property/structure.md" ]
 }
 
 @test "pa-data-vault: errore controllato su profilo inesistente" {

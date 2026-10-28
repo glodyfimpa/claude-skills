@@ -72,7 +72,7 @@ whisper, due agenti sullo stesso Chrome). Pattern di riferimento già nel CLAUDE
 
 La Traccia Passiva del corso (Mod 10 analisi host, Mod 11 case study, le 23 FAQ
 #OresteRisponde) è marcata "ascolto serale, senza ordine" e si è rivelata **quasi
-interamente N/A per Via Braida**: analisi di annunci altrui, case study narrativi, FAQ su
+interamente N/A per l'appartamento**: analisi di annunci altrui, case study narrativi, FAQ su
 acquisizione/PM. Distillarla col rigore pieno (un sub-agente di confronto per lezione + gate
 fonti) è costo che non si ripaga su contenuto N/A — verificato sul gruppo 191-233 (distillato
 2026-06-17): 43 lezioni, zero fix nuovi propagati, tutto già coperto dai moduli Nucleo→Fase 5.
@@ -249,13 +249,13 @@ pattern "CORSO IMPRECISO con fonte" della 001 e la marcatura calibrata non-allar
 |---|---|---|
 | ... | ATTUALE / DATATO / DA VERIFICARE | [[locazioni-turistiche-compliance]] o link |
 
-## Azioni per Via Braida
+## Azioni per l'appartamento
 - [ ] ...
 ```
 
 Confrontare sempre contro: `[[locazioni-turistiche-compliance]]`, le procedure in
 `areas/affitti-brevi/procedure/`, la revisione pricing
-`appartamenti/via-braida/outputs/pricing-revisione-2026-06-10.md`.
+`appartamenti/<property>/outputs/pricing-revisione-2026-06-10.md`.
 
 > ⚠️ Sub-agenti sicuri da parallelizzare: leggono file + fanno WebSearch, **niente browser
 > condiviso**. Pipeline: lanciali sulle lezioni già trascritte mentre la Fase 2 macina la

@@ -143,7 +143,7 @@ Esempio: `~/.claude/pa-checkpoints/soggiorniamoMilano-2026-05-13.json`
   "url_corrente": "https://soggiorniamoamilano.comune.milano.it/form/step2",
   "pagina_corrente": 2,
   "campi_compilati": {
-    "nome_struttura": "BnB Via Braida",
+    "nome_struttura": "BnB <property>",
     "tipo_struttura": "bed_and_breakfast"
   },
   "campi_rimanenti": ["cin", "codice_struttura_milano"],

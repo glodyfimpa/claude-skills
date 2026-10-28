@@ -56,7 +56,7 @@ Perché è golden:
   dannoso" — la differenza tra "non sposta la conversione" e "ti penalizza".
 - **Cita 4 fonti** con cosa dice ciascuna, e una nota esplicita ("Correzione rispetto a una
   prima stesura troppo allarmista") che rende tracciabile il ragionamento.
-- L'azione per Via Braida è dimensionata sul valore reale ("rischio ~nullo ma guadagno
+- L'azione per l'appartamento è dimensionata sul valore reale ("rischio ~nullo ma guadagno
   minimo"), non sull'allarme.
 
 Questo è esattamente il bug che il gate fonti previene: marcare a naso (in entrambe le
