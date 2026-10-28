@@ -114,7 +114,7 @@ claude-skills/
 
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).
 
 ## Author
 
