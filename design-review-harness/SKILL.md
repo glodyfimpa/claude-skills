@@ -73,7 +73,17 @@ un design innocuo, deve trovare qualcosa per giustificarsi.
    un tetto di ~10-20 tool call. Così un reviewer ucciso dal watchdog lascia un referto parziale
    invece di niente (2026-10-05: 4/4 bloccati a 600 s senza file al primo lancio, 6/6 completati
    col pattern).
-4. **Riconcilia** (vedi sotto).
+   **Lanciali in primo piano, non in background** (`run_in_background` assente o `false`), così
+   i risultati tornano nello stesso turno. Se l'harness li manda comunque in background,
+   **non chiudere il turno**: aspetta la notifica di completamento di **ogni** reviewer (anche
+   quando riporta un fallimento: un reviewer senza notifica è ancora in corso, non morto), poi
+   controlla che ogni `<stem>-referto-*.md` atteso esista su disco. Un turno che finisce
+   con i reviewer ancora in corso non scrive mai il verdetto: in una run senza nessuno
+   davanti (headless, routine) nessuno ti riporta lì (eval 2026-11-02: verdetto assente in
+   3 run su 5).
+4. **Riconcilia** solo quando tutti i reviewer hanno chiuso (vedi sotto). Un reviewer
+   fallito o ucciso dal watchdog conta come chiuso: riconcilia sul suo referto parziale e
+   scrivilo nel verdetto.
 5. **Scrivi il verdetto** in `<stem>-verdetto.md`.
 
 ## I tre ruoli — non sono tre voti
