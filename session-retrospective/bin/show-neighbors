@@ -8,7 +8,9 @@ or the Nth variant of something already there (fuse/update instead of duplicate)
 Usage:
     show-neighbors [--vault DIR] [--skills DIR] [--top N] [--min-overlap K] "spark text"
 
-Defaults: --vault ~/Documents/brain, --skills ~/.claude/skills, --top 5, --min-overlap 2.
+Defaults: --vault = the vault checkout containing the cwd (walking up), else
+~/Documents/brain; --skills = ~/.claude/skills if present, else the vault's nested
+areas/ai-automation/skills/claude-skills; --top 5, --min-overlap 2.
 Exit 0 always on a valid call (an empty result is a legitimate, common outcome:
 "nessun vicino" means the spark is genuinely new). Exit 64 on a missing spark.
 """
@@ -24,11 +26,17 @@ import neighbors  # noqa: E402
 def main(argv=None):
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument("spark", nargs="?", help="the lesson/idea that just emerged")
-    parser.add_argument("--vault", default=os.path.expanduser("~/Documents/brain"))
-    parser.add_argument("--skills", default=os.path.expanduser("~/.claude/skills"))
+    parser.add_argument("--vault", default=None)
+    parser.add_argument("--skills", default=None)
     parser.add_argument("--top", type=int, default=5)
     parser.add_argument("--min-overlap", type=int, default=2)
     args = parser.parse_args(argv)
+
+    home = os.path.expanduser("~")
+    if args.vault is None:
+        args.vault = str(neighbors.default_vault(os.getcwd(), home))
+    if args.skills is None:
+        args.skills = str(neighbors.default_skills(args.vault, home))
 
     if not args.spark or not args.spark.strip():
         parser.print_usage(sys.stderr)

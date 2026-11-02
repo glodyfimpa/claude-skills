@@ -77,3 +77,62 @@ teardown() { rm -rf "$VAULT" "$SKILLS"; }
   run "$CLI" --vault "$VAULT" --skills "$SKILLS"
   [ "$status" -ne 0 ]
 }
+
+# --- defaults without explicit flags (Cloud / worktree portability) ---------
+# Without --vault/--skills the CLI must not assume the Mac layout: it detects the
+# vault from the cwd (walking up to the checkout root) and, when ~/.claude/skills
+# is absent, reads the skills nested in the vault's claude-skills repo.
+
+_vault_checkout() {
+  # Turn $VAULT into a .brain/ layout git checkout with nested claude-skills.
+  mkdir -p "$VAULT/.brain"
+  mv "$VAULT/principles" "$VAULT/memory" "$VAULT/.brain/"
+  mkdir -p "$VAULT/areas/ai-automation/skills/claude-skills"
+  mv "$SKILLS/quick-capture" "$VAULT/areas/ai-automation/skills/claude-skills/"
+  git -C "$VAULT" init -q
+  FAKE_HOME="$(mktemp -d)"
+}
+
+@test "without --vault, detects the vault from a cwd inside the checkout" {
+  _vault_checkout
+  cd "$VAULT/areas/affitti-brevi"
+  run env HOME="$FAKE_HOME" "$CLI" "design review gate su una nuova spec"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q ".brain/principles/engineering-lessons.md"
+  ! echo "$output" | grep -qi "attenzione.*vault"
+}
+
+@test "without --skills and no ~/.claude/skills, reads the nested claude-skills" {
+  _vault_checkout
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "cattura veloce di una nota vault"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "quick-capture"
+  ! echo "$output" | grep -qi "attenzione.*skills"
+}
+
+@test "without --vault, a cwd outside any vault falls back to ~/Documents/brain" {
+  _vault_checkout
+  mkdir -p "$FAKE_HOME/Documents"
+  ln -s "$VAULT" "$FAKE_HOME/Documents/brain"
+  OUTSIDE="$(mktemp -d)"
+  cd "$OUTSIDE"
+  run env HOME="$FAKE_HOME" "$CLI" "design review gate su una nuova spec"
+  rm -rf "$FAKE_HOME" "$OUTSIDE"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "engineering-lessons.md"
+}
+
+@test "an installed ~/.claude/skills still wins over the nested repo" {
+  _vault_checkout
+  mkdir -p "$FAKE_HOME/.claude/skills/rito-locale"
+  printf -- '---\nname: rito-locale\ndescription: helm chart rollout canary kubernetes\n---\n' \
+    > "$FAKE_HOME/.claude/skills/rito-locale/SKILL.md"
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "kubernetes helm chart rollout canary"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "rito-locale"
+}

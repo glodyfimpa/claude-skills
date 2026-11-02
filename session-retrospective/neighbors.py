@@ -147,6 +147,42 @@ def _brain_path(vault_root: Path, *parts: str) -> Path:
     return current if current.exists() else vault_root.joinpath(*parts)
 
 
+NESTED_SKILLS = Path("areas", "ai-automation", "skills", "claude-skills")
+
+
+def _is_vault_root(path: Path) -> bool:
+    """A vault checkout root: .brain/ (post-L2) or principles/ + areas/ (pre-L2)."""
+    return (path / ".brain").is_dir() or (
+        (path / "principles").is_dir() and (path / "areas").is_dir())
+
+
+def default_vault(cwd, home) -> Path:
+    """Vault root when --vault is not given.
+
+    Walk up from cwd to the first vault checkout root, so a Cloud clone or a
+    worktree searches its own checkout instead of a Mac path that is not there.
+    Outside any vault, fall back to the Mac location ~/Documents/brain.
+    """
+    cwd = Path(cwd).resolve()
+    for candidate in (cwd, *cwd.parents):
+        if _is_vault_root(candidate):
+            return candidate
+    return Path(home) / "Documents" / "brain"
+
+
+def default_skills(vault_root, home) -> Path:
+    """Skills dir when --skills is not given.
+
+    ~/.claude/skills (installed skills, the Mac sync destination) when present;
+    otherwise the claude-skills repo nested in the resolved vault, which is
+    what a Cloud clone has.
+    """
+    installed = Path(home) / ".claude" / "skills"
+    if installed.is_dir():
+        return installed
+    return Path(vault_root) / NESTED_SKILLS
+
+
 def missing_perimeter(vault_root) -> list[str]:
     """Names of the vault perimeter sources that do not exist, in either layout.
 

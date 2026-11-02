@@ -73,8 +73,11 @@ funziona da qualsiasi cwd; a fine sessione sei nella working-dir del lavoro, non
 ~/.claude/skills/session-retrospective/bin/show-neighbors "<la scintilla in una frase>"
 ```
 
-I default sono già giusti (`--vault ~/Documents/brain`, `--skills ~/.claude/skills`); passa
-`--vault`/`--skills` solo per puntare altrove nei test.
+I default sono già giusti anche su Cloud e nei worktree: il vault è il checkout che contiene
+la cwd (risalendo le cartelle), altrimenti `~/Documents/brain`; le skill sono
+`~/.claude/skills` se esiste, altrimenti il `claude-skills` annidato nel vault
+(`areas/ai-automation/skills/claude-skills`). Passa `--vault`/`--skills` solo per puntare
+altrove nei test.
 
 Stampa i frammenti del brain che condividono più parole-chiave con la scintilla, dal più
 simile, dentro il perimetro: `.brain/principles/*.md` (dove vive una LEZIONE),
