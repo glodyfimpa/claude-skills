@@ -28,6 +28,19 @@ ti spingeva a produrre output da ogni sessione → rumore, cimiteri, cose che es
 non chiedi "cosa automatizzo?" (che pretende un output): chiedi "è successo qualcosa di raro?"
 (che si aspetta un no).
 
+## Who runs the ritual: an external reviewer, always
+
+The session that did the work never runs this ritual on itself: whoever built is the worst
+judge of what went wrong. Launch a fresh subagent with no session context (strongest model
+available) and give it: this file, the session transcript
+(`~/.claude/projects/<project-dir>/<session-id>.jsonl`; timestamps are UTC, extract user and
+assistant text instead of loading it whole), and a short list of the commits or files the
+session produced, marked as a summary to check, not to trust. The subagent runs Passo 0-3
+read-only and reports the outcome and the exact proposed edits (file, place, text); the main
+session applies them, and asks Glody first for anything outside its own task (global files,
+public repos). Tell the subagent to look at the flow by hand too: where Glody had to correct
+or ask twice. Glody asked for this in at least 6 sessions between 09 and 10/11/2026.
+
 ## Passo 0 — weekly-planner feedback rows (data, not lessons)
 
 If this session touched the `weekly-planner` skill or its Monday routine
