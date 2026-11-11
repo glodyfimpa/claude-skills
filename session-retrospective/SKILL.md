@@ -40,6 +40,7 @@ read-only and reports the outcome and the exact proposed edits (file, place, tex
 session applies them, and asks Glody first for anything outside its own task (global files,
 public repos). Tell the subagent to look at the flow by hand too: where Glody had to correct
 or ask twice. Glody asked for this in at least 6 sessions between 09 and 10/11/2026.
+When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. Glody asked for both in at least 4 sessions on 10-11/11/2026.
 
 ## Passo 0 — weekly-planner feedback rows (data, not lessons)
 
