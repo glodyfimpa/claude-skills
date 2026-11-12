@@ -1,6 +1,6 @@
 # Eval Cases — session-retrospective (rito a una domanda)
 
-Casi-spec per il rito riscritto (Fronte 2, 2026-07-15). Ogni caso descrive una sessione, la
+Casi-spec per il rito riscritto. Ogni caso descrive una sessione, la
 scintilla (o la sua assenza), e cosa il rito deve fare. Un caso fallisce se la SKILL.md manca del
 comportamento atteso o ne contiene uno contraddittorio.
 
@@ -68,7 +68,7 @@ fatto-vs-resta). NON lo accoda in build-queue (il Builder headless non saprebbe 
 **Setup.** La scintilla è una lezione di metodo (es. "prima di X, verifica Y sul reale").
 
 **Atteso.** Il rito applica il gesto dell'ex revise-claude-md — formula la riga, guarda i vicini,
-sceglie la casa (globale/area/hook), mostra il diff a Glody, applica su conferma — SENZA che serva
+sceglie la casa (globale/area/hook), mostra il diff all'utente, applica su conferma — SENZA che serva
 invocare una skill separata revise-claude-md.
 
 **Criterio.** La SKILL.md contiene il ramo LEZIONE con i 4 passi (formula → vicini → casa → diff+conferma)
@@ -76,7 +76,7 @@ e dichiara di assorbire revise-claude-md.
 
 ## TC-07 — Session that touched the weekly-planner → feedback rows, then the usual ritual
 
-**Setup.** The session ran or edited the weekly planner. Glody gave two corrections on it
+**Setup.** The session ran or edited the weekly planner. The user gave two corrections on it
 ("hai dimenticato X", "la griglia ASCII va sempre mostrata"); nothing else rare happened.
 
 **Expected.** Passo 0 registers two rows with `--origine retro` (one per request, verbatim,

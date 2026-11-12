@@ -2,7 +2,7 @@
 """show-neighbors — the fulcrum of the session-retrospective rite.
 
 Given a spark (a lesson or tool-idea that just emerged), print the already-existing
-similar fragments in the brain, most-similar first, so Glody can judge: is this new,
+similar fragments in the brain, most-similar first, so the user can judge: is this new,
 or the Nth variant of something already there (fuse/update instead of duplicate)?
 
 Usage:

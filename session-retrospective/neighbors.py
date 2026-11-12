@@ -7,11 +7,11 @@ already built. Lexical token-overlap ranking: deterministic, testable, no
 embeddings (an embedding engine would be non-deterministic, heavy to install,
 and impossible to reproduce at cold-read — against the audit's whole point).
 
-Perimeter (decided with Glody, Fronte 2): .brain/principles/*.md (where a LESSON
+Perimeter (decided at design time): .brain/principles/*.md (where a LESSON
 lives), .brain/memory/MEMORY.md (the always-loaded index), areas/**/CLAUDE.md
 (area rules), and installed skill descriptions (~/.claude/skills/*/SKILL.md — for
 "already covered by a tool"). Principles and memory moved under .brain/ in the L2
-migration (2026-09-01); the pre-L2 layout (principles/, memory/ at the vault
+migration; the pre-L2 layout (principles/, memory/ at the vault
 root) is still read as a fallback. Ranking by shared-token count keeps irrelevant
 area rules out on a global spark for free: few shared tokens -> below threshold
 -> excluded.
