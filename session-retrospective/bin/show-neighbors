@@ -6,7 +6,7 @@ similar fragments in the brain, most-similar first, so Glody can judge: is this 
 or the Nth variant of something already there (fuse/update instead of duplicate)?
 
 Usage:
-    show-neighbors [--vault DIR] [--skills DIR] [--top N] [--min-overlap K] "spark text"
+    show-neighbors [--vault DIR] [--skills DIR] [--top N] [--min-overlap K] [--session ID] "spark text"
 
 Defaults: --vault ~/Documents/brain, --skills ~/.claude/skills, --top 5, --min-overlap 2.
 Exit 0 always on a valid call (an empty result is a legitimate, common outcome:
@@ -28,6 +28,7 @@ def main(argv=None):
     parser.add_argument("--skills", default=os.path.expanduser("~/.claude/skills"))
     parser.add_argument("--top", type=int, default=5)
     parser.add_argument("--min-overlap", type=int, default=2)
+    parser.add_argument("--session", help="current session id: its own retro candidates are not neighbors")
     args = parser.parse_args(argv)
 
     if not args.spark or not args.spark.strip():
@@ -51,7 +52,8 @@ def main(argv=None):
         print(f"show-neighbors: ATTENZIONE, non trovato nel perimetro: {name} "
               "— i vicini da lì non sono stati cercati", file=sys.stderr)
 
-    sources = neighbors.collect_sources(vault_root=vault, skills_root=skills)
+    sources = neighbors.drop_session(
+        neighbors.collect_sources(vault_root=vault, skills_root=skills), args.session)
     hits = neighbors.find_neighbors(args.spark, sources,
                                     top_n=args.top, min_overlap=args.min_overlap)
 

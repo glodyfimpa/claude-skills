@@ -21,10 +21,8 @@ A fine sessione, **una domanda sola**:
 
 "In meglio" = più qualità in meno tempo, produttività per efficienza non per fatica, migliora
 la mia vita o quella d'altri, se possibile fa guadagnare. **"Niente" è un esito legittimo, non
-quello atteso**: lo si sa solo dopo aver guardato. I dati del vault (12/11/2026): "niente" esce
-spesso nei run automatici brevi, mentre le sessioni lunghe con correzioni di Glody hanno quasi
-sempre dato una lezione. La barra resta alta: se dopo aver guardato non c'è niente di raro,
-chiudi senza output.
+quello atteso**: lo si sa solo dopo aver guardato. La barra resta alta: se dopo aver guardato
+non c'è niente di raro, chiudi senza output.
 
 Il vecchio rito partiva da "cerchiamo cosa automatizzare" e ti spingeva a produrre output da
 ogni sessione → rumore, cimiteri, cose che esistono già. Qui non chiedi "cosa automatizzo?"
@@ -34,15 +32,22 @@ ogni sessione → rumore, cimiteri, cose che esistono già. Qui non chiedi "cosa
 
 The session that did the work never runs this ritual on itself: whoever built is the worst
 judge of what went wrong. Launch a fresh subagent with no session context (strongest model
-available) and give it: this file, the session transcript
-(`~/.claude/projects/<project-dir>/<session-id>.jsonl`; timestamps are UTC, extract user and
-assistant text instead of loading it whole), and a short list of the commits or files the
-session produced, marked as a summary to check, not to trust. The subagent runs Passo 0-3
+available) and give it: this file, the session transcript wherever the harness keeps it (in
+Claude Code `~/.claude/projects/<project-dir>/<session-id>.jsonl`; timestamps are UTC, extract
+user and assistant text instead of loading it whole), and a short list of the commits or files
+the session produced, marked as a summary to check, not to trust.
+
+If the environment has a capture tool (`RETRO_CAPTURE_CMD` set: a command that takes
+`--transcript <path>` and prints the path of a candidates file, or `no candidates`), run it first
+and give the subagent the file as a list of points to look at first: corrections from the user,
+tool errors, hook blocks, retries after an error. The list is an index, not the review: the
+subagent still reads the whole transcript, and most candidates fall at the self-check. Without a
+capture tool, proceed as above. The subagent runs Passo 0-3
 read-only and reports the outcome and the exact proposed edits (file, place, text); the main
 session applies them, and asks Glody first for anything outside its own task (global files,
 public repos). Tell the subagent to look at the flow by hand too: where Glody had to correct
 or ask twice. Glody asked for this in at least 6 sessions between 09 and 10/11/2026.
-When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. Glody asked for both in at least 4 sessions on 10-11/11/2026.
+When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. "The work" includes the sessions and agents this session started: give the second reviewer the session's time window and the ids of its child sessions; it builds the list of effects itself from the real sources (git log in the window, files written, sends, routines created, child sessions and their reports), not from this session's summary, and verifies each one against the real state. This is the only check for an error nobody flagged. Glody asked for both in at least 4 sessions on 10-11/11/2026.
 
 ## Passo 0 — weekly-planner feedback rows (data, not lessons)
 
@@ -86,7 +91,7 @@ Prima di salvare QUALSIASI cosa, cerca i simili già nel brain. Esegui (path ass
 funziona da qualsiasi cwd; a fine sessione sei nella working-dir del lavoro, non nella skill-dir):
 
 ```bash
-~/.claude/skills/session-retrospective/bin/show-neighbors "<la scintilla in una frase>"
+~/.claude/skills/session-retrospective/bin/show-neighbors --session <session-id> "<la scintilla in una frase>"
 ```
 
 I default sono già giusti (`--vault ~/Documents/brain`, `--skills ~/.claude/skills`); passa
@@ -95,7 +100,9 @@ I default sono già giusti (`--vault ~/Documents/brain`, `--skills ~/.claude/ski
 Stampa i frammenti del brain che condividono più parole-chiave con la scintilla, dal più
 simile, dentro il perimetro: `.brain/principles/*.md` (dove vive una LEZIONE),
 `.brain/memory/MEMORY.md` (l'indice sempre caricato), `areas/**/CLAUDE.md` (regole d'area),
-e le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento").
+le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento"),
+e i candidati delle sessioni passate (`.brain/system/retro/*.md`, se esiste): un vicino
+`past-candidate` è la stessa scintilla vista in un'altra sessione, cioè la seconda occorrenza.
 Se una di queste sorgenti non esiste, lo dice su stderr (`ATTENZIONE, non trovato nel
 perimetro`): in quel caso un "nessun vicino" NON prova che la scintilla sia nuova — cerca a
 mano nella sorgente mancante prima di salvare.

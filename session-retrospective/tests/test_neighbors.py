@@ -211,3 +211,48 @@ def test_collect_sources_reads_installed_skill_descriptions(tmp_path):
     assert skill_sources[0].title == "quick-capture"
     # the description is what makes a skill findable as "already covered"
     assert "cattura" in skill_sources[0].text
+
+
+def test_collect_sources_reads_past_retro_candidates_one_per_line(tmp_path):
+    # Recurrence across sessions: each line of a past candidates file
+    # (.brain/system/retro/*.md) is its own source, so a spark that happened
+    # in an earlier session shows up as a neighbor (2-occurrence bar).
+    retro = tmp_path / ".brain" / "system" / "retro"
+    retro.mkdir(parents=True)
+    (retro / "claude_code-s1.md").write_text(textwrap.dedent("""\
+        ---
+        doc_type: log
+        ---
+
+        # Candidati retro, sessione s1
+
+        - 14:19 · #1255 · correzione · «devi dare respiro al testo del messaggio»
+        - 14:25 · #1387 · tool_error · «find: security check failed»
+
+        ## Retro 2026-11-12
+
+        Niente di raro.
+        """), encoding="utf-8")
+    past = [s for s in neighbors.collect_sources(vault_root=tmp_path) if s.kind == "past-candidate"]
+    assert len(past) == 2
+    hits = neighbors.find_neighbors("dare respiro al testo dei messaggi agli ospiti", past)
+    assert hits and "respiro" in hits[0].source.text
+
+
+def test_missing_retro_dir_is_not_a_missing_perimeter(tmp_path):
+    (tmp_path / ".brain" / "principles").mkdir(parents=True)
+    (tmp_path / ".brain" / "memory").mkdir(parents=True)
+    (tmp_path / ".brain" / "memory" / "MEMORY.md").write_text("x", encoding="utf-8")
+    (tmp_path / "areas").mkdir()
+    assert neighbors.missing_perimeter(tmp_path) == []
+
+
+def test_drop_session_removes_only_the_current_sessions_candidates():
+    srcs = [
+        neighbors.Source(path="/v/.brain/system/retro/claude_code-AAA.md", kind="past-candidate", title="claude_code-AAA", text="respiro testo"),
+        neighbors.Source(path="/v/.brain/system/retro/claude_code-BBB.md", kind="past-candidate", title="claude_code-BBB", text="respiro testo"),
+        neighbors.Source(path="/v/.brain/principles/AAA.md", kind="principle", title="AAA", text="respiro testo"),
+    ]
+    kept = neighbors.drop_session(srcs, "AAA")
+    assert [s.title for s in kept] == ["claude_code-BBB", "AAA"]
+    assert neighbors.drop_session(srcs, None) == srcs

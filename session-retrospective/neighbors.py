@@ -92,6 +92,14 @@ def find_neighbors(spark: str, sources: list[Source], top_n: int = 5,
     return qualified[:top_n]
 
 
+def drop_session(sources: list[Source], session_id) -> list[Source]:
+    """Drop the current session's own candidates: a spark always matches itself."""
+    if not session_id:
+        return sources
+    return [s for s in sources
+            if not (s.kind == "past-candidate" and Path(s.path).stem.endswith(f"-{session_id}"))]
+
+
 # --- collecting the perimeter -----------------------------------------------
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -195,6 +203,17 @@ def collect_sources(vault_root=None, skills_root=None) -> list[Source]:
                     continue
                 sources.append(Source(path=str(claude_md), kind="area-rule",
                                       title=str(rel), text=_read(claude_md)))
+
+        # Past retro candidates (optional: the dir exists only where a capture
+        # tool runs). One source per candidate line, so a spark seen in an
+        # earlier session surfaces as a neighbor: the 2-occurrence bar.
+        retro = vault_root / ".brain" / "system" / "retro"
+        if retro.is_dir():
+            for f in sorted(retro.glob("*.md")):
+                for line in _read(f).splitlines():
+                    if line.startswith("- ") and "«" in line:
+                        sources.append(Source(path=str(f), kind="past-candidate",
+                                              title=f.stem, text=line[2:]))
 
     if skills_root is not None:
         skills_root = Path(skills_root)
