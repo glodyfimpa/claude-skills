@@ -2,7 +2,7 @@
 name: session-retrospective
 description: >
   Rito di fine sessione, una domanda sola: è successo qualcosa di raro che cambia il domani
-  in meglio? L'esito normale è "niente, chiudi". Se c'è una scintilla, il mostra-vicini cerca
+  in meglio? "Niente, chiudi" è un esito legittimo, non quello atteso. Se c'è una scintilla, il mostra-vicini cerca
   i simili già nel brain e li mette davanti, così una lezione si fonde/aggiorna invece di
   duplicare, e un'idea-strumento si controlla contro ciò che esiste già. Tre esiti: LEZIONE →
   principles/hook; SEME-STRUMENTO forma-A → commessa nella build-queue degli autonomous-agents;
@@ -10,7 +10,7 @@ description: >
   Triggers (Italian): "retrospettiva sessione", "session retrospective", "cosa salvo di oggi?",
   "è emerso qualcosa da tenere?", "chiudiamo la sessione", "/session-retrospective",
   "pattern da automatizzare". Non è un magazzino: la barra è alta,
-  l'esito più frequente e più onorevole è "niente da salvare".
+  e "niente da salvare" è un esito onorevole quando la sessione non ha insegnato niente di raro.
 ---
 
 # Session Retrospective — il rito a una domanda
@@ -20,13 +20,15 @@ A fine sessione, **una domanda sola**:
 > **È successo qualcosa di raro che cambia il domani in meglio?**
 
 "In meglio" = più qualità in meno tempo, produttività per efficienza non per fatica, migliora
-la mia vita o quella d'altri, se possibile fa guadagnare. L'**esito normale è NIENTE** — la
-maggior parte delle sessioni non insegna niente di raro, e va bene così: chiudi senza output.
+la mia vita o quella d'altri, se possibile fa guadagnare. **"Niente" è un esito legittimo, non
+quello atteso**: lo si sa solo dopo aver guardato. I dati del vault (12/11/2026): "niente" esce
+spesso nei run automatici brevi, mentre le sessioni lunghe con correzioni di Glody hanno quasi
+sempre dato una lezione. La barra resta alta: se dopo aver guardato non c'è niente di raro,
+chiudi senza output.
 
-Questo rito ha il default giusto. Il vecchio rito partiva da "cerchiamo cosa automatizzare" e
-ti spingeva a produrre output da ogni sessione → rumore, cimiteri, cose che esistono già. Qui
-non chiedi "cosa automatizzo?" (che pretende un output): chiedi "è successo qualcosa di raro?"
-(che si aspetta un no).
+Il vecchio rito partiva da "cerchiamo cosa automatizzare" e ti spingeva a produrre output da
+ogni sessione → rumore, cimiteri, cose che esistono già. Qui non chiedi "cosa automatizzo?"
+(che pretende un output): chiedi "è successo qualcosa di raro?", e accetti entrambe le risposte.
 
 ## Who runs the ritual: an external reviewer, always
 
@@ -168,7 +170,7 @@ calendario insieme).
 
 - Niente magazzino da potare, niente `# Idee da sessione [data]`, niente contatori di occorrenze
   (misuravano la frequenza, non la leva). Il vecchio `backlog-skill.md` è archiviato (Fronte 3).
-- Niente output forzato da una sessione che non ha insegnato niente: "niente da salvare" è l'esito
-  più frequente e più onorevole.
+- Niente output forzato da una sessione che non ha insegnato niente: "niente da salvare" è un esito
+  onorevole, che si dichiara dopo aver guardato.
 - Niente doppioni: se il mostra-vicini segnala che esiste già, marca "già coperta" e chiudi.
 - Niente motore di consolidamento schedulato a parte: il consolidamento È il mostra-vicini.

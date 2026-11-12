@@ -15,10 +15,10 @@ La meccanica del **mostra-vicini** ha i suoi test automatici (`tests/test_neighb
 nessuna frizione ripetuta, nessuna idea di strumento maturata.
 
 **Atteso.** Il rito risponde "Niente di raro da salvare oggi" e chiude. NON forza un output, NON
-apre il mostra-vicini, NON propone skill/idee. L'esito "niente" è quello normale e onorevole.
+apre il mostra-vicini, NON propone skill/idee. L'esito "niente" è legittimo e onorevole.
 
-**Criterio.** La SKILL.md dichiara esplicitamente che l'esito più frequente è "niente" e che non
-si forza output da una sessione che non ha insegnato niente.
+**Criterio.** La SKILL.md dichiara che "niente" è un esito legittimo (non quello atteso: si sa solo
+dopo aver guardato) e che non si forza output da una sessione che non ha insegnato niente.
 
 ## TC-02 — Scintilla nuova → mostra-vicini dice "nessuno" → nasce ex-novo
 

@@ -1,7 +1,7 @@
 # session-retrospective
 
 Il rito di fine sessione, all'osso. Una domanda: *è successo qualcosa di raro che cambia il
-domani in meglio?* Esito normale = niente. Se c'è una scintilla, il **mostra-vicini** cerca i
+domani in meglio?* "Niente" è un esito legittimo, non quello atteso. Se c'è una scintilla, il **mostra-vicini** cerca i
 simili nel brain e li mette davanti, così una lezione si fonde invece di duplicare; poi tre
 esiti (LEZIONE → principles/hook; SEME-STRUMENTO forma-A → commessa in coda; serve-la-tua-testa
 → appuntamento calendario). Assorbe l'ex `revise-claude-md` nel ramo LEZIONE.
