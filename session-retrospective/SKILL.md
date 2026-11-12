@@ -44,15 +44,15 @@ tool errors, hook blocks, retries after an error. The list is an index, not the 
 subagent still reads the whole transcript, and most candidates fall at the self-check. Without a
 capture tool, proceed as above. The subagent runs Passo 0-3
 read-only and reports the outcome and the exact proposed edits (file, place, text); the main
-session applies them, and asks Glody first for anything outside its own task (global files,
-public repos). Tell the subagent to look at the flow by hand too: where Glody had to correct
-or ask twice. Glody asked for this in at least 6 sessions between 09 and 10/11/2026.
-When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. "The work" includes the sessions and agents this session started: give the second reviewer the session's time window and the ids of its child sessions; it builds the list of effects itself from the real sources (git log in the window, files written, sends, routines created, child sessions and their reports), not from this session's summary, and verifies each one against the real state. This is the only check for an error nobody flagged. Glody asked for both in at least 4 sessions on 10-11/11/2026.
+session applies them, and asks the user first for anything outside its own task (global files,
+public repos). Tell the subagent to look at the flow by hand too: where the user had to correct
+or ask twice.
+When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. "The work" includes the sessions and agents this session started: give the second reviewer the session's time window and the ids of its child sessions; it builds the list of effects itself from the real sources (git log in the window, files written, sends, routines created, child sessions and their reports), not from this session's summary, and verifies each one against the real state. This is the only check for an error nobody flagged.
 
 ## Passo 0 — weekly-planner feedback rows (data, not lessons)
 
 If this session touched the `weekly-planner` skill or its Monday routine
-(`pianificazione-settimanale`), register each real feedback gesture Glody gave on the
+(`pianificazione-settimanale`), register each real feedback gesture the user gave on the
 planner in this session as one row of the planner's learning signal, with `--origine retro`.
 Command, closed class list and the one-row-per-request rule: section "Learning signal" of
 `~/.claude/skills/weekly-planner/SKILL.md`. These rows are data for the planner's own
@@ -75,7 +75,7 @@ ripetuto nella sessione"), è rumore: fermati qui, non procedere al mostra-vicin
 intercettare: un episodio ripetuto PIÙ VOLTE NELLA STESSA sessione sembra "leva" solo perché è
 fresco e vivido — ma la frequenza dentro una sessione non è la stessa cosa della frequenza tra
 sessioni diverse (quella la misura la famiglia di lezioni già esistente, non questo rito).
-Verificato 2026-07-20: due "scintille" proposte (un dominio nuovo per verify-before-react, un
+Verificato su un caso reale: due "scintille" proposte (un dominio nuovo per verify-before-react, un
 pattern sintomo-vs-causa) erano entrambe già coperte nello spirito da principi esistenti — il
 mostra-vicini le avrebbe comunque agganciate a vicini forti, ma il self-check le avrebbe fermate
 un passo prima, senza nemmeno investigare.
@@ -116,7 +116,7 @@ Il mostra-vicini fa **tre lavori in un gesto**:
 
 Se il mostra-vicini dice **"nessun vicino"** → la scintilla è nuova, nasce ex-novo nel ramo
 giusto. Se mostra vicini forti → **fondi/aggiorna quel file**, non crearne uno nuovo. Se un
-vicino la copre già del tutto → **è già coperta, non salvare** (dillo a Glody e chiudi).
+vicino la copre già del tutto → **è già coperta, non salvare** (dillo all'utente e chiudi).
 
 ## Passo 3 — i tre esiti (nessuno è un magazzino)
 
@@ -156,7 +156,7 @@ davanti (che revise-claude-md non aveva):
    - regola trasversale a un'area → `CLAUDE.md` di quella cartella d'area;
    - gesto-predicato deterministico (un check su un path, un campo, un diff) → un **hook**,
      non una regola-testo (una regola-testo su un gesto-predicato è un ponte provvisorio).
-4. **Mostra il diff** a Glody prima di scrivere (sezione + righe esatte, `+`/`~`), poi applica
+4. **Mostra il diff** all'utente prima di scrivere (sezione + righe esatte, `+`/`~`), poi applica
    solo su conferma. Una riga per concetto, stesso stile del file, mai duplicare, mai rimuovere
    contenuto salvo che sia stato corretto in questa sessione.
 

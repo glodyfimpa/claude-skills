@@ -6,9 +6,8 @@ simili nel brain e li mette davanti, così una lezione si fonde invece di duplic
 esiti (LEZIONE → principles/hook; SEME-STRUMENTO forma-A → commessa in coda; serve-la-tua-testa
 → appuntamento calendario). Assorbe l'ex `revise-claude-md` nel ramo LEZIONE.
 
-Riscritta dal Fronte 2 dell'audit sistema+brain (2026-07-15): il vecchio rito (8 fasi, 16 KB,
-centrato su un backlog-cimitero) aveva il default invertito (pretendeva output → rumore). Design:
-`~/Documents/brain/areas/ai-automation/docs/superpowers/specs/2026-07-15-retro-consolidamento-cimitero-design.md`.
+Riscritta da un audit del sistema: il vecchio rito (8 fasi, 16 KB, centrato su un
+backlog-cimitero) aveva il default invertito (pretendeva output → rumore).
 
 ## File
 
@@ -62,6 +61,6 @@ Modello di default `sonnet` (`EVAL_MODEL`). Costo misurato il 2026-10-21 con son
 0,80 USD per l'intera suite (i test con conferma fanno due turni). Senza `RUN_EVALS=1` i test sono skip.
 
 Seam: il calendario reale (evento Google Calendar) è sostituito dalla CLI stub `gcal-event`,
-annunciata nel prompt del run; la conferma di Glody è un secondo turno sulla stessa
+annunciata nel prompt del run; la conferma dell'utente è un secondo turno sulla stessa
 sessione (`--resume`). Una sola esecuzione per test: il giudizio è di un modello, quindi un
 rosso isolato va rilanciato prima di leggerlo come regressione.

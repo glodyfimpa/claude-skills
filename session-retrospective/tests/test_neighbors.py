@@ -2,7 +2,7 @@
 
 The mostra-vicini is the fulcrum of the rewritten retro: given a spark (a lesson
 or tool-idea that just emerged), it searches the brain for the already-existing
-similar fragments and puts them in front of Glody, so a lesson is fused/updated
+similar fragments and puts them in front of the user, so a lesson is fused/updated
 instead of duplicated. Lexical (token-overlap) ranking: deterministic, testable,
 zero-dependency — no embeddings.
 """
@@ -119,7 +119,7 @@ def test_collect_sources_reads_principles_and_memory_and_areas(tmp_path):
 
 
 def _brain_layout(root):
-    """Vault layout after the L2 migration (2026-09-01): meta under .brain/."""
+    """Vault layout after the L2 migration: meta under .brain/."""
     (root / ".brain" / "principles").mkdir(parents=True)
     (root / ".brain" / "principles" / "engineering-lessons.md").write_text(
         "# Engineering\n- gate fail-closed sul file bersaglio\n", encoding="utf-8")
