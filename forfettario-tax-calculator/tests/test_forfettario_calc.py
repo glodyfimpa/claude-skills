@@ -41,6 +41,7 @@ class TestCertifiedChain(unittest.TestCase):
                       aliquota_inps=0.2607)
         self.assertAlmostEqual(r["imponibile_lordo"], 39000.00, places=2)
         self.assertAlmostEqual(r["imponibile_netto"], 28832.70, places=2)
+        self.assertAlmostEqual(r["imposta"], 1441.635, places=3)
         self.assertAlmostEqual(r["netto"], 38391.065, places=3)
 
     def test_no_contributions_paid_at_standard_15_percent_rate(self):
