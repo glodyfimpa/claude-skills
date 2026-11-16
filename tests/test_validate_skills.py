@@ -246,3 +246,29 @@ def test_name_with_surrounding_whitespace_is_reported(tmp_path):
     lines = violation_lines(result, "s")
     assert len(lines) == 1
     assert "whitespace" in lines[0]
+
+
+def test_duplicate_name_key_is_reported(tmp_path):
+    content = "---\nname: wrong\ndescription: Has a description.\nname: dup-name\n---\n"
+    make_skill(tmp_path, "dup-name", content)
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "dup-name")
+    assert len(lines) == 1
+    assert "duplicate key" in lines[0]
+    assert "'name'" in lines[0]
+
+
+def test_duplicate_description_key_is_reported(tmp_path):
+    content = "---\nname: dup-desc\ndescription: First.\ndescription: Second.\n---\n"
+    make_skill(tmp_path, "dup-desc", content)
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "dup-desc")
+    assert len(lines) == 1
+    assert "duplicate key" in lines[0]
+    assert "'description'" in lines[0]
