@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Validate the structure of every skill in the repo.
 
-A skill is a top-level folder that contains a SKILL.md. Each SKILL.md must open
-with YAML frontmatter holding:
+A skill is a top-level folder that contains a SKILL.md entry. The entry must be a
+readable regular file (a directory or a dangling symlink is a violation), and it
+must open with YAML frontmatter holding:
 
   - a non-empty `name` equal to the folder name
   - a non-empty `description`
@@ -38,10 +39,25 @@ def is_non_empty_string(value):
     return isinstance(value, str) and value.strip() != ""
 
 
+def skill_file_kind_problem(skill_file):
+    """Return a reason when SKILL.md exists but is not a regular file, else None."""
+    if skill_file.is_symlink() and not skill_file.exists():
+        return "SKILL.md is not a regular file (dangling symlink)"
+    if skill_file.is_dir():
+        return "SKILL.md is not a regular file (directory)"
+    if not skill_file.is_file():
+        return "SKILL.md is not a regular file"
+    return None
+
+
 def validate_skill(skill_dir):
     """Return the list of violation reasons for one skill folder."""
+    skill_file = skill_dir / SKILL_FILE
+    problem = skill_file_kind_problem(skill_file)
+    if problem:
+        return [problem]
     try:
-        text = (skill_dir / SKILL_FILE).read_text(encoding="utf-8")
+        text = skill_file.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as error:
         return [f"cannot read file: {error}"]
 
@@ -70,10 +86,14 @@ def validate_skill(skill_dir):
     return reasons
 
 
+def has_skill_entry(folder):
+    """True when the folder holds a SKILL.md entry of any kind (file, dir, symlink, even dangling)."""
+    skill_file = folder / SKILL_FILE
+    return skill_file.exists() or skill_file.is_symlink()
+
+
 def find_skill_dirs(root):
-    return sorted(
-        entry for entry in root.iterdir() if entry.is_dir() and (entry / SKILL_FILE).is_file()
-    )
+    return sorted(entry for entry in root.iterdir() if entry.is_dir() and has_skill_entry(entry))
 
 
 def main(argv):
