@@ -98,14 +98,13 @@ claude-skills/
 │   ├── scripts/
 │   │   └── forfettario_calc.py                      calculate(), coefficiente_per_ateco(), ravvedimento, acconti
 │   └── tests/
-│       └── test_forfettario_calc.py                 certified-rules tests (11, unittest)
+│       └── test_forfettario_calc.py                 certified-rules tests (15, unittest)
 ├── portable-local-routine/
 │   ├── SKILL.md                                     portability gate for locally-scheduled routines
 │   └── README.md                                    7 criteria + Gate 0 (form A/B/C) summary
 ├── tests/
 │   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
-│   ├── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
-│   └── test_forfettario_calc.py                     test suite forfettario calculator (13 test, pytest)
+│   └── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
