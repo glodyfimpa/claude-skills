@@ -24,21 +24,24 @@ assert_eq() {
 }
 
 assert_file_exists() {
-    local path="$1" msg="${2:-file should exist: $path}"
+    local path="$1"
+    local msg="${2:-file should exist: $path}"
     if [ -f "$path" ]; then return 0; fi
     echo -e "  ${RED}FAIL${RESET}: $msg (not found: $path)" >&2
     return 1
 }
 
 assert_dir_exists() {
-    local path="$1" msg="${2:-dir should exist: $path}"
+    local path="$1"
+    local msg="${2:-dir should exist: $path}"
     if [ -d "$path" ]; then return 0; fi
     echo -e "  ${RED}FAIL${RESET}: $msg (not found: $path)" >&2
     return 1
 }
 
 assert_not_exists() {
-    local path="$1" msg="${2:-should not exist: $path}"
+    local path="$1"
+    local msg="${2:-should not exist: $path}"
     if [ ! -e "$path" ]; then return 0; fi
     echo -e "  ${RED}FAIL${RESET}: $msg (exists: $path)" >&2
     return 1
