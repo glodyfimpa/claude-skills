@@ -35,8 +35,14 @@ def extract_frontmatter(text):
     return None, "YAML frontmatter is not closed (no terminating '---' line)"
 
 
-def is_non_empty_string(value):
-    return isinstance(value, str) and value.strip() != ""
+def string_field_problem(data, key):
+    """Return a reason when data[key] is not a non-empty string, else None."""
+    value = data.get(key)
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return f"frontmatter '{key}' is missing or empty"
+    if not isinstance(value, str):
+        return f"frontmatter '{key}' is not a string (got {type(value).__name__})"
+    return None
 
 
 def skill_file_kind_problem(skill_file):
@@ -74,14 +80,17 @@ def validate_skill(skill_dir):
         return ["YAML frontmatter is not a key/value mapping"]
 
     reasons = []
-    name = data.get("name")
-    if not is_non_empty_string(name):
-        reasons.append("frontmatter 'name' is missing or empty")
-    elif name.strip() != skill_dir.name:
-        reasons.append(f"frontmatter 'name' ({name.strip()!r}) does not match folder name ({skill_dir.name!r})")
+    name_problem = string_field_problem(data, "name")
+    if name_problem:
+        reasons.append(name_problem)
+    elif data["name"].strip() != skill_dir.name:
+        reasons.append(
+            f"frontmatter 'name' ({data['name'].strip()!r}) does not match folder name ({skill_dir.name!r})"
+        )
 
-    if not is_non_empty_string(data.get("description")):
-        reasons.append("frontmatter 'description' is missing or empty")
+    description_problem = string_field_problem(data, "description")
+    if description_problem:
+        reasons.append(description_problem)
 
     return reasons
 
