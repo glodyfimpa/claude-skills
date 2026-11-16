@@ -251,6 +251,11 @@ without it, the defaults here):
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (Glody-time + load type), respecting the rules above.
 
+**End-of-Phase-2 check (before Phase 3).** Re-read steps 2-5 and 14 of
+`regole-di-pianificazione.md` against the finished grid and write ONE line of outcome in the
+note ("controllo passi 2-5 e 14: ok" or the correction made). Reason: the learning signal
+logged `2/peso-sbagliato` 9 times in 27 days, every one already written in those rules.
+
 ---
 
 ## Phase 3 — Report + GATE (handoff stop)
