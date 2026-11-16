@@ -179,16 +179,24 @@ def default_vault(cwd, home) -> Path:
 
 
 def default_skills(vault_root, home) -> Path:
-    """Skills dir when --skills is not given.
+    """Skills dir when --skills is not given: the first one that exists of
 
-    ~/.claude/skills (installed skills, the Mac sync destination) when present;
-    otherwise the claude-skills repo nested in the resolved vault, which is
-    what a Cloud clone has.
+    1. ~/.claude/skills: installed skills, the Mac sync destination;
+    2. <vault>/.claude/skills: versioned in the vault checkout (symlinks to the
+       vault's native skills), so a Cloud clone or a worktree has it;
+    3. the claude-skills repo nested in the vault, present only where it was
+       cloned by hand (the vault gitignores it).
+
+    When none exists, return <vault>/.claude/skills: the caller warns that the
+    skills were not searched, naming the path a vault checkout should have.
     """
-    installed = Path(home) / ".claude" / "skills"
-    if installed.is_dir():
-        return installed
-    return Path(vault_root) / NESTED_SKILLS
+    vault_skills = Path(vault_root) / ".claude" / "skills"
+    candidates = (Path(home) / ".claude" / "skills", vault_skills,
+                  Path(vault_root) / NESTED_SKILLS)
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    return vault_skills
 
 
 def missing_perimeter(vault_root) -> list[str]:

@@ -9,8 +9,8 @@ Usage:
     show-neighbors [--vault DIR] [--skills DIR] [--top N] [--min-overlap K] [--session ID] "spark text"
 
 Defaults: --vault = the vault checkout containing the cwd (walking up), else
-~/Documents/brain; --skills = ~/.claude/skills if present, else the vault's nested
-areas/ai-automation/skills/claude-skills; --top 5, --min-overlap 2.
+~/Documents/brain; --skills = the first existing of ~/.claude/skills, <vault>/.claude/skills,
+the vault's nested areas/ai-automation/skills/claude-skills; --top 5, --min-overlap 2.
 Exit 0 always on a valid call (an empty result is a legitimate, common outcome:
 "nessun vicino" means the spark is genuinely new). Exit 64 on a missing spark.
 """
