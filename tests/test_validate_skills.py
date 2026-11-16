@@ -161,3 +161,30 @@ def test_nested_skill_md_is_out_of_scope(tmp_path):
     result = run_validator(tmp_path)
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_skill_md_that_is_a_directory_is_reported(tmp_path):
+    make_skill(tmp_path, "good-skill", VALID_FRONTMATTER.format(name="good-skill"))
+    (tmp_path / "dir-skill" / "SKILL.md").mkdir(parents=True)
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "dir-skill")
+    assert len(lines) == 1
+    assert "not a regular file" in lines[0]
+    assert "directory" in lines[0]
+
+
+def test_skill_md_that_is_a_dangling_symlink_is_reported(tmp_path):
+    make_skill(tmp_path, "good-skill", VALID_FRONTMATTER.format(name="good-skill"))
+    (tmp_path / "link-skill").mkdir()
+    (tmp_path / "link-skill" / "SKILL.md").symlink_to(tmp_path / "does-not-exist.md")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "link-skill")
+    assert len(lines) == 1
+    assert "not a regular file" in lines[0]
+    assert "dangling symlink" in lines[0]
