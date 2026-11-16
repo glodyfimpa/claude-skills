@@ -188,3 +188,12 @@ def test_skill_md_that_is_a_dangling_symlink_is_reported(tmp_path):
     assert len(lines) == 1
     assert "not a regular file" in lines[0]
     assert "dangling symlink" in lines[0]
+
+
+def test_bom_prefixed_valid_skill_passes(tmp_path):
+    make_skill(tmp_path, "bom-skill", "﻿" + VALID_FRONTMATTER.format(name="bom-skill"))
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert violation_lines(result, "bom-skill") == []
