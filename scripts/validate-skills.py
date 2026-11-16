@@ -83,10 +83,10 @@ def validate_skill(skill_dir):
     name_problem = string_field_problem(data, "name")
     if name_problem:
         reasons.append(name_problem)
-    elif data["name"].strip() != skill_dir.name:
-        reasons.append(
-            f"frontmatter 'name' ({data['name'].strip()!r}) does not match folder name ({skill_dir.name!r})"
-        )
+    elif data["name"] != data["name"].strip():
+        reasons.append(f"frontmatter 'name' ({data['name']!r}) has leading or trailing whitespace")
+    elif data["name"] != skill_dir.name:
+        reasons.append(f"frontmatter 'name' ({data['name']!r}) does not match folder name ({skill_dir.name!r})")
 
     description_problem = string_field_problem(data, "description")
     if description_problem:
