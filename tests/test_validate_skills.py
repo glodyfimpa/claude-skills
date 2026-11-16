@@ -235,3 +235,14 @@ def test_list_description_is_reported_as_not_a_string(tmp_path):
     assert len(lines) == 1
     assert "'description' is not a string" in lines[0]
     assert "list" in lines[0]
+
+
+def test_name_with_surrounding_whitespace_is_reported(tmp_path):
+    make_skill(tmp_path, "s", '---\nname: " s "\ndescription: Has a description.\n---\n')
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "s")
+    assert len(lines) == 1
+    assert "whitespace" in lines[0]
