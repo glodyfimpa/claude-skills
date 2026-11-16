@@ -197,3 +197,41 @@ def test_bom_prefixed_valid_skill_passes(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert violation_lines(result, "bom-skill") == []
+
+
+def test_non_string_name_is_reported_as_not_a_string(tmp_path):
+    make_skill(tmp_path, "int-name", "---\nname: 123\ndescription: Has a description.\n---\n")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "int-name")
+    assert len(lines) == 1
+    assert "'name' is not a string" in lines[0]
+    assert "int" in lines[0]
+    assert "missing or empty" not in lines[0]
+
+
+def test_date_description_is_reported_as_not_a_string(tmp_path):
+    make_skill(tmp_path, "date-desc", "---\nname: date-desc\ndescription: 2026-11-16\n---\n")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "date-desc")
+    assert len(lines) == 1
+    assert "'description' is not a string" in lines[0]
+    assert "date" in lines[0]
+    assert "missing or empty" not in lines[0]
+
+
+def test_list_description_is_reported_as_not_a_string(tmp_path):
+    make_skill(tmp_path, "list-desc", "---\nname: list-desc\ndescription:\n  - one\n  - two\n---\n")
+
+    result = run_validator(tmp_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    lines = violation_lines(result, "list-desc")
+    assert len(lines) == 1
+    assert "'description' is not a string" in lines[0]
+    assert "list" in lines[0]
