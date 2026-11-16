@@ -5,7 +5,8 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 from forfettario_calc import (  # noqa: E402
-    calculate, coefficiente_per_ateco, incassi_coperti_da_acconti, sanzione_ravvedimento_gs,
+    calculate, coefficiente_per_ateco, format_breakdown, incassi_coperti_da_acconti,
+    sanzione_ravvedimento_gs,
 )
 
 
@@ -32,6 +33,28 @@ class TestCertifiedChain(unittest.TestCase):
     def test_negative_revenue_rejected(self):
         with self.assertRaises(ValueError):
             calculate(-1)
+
+    def test_steady_state_full_chain(self):
+        # 50000 * 0.78 = 39000 (LM34); GS 39000 * 0.2607 = 10167.30; steady state: paid = computed,
+        # so LM35 gives 39000 - 10167.30 = 28832.70; tax 5% = 1441.635; net 50000 - 10167.30 - 1441.635.
+        r = calculate(50000, coefficiente_redditivita=0.78, aliquota_sostitutiva=0.05,
+                      aliquota_inps=0.2607)
+        self.assertAlmostEqual(r["imponibile_lordo"], 39000.00, places=2)
+        self.assertAlmostEqual(r["imponibile_netto"], 28832.70, places=2)
+        self.assertAlmostEqual(r["netto"], 38391.065, places=3)
+
+    def test_no_contributions_paid_at_standard_15_percent_rate(self):
+        # Nothing paid in the year (LM35 = 0): 30000 * 0.78 = 23400 taxed in full, 23400 * 0.15 = 3510.
+        r = calculate(30000, coefficiente_redditivita=0.78, aliquota_sostitutiva=0.15,
+                      contributi_versati=0)
+        self.assertAlmostEqual(r["imponibile_netto"], 23400.00, places=2)
+        self.assertAlmostEqual(r["imposta"], 3510.00, places=2)
+
+    def test_zero_revenue_gives_all_zero(self):
+        r = calculate(0)
+        for key in ("imponibile_lordo", "contributi_inps", "imponibile_netto", "imposta", "netto"):
+            with self.subTest(key=key):
+                self.assertEqual(r[key], 0.0)
 
 
 class TestCoefficientTable(unittest.TestCase):
@@ -84,6 +107,15 @@ class TestCoperturaAcconti(unittest.TestCase):
         self.assertAlmostEqual(r["gs"], 3000 / 0.8 / 0.2607 / 0.67, places=6)   # GS acconto = 80% of due
         self.assertAlmostEqual(r["imposta"], (600 / 0.05 + 6000) / 0.67, places=6)  # tax acconto = 100% of due
         self.assertAlmostEqual(r["limite"], min(r["gs"], r["imposta"]), places=6)
+
+
+class TestFormatBreakdown(unittest.TestCase):
+    def test_shows_revenue_and_net_lines(self):
+        r = calculate(50000, coefficiente_redditivita=0.78, aliquota_sostitutiva=0.05,
+                      aliquota_inps=0.2607)
+        output = format_breakdown(r, fatturato=50000)
+        self.assertIn("Netto reale", output)
+        self.assertIn("50000.00", output)
 
 
 if __name__ == "__main__":
