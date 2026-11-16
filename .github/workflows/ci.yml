@@ -104,12 +104,8 @@ jobs:
           python-version: "3.12"
       - name: Install pytest
         run: python -m pip install pytest
-      # Two files share the basename test_forfettario_calc.py, so pytest collects
-      # them in separate runs to avoid an import-name clash.
-      - name: forfettario-tax-calculator (skill suite)
+      - name: forfettario-tax-calculator
         run: python -m pytest -v forfettario-tax-calculator/tests
-      - name: forfettario-tax-calculator (root suite)
-        run: python -m pytest -v tests/test_forfettario_calc.py
       - name: session-retrospective (neighbors engine)
         # The test imports neighbors.py from the skill root, so it runs from there.
         working-directory: session-retrospective
