@@ -5,8 +5,9 @@ A skill is a top-level folder that contains a SKILL.md entry. The entry must be 
 readable regular file (a directory or a dangling symlink is a violation), and it
 must open with YAML frontmatter holding:
 
-  - a non-empty `name` equal to the folder name
-  - a non-empty `description`
+  - a non-empty string `name` equal to the folder name (no surrounding whitespace)
+  - a non-empty string `description`
+  - no key written twice (parsed with a SafeLoader subclass that rejects duplicates)
 
 Every violation is printed as `<path>: <reason>`; the exit code is 1 if there is
 at least one violation, 0 otherwise.
@@ -22,6 +23,25 @@ import yaml
 
 SKILL_FILE = "SKILL.md"
 DELIMITER = "---"
+
+
+class DuplicateKeyError(yaml.YAMLError):
+    def __init__(self, key):
+        super().__init__(key)
+        self.key = key
+
+
+class UniqueKeySafeLoader(yaml.SafeLoader):
+    """SafeLoader that refuses a mapping with the same key twice (PyYAML keeps the last one)."""
+
+    def construct_mapping(self, node, deep=False):
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise DuplicateKeyError(key)
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
 
 
 def extract_frontmatter(text):
@@ -72,7 +92,9 @@ def validate_skill(skill_dir):
         return [reason]
 
     try:
-        data = yaml.safe_load(frontmatter)
+        data = yaml.load(frontmatter, Loader=UniqueKeySafeLoader)
+    except DuplicateKeyError as error:
+        return [f"duplicate key {error.key!r} in YAML frontmatter"]
     except yaml.YAMLError as error:
         return [f"invalid YAML frontmatter: {' '.join(str(error).split())}"]
 
