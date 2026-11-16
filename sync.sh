@@ -75,7 +75,7 @@ remove_skill() {
     fi
 
     if [ -d "$dest_dir/$skill_name" ]; then
-        rm -rf "$dest_dir/$skill_name"
+        rm -rf "${dest_dir:?}/${skill_name:?}"
         return 0
     fi
     return 1

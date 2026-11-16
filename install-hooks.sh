@@ -32,8 +32,7 @@ err()  { echo -e "${RED}✗${RESET} $1" >&2; }
 
 # Guard: we must be inside this repo's working tree.
 assert_in_repo() {
-    local toplevel
-    toplevel="$(git -C "$REPO_ROOT" rev-parse --show-toplevel 2>/dev/null)" || {
+    git -C "$REPO_ROOT" rev-parse --show-toplevel >/dev/null 2>&1 || {
         err "not a git repository: $REPO_ROOT"
         exit 1
     }
