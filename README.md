@@ -103,13 +103,13 @@ claude-skills/
 │   ├── SKILL.md                                     portability gate for locally-scheduled routines
 │   └── README.md                                    7 criteria + Gate 0 (form A/B/C) summary
 ├── tests/
-│   ├── test_bureaucratic_research_assistant.sh      test suite BRA (23 test, bats)
-│   └── test_session_retrospective.sh                test suite session-retrospective (10 test, bats)
+│   ├── test_bureaucratic_research_assistant.sh      test suite BRA (20 test, bats)
+│   └── test_sync.sh                                 test suite sync.sh (21 test, bash)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-13 skills, 14 automation scripts, 6 reference files, 1 template, 1 installer, 19 + 23 + 10 bats tests + 6 pytest. No plugin infrastructure.
+13 skills, 14 automation scripts, 6 reference files, 1 template, 1 installer, 19 + 20 + 13 bats tests, 21 sync.sh tests, 15 + 19 pytest. No plugin infrastructure.
 
 ## License
 
