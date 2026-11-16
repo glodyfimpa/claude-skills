@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-24.04
+    # Non-blocking for now: main carries 5 pre-existing warnings
+    # (SC2034 install-hooks.sh, SC2115 sync.sh, SC2318 x3 tests/test_sync.sh).
+    # Drop continue-on-error once they are fixed in a separate PR.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run shellcheck (severity warning)
+        # Fixtures under bash-portability-linter/tests/fixtures are deliberately
+        # non-portable; tests/test_bureaucratic_research_assistant.sh is a bats file.
+        run: |
+          shellcheck --version
+          shellcheck -S warning \
+            install.sh install-hooks.sh sync.sh \
+            tests/test_sync.sh \
+            bash-portability-linter/bin/bash-portability-linter
+
+  bats:
+    name: bats (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install bats
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then brew install bats-core; else sudo apt-get update -qq && sudo apt-get install -y -qq bats; fi
+          bats --version
+      - name: bash-portability-linter
+        run: bats bash-portability-linter/tests/linter.bats
+      - name: session-retrospective (show-neighbors CLI)
+        run: bats session-retrospective/tests/test_show_neighbors.bats
+      - name: Bureaucratic Research Assistant skills
+        run: bats tests/test_bureaucratic_research_assistant.sh
+      # Model-backed evals (*/tests/eval/*.eval.bats) need RUN_EVALS=1 and an API key:
+      # not run in CI.
+
+  shell-tests:
+    name: sync.sh tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: tests/test_sync.sh
+        run: bash tests/test_sync.sh
+
+  pytest:
+    name: pytest
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install pytest
+        run: python -m pip install pytest
+      # Two files share the basename test_forfettario_calc.py, so pytest collects
+      # them in separate runs to avoid an import-name clash.
+      - name: forfettario-tax-calculator (skill suite)
+        run: python -m pytest -v forfettario-tax-calculator/tests
+      - name: forfettario-tax-calculator (root suite)
+        run: python -m pytest -v tests/test_forfettario_calc.py
+      - name: session-retrospective (neighbors engine)
+        # The test imports neighbors.py from the skill root, so it runs from there.
+        working-directory: session-retrospective
+        run: python -m pytest -v tests/test_neighbors.py
