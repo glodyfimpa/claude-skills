@@ -41,7 +41,7 @@ jobs:
         run: |
           shellcheck --version
           # Fail if the runner's default shellcheck shadowed the pinned one.
-          shellcheck --version | grep -qxF "version:${SHELLCHECK_VERSION}"
+          shellcheck --version | grep -qxF "version: ${SHELLCHECK_VERSION}"
           shellcheck -S warning \
             install.sh install-hooks.sh sync.sh \
             tests/test_sync.sh \
