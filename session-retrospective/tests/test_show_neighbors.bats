@@ -77,3 +77,91 @@ teardown() { rm -rf "$VAULT" "$SKILLS"; }
   run "$CLI" --vault "$VAULT" --skills "$SKILLS"
   [ "$status" -ne 0 ]
 }
+
+# --- defaults without explicit flags (Cloud / worktree portability) ---------
+# Without --vault/--skills the CLI must not assume the Mac layout: it detects the
+# vault from the cwd (walking up to the checkout root) and, when ~/.claude/skills
+# is absent, reads the skills nested in the vault's claude-skills repo.
+
+_vault_checkout() {
+  # Turn $VAULT into a .brain/ layout git checkout with nested claude-skills.
+  mkdir -p "$VAULT/.brain"
+  mv "$VAULT/principles" "$VAULT/memory" "$VAULT/.brain/"
+  mkdir -p "$VAULT/areas/ai-automation/skills/claude-skills"
+  mv "$SKILLS/quick-capture" "$VAULT/areas/ai-automation/skills/claude-skills/"
+  git -C "$VAULT" init -q
+  FAKE_HOME="$(mktemp -d)"
+}
+
+@test "without --vault, detects the vault from a cwd inside the checkout" {
+  _vault_checkout
+  cd "$VAULT/areas/affitti-brevi"
+  run env HOME="$FAKE_HOME" "$CLI" "design review gate su una nuova spec"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q ".brain/principles/engineering-lessons.md"
+  ! echo "$output" | grep -qi "attenzione.*vault"
+}
+
+@test "without --skills and no ~/.claude/skills, reads the nested claude-skills" {
+  _vault_checkout
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "cattura veloce di una nota vault"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "quick-capture"
+  ! echo "$output" | grep -qi "attenzione.*skills"
+}
+
+@test "without --vault, a cwd outside any vault falls back to ~/Documents/brain" {
+  _vault_checkout
+  mkdir -p "$FAKE_HOME/Documents"
+  ln -s "$VAULT" "$FAKE_HOME/Documents/brain"
+  OUTSIDE="$(mktemp -d)"
+  cd "$OUTSIDE"
+  run env HOME="$FAKE_HOME" "$CLI" "design review gate su una nuova spec"
+  rm -rf "$FAKE_HOME" "$OUTSIDE"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "engineering-lessons.md"
+}
+
+@test "an installed ~/.claude/skills still wins over the nested repo" {
+  _vault_checkout
+  mkdir -p "$FAKE_HOME/.claude/skills/rito-locale"
+  printf -- '---\nname: rito-locale\ndescription: helm chart rollout canary kubernetes\n---\n' \
+    > "$FAKE_HOME/.claude/skills/rito-locale/SKILL.md"
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "kubernetes helm chart rollout canary"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "rito-locale"
+}
+
+# A vault checkout versions its skills in <vault>/.claude/skills (symlinks to the
+# vault's native skills); the nested claude-skills repo is gitignored there, so a
+# Cloud clone without ~/.claude/skills must read <vault>/.claude/skills first.
+
+@test "without --skills and no ~/.claude/skills, reads the vault's .claude/skills" {
+  _vault_checkout
+  # As in the real vault: .claude/skills/<x> is a symlink to the skill's native home.
+  mkdir -p "$VAULT/areas/affitti-brevi/skills/alloggiati-checkin" "$VAULT/.claude/skills"
+  printf -- '---\nname: alloggiati-checkin\ndescription: comunica alla questura le schedine degli ospiti\n---\n' \
+    > "$VAULT/areas/affitti-brevi/skills/alloggiati-checkin/SKILL.md"
+  ln -s ../../areas/affitti-brevi/skills/alloggiati-checkin "$VAULT/.claude/skills/alloggiati-checkin"
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "schedine ospiti alla questura"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -q "alloggiati-checkin"
+  ! echo "$output" | grep -qi "attenzione.*skills"
+}
+
+@test "warns on stderr when no skills dir is found at all" {
+  _vault_checkout
+  rm -rf "$VAULT/areas/ai-automation/skills/claude-skills"
+  cd "$VAULT"
+  run env HOME="$FAKE_HOME" "$CLI" "cattura veloce di una nota vault"
+  rm -rf "$FAKE_HOME"
+  [ "$status" -eq 0 ]
+  echo "$output" | grep -qi "attenzione.*skills"
+}

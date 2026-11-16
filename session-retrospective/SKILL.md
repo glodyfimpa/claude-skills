@@ -87,20 +87,31 @@ Se c'è, e il self-check la conferma → una frase asciutta che la descrive, e v
 
 ## Passo 2 — il mostra-vicini (il fulcro)
 
-Prima di salvare QUALSIASI cosa, cerca i simili già nel brain. Esegui (path assoluto —
-funziona da qualsiasi cwd; a fine sessione sei nella working-dir del lavoro, non nella skill-dir):
+Before saving ANYTHING, look for the similar fragments already in the brain. Run the CLI by
+absolute path (at the end of a session the cwd is the work's directory, not the skill's), using
+the first entry point that exists:
 
 ```bash
-~/.claude/skills/session-retrospective/bin/show-neighbors --session <session-id> "<la scintilla in una frase>"
+# Mac (installed skills)
+~/.claude/skills/session-retrospective/bin/show-neighbors --session <session-id> "<the spark in one sentence>"
+# Cloud or worktree (no ~/.claude/skills): the copy versioned in the vault checkout
+<vault>/.claude/skills/session-retrospective/bin/show-neighbors --session <session-id> "<the spark in one sentence>"
+# Anywhere else: the claude-skills repo checkout
+<claude-skills checkout>/session-retrospective/bin/show-neighbors --session <session-id> "<the spark in one sentence>"
 ```
 
-I default sono già giusti (`--vault ~/Documents/brain`, `--skills ~/.claude/skills`); passa
-`--vault`/`--skills` solo per puntare altrove nei test.
+`<vault>` is the checkout root that contains the cwd (walk up to the folder holding `.brain/`).
+
+The defaults already fit Cloud and worktrees: the vault is the checkout containing the cwd
+(walking up), else `~/Documents/brain`; the skills are the first existing of
+`~/.claude/skills`, `<vault>/.claude/skills`, and the nested `claude-skills` repo
+(`areas/ai-automation/skills/claude-skills`). When none exists the CLI warns on stderr that the
+skills were not searched. Pass `--vault`/`--skills` only to point elsewhere in tests.
 
 Stampa i frammenti del brain che condividono più parole-chiave con la scintilla, dal più
 simile, dentro il perimetro: `.brain/principles/*.md` (dove vive una LEZIONE),
 `.brain/memory/MEMORY.md` (l'indice sempre caricato), `areas/**/CLAUDE.md` (regole d'area),
-le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento"),
+le skill (`<skills dir>/*/SKILL.md`, risolta come sopra — per "già coperto da uno strumento"),
 e i candidati delle sessioni passate (`.brain/system/retro/*.md`, se esiste): un vicino
 `past-candidate` è la stessa scintilla vista in un'altra sessione, cioè la seconda occorrenza.
 Se una di queste sorgenti non esiste, lo dice su stderr (`ATTENZIONE, non trovato nel
