@@ -7,11 +7,11 @@ already built. Lexical token-overlap ranking: deterministic, testable, no
 embeddings (an embedding engine would be non-deterministic, heavy to install,
 and impossible to reproduce at cold-read — against the audit's whole point).
 
-Perimeter (decided with Glody, Fronte 2): .brain/principles/*.md (where a LESSON
+Perimeter (decided at design time): .brain/principles/*.md (where a LESSON
 lives), .brain/memory/MEMORY.md (the always-loaded index), areas/**/CLAUDE.md
 (area rules), and installed skill descriptions (~/.claude/skills/*/SKILL.md — for
 "already covered by a tool"). Principles and memory moved under .brain/ in the L2
-migration (2026-09-01); the pre-L2 layout (principles/, memory/ at the vault
+migration; the pre-L2 layout (principles/, memory/ at the vault
 root) is still read as a fallback. Ranking by shared-token count keeps irrelevant
 area rules out on a global spark for free: few shared tokens -> below threshold
 -> excluded.
@@ -90,6 +90,14 @@ def find_neighbors(spark: str, sources: list[Source], top_n: int = 5,
     qualified = [n for n in scored if n.score >= min_overlap]
     qualified.sort(key=lambda n: (-n.score, n.source.path))
     return qualified[:top_n]
+
+
+def drop_session(sources: list[Source], session_id) -> list[Source]:
+    """Drop the current session's own candidates: a spark always matches itself."""
+    if not session_id:
+        return sources
+    return [s for s in sources
+            if not (s.kind == "past-candidate" and Path(s.path).stem.endswith(f"-{session_id}"))]
 
 
 # --- collecting the perimeter -----------------------------------------------
@@ -231,6 +239,17 @@ def collect_sources(vault_root=None, skills_root=None) -> list[Source]:
                     continue
                 sources.append(Source(path=str(claude_md), kind="area-rule",
                                       title=str(rel), text=_read(claude_md)))
+
+        # Past retro candidates (optional: the dir exists only where a capture
+        # tool runs). One source per candidate line, so a spark seen in an
+        # earlier session surfaces as a neighbor: the 2-occurrence bar.
+        retro = vault_root / ".brain" / "system" / "retro"
+        if retro.is_dir():
+            for f in sorted(retro.glob("*.md")):
+                for line in _read(f).splitlines():
+                    if line.startswith("- ") and "«" in line:
+                        sources.append(Source(path=str(f), kind="past-candidate",
+                                              title=f.stem, text=line[2:]))
 
     if skills_root is not None:
         skills_root = Path(skills_root)

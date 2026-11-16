@@ -2,7 +2,7 @@
 name: session-retrospective
 description: >
   Rito di fine sessione, una domanda sola: è successo qualcosa di raro che cambia il domani
-  in meglio? L'esito normale è "niente, chiudi". Se c'è una scintilla, il mostra-vicini cerca
+  in meglio? "Niente, chiudi" è un esito legittimo, non quello atteso. Se c'è una scintilla, il mostra-vicini cerca
   i simili già nel brain e li mette davanti, così una lezione si fonde/aggiorna invece di
   duplicare, e un'idea-strumento si controlla contro ciò che esiste già. Tre esiti: LEZIONE →
   principles/hook; SEME-STRUMENTO forma-A → commessa nella build-queue degli autonomous-agents;
@@ -10,7 +10,7 @@ description: >
   Triggers (Italian): "retrospettiva sessione", "session retrospective", "cosa salvo di oggi?",
   "è emerso qualcosa da tenere?", "chiudiamo la sessione", "/session-retrospective",
   "pattern da automatizzare". Non è un magazzino: la barra è alta,
-  l'esito più frequente e più onorevole è "niente da salvare".
+  e "niente da salvare" è un esito onorevole quando la sessione non ha insegnato niente di raro.
 ---
 
 # Session Retrospective — il rito a una domanda
@@ -20,18 +20,39 @@ A fine sessione, **una domanda sola**:
 > **È successo qualcosa di raro che cambia il domani in meglio?**
 
 "In meglio" = più qualità in meno tempo, produttività per efficienza non per fatica, migliora
-la mia vita o quella d'altri, se possibile fa guadagnare. L'**esito normale è NIENTE** — la
-maggior parte delle sessioni non insegna niente di raro, e va bene così: chiudi senza output.
+la mia vita o quella d'altri, se possibile fa guadagnare. **"Niente" è un esito legittimo, non
+quello atteso**: lo si sa solo dopo aver guardato. La barra resta alta: se dopo aver guardato
+non c'è niente di raro, chiudi senza output.
 
-Questo rito ha il default giusto. Il vecchio rito partiva da "cerchiamo cosa automatizzare" e
-ti spingeva a produrre output da ogni sessione → rumore, cimiteri, cose che esistono già. Qui
-non chiedi "cosa automatizzo?" (che pretende un output): chiedi "è successo qualcosa di raro?"
-(che si aspetta un no).
+Il vecchio rito partiva da "cerchiamo cosa automatizzare" e ti spingeva a produrre output da
+ogni sessione → rumore, cimiteri, cose che esistono già. Qui non chiedi "cosa automatizzo?"
+(che pretende un output): chiedi "è successo qualcosa di raro?", e accetti entrambe le risposte.
+
+## Who runs the ritual: an external reviewer, always
+
+The session that did the work never runs this ritual on itself: whoever built is the worst
+judge of what went wrong. Launch a fresh subagent with no session context (strongest model
+available) and give it: this file, the session transcript wherever the harness keeps it (in
+Claude Code `~/.claude/projects/<project-dir>/<session-id>.jsonl`; timestamps are UTC, extract
+user and assistant text instead of loading it whole), and a short list of the commits or files
+the session produced, marked as a summary to check, not to trust.
+
+If the environment has a capture tool (`RETRO_CAPTURE_CMD` set: a command that takes
+`--transcript <path>` and prints the path of a candidates file, or `no candidates`), run it first
+and give the subagent the file as a list of points to look at first: corrections from the user,
+tool errors, hook blocks, retries after an error. The list is an index, not the review: the
+subagent still reads the whole transcript, and most candidates fall at the self-check. Without a
+capture tool, proceed as above. The subagent runs Passo 0-3
+read-only and reports the outcome and the exact proposed edits (file, place, text); the main
+session applies them, and asks the user first for anything outside its own task (global files,
+public repos). Tell the subagent to look at the flow by hand too: where the user had to correct
+or ask twice.
+When the session produced artifacts or outward acts (sends, commits, routines), launch in the same message a second fresh reviewer on the work itself: it checks the real effects against the claims, not the summary. "The work" includes the sessions and agents this session started: give the second reviewer the session's time window and the ids of its child sessions; it builds the list of effects itself from the real sources (git log in the window, files written, sends, routines created, child sessions and their reports), not from this session's summary, and verifies each one against the real state. This is the only check for an error nobody flagged.
 
 ## Passo 0 — weekly-planner feedback rows (data, not lessons)
 
 If this session touched the `weekly-planner` skill or its Monday routine
-(`pianificazione-settimanale`), register each real feedback gesture Glody gave on the
+(`pianificazione-settimanale`), register each real feedback gesture the user gave on the
 planner in this session as one row of the planner's learning signal, with `--origine retro`.
 Command, closed class list and the one-row-per-request rule: section "Learning signal" of
 `~/.claude/skills/weekly-planner/SKILL.md`. These rows are data for the planner's own
@@ -54,7 +75,7 @@ ripetuto nella sessione"), è rumore: fermati qui, non procedere al mostra-vicin
 intercettare: un episodio ripetuto PIÙ VOLTE NELLA STESSA sessione sembra "leva" solo perché è
 fresco e vivido — ma la frequenza dentro una sessione non è la stessa cosa della frequenza tra
 sessioni diverse (quella la misura la famiglia di lezioni già esistente, non questo rito).
-Verificato 2026-07-20: due "scintille" proposte (un dominio nuovo per verify-before-react, un
+Verificato su un caso reale: due "scintille" proposte (un dominio nuovo per verify-before-react, un
 pattern sintomo-vs-causa) erano entrambe già coperte nello spirito da principi esistenti — il
 mostra-vicini le avrebbe comunque agganciate a vicini forti, ma il self-check le avrebbe fermate
 un passo prima, senza nemmeno investigare.
@@ -70,7 +91,7 @@ Prima di salvare QUALSIASI cosa, cerca i simili già nel brain. Esegui (path ass
 funziona da qualsiasi cwd; a fine sessione sei nella working-dir del lavoro, non nella skill-dir):
 
 ```bash
-~/.claude/skills/session-retrospective/bin/show-neighbors "<la scintilla in una frase>"
+~/.claude/skills/session-retrospective/bin/show-neighbors --session <session-id> "<la scintilla in una frase>"
 ```
 
 I default sono già giusti anche su Cloud e nei worktree: il vault è il checkout che contiene
@@ -82,7 +103,9 @@ altrove nei test.
 Stampa i frammenti del brain che condividono più parole-chiave con la scintilla, dal più
 simile, dentro il perimetro: `.brain/principles/*.md` (dove vive una LEZIONE),
 `.brain/memory/MEMORY.md` (l'indice sempre caricato), `areas/**/CLAUDE.md` (regole d'area),
-e le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento").
+le skill installate (`~/.claude/skills/*/SKILL.md` — per "già coperto da uno strumento"),
+e i candidati delle sessioni passate (`.brain/system/retro/*.md`, se esiste): un vicino
+`past-candidate` è la stessa scintilla vista in un'altra sessione, cioè la seconda occorrenza.
 Se una di queste sorgenti non esiste, lo dice su stderr (`ATTENZIONE, non trovato nel
 perimetro`): in quel caso un "nessun vicino" NON prova che la scintilla sia nuova — cerca a
 mano nella sorgente mancante prima di salvare.
@@ -96,7 +119,7 @@ Il mostra-vicini fa **tre lavori in un gesto**:
 
 Se il mostra-vicini dice **"nessun vicino"** → la scintilla è nuova, nasce ex-novo nel ramo
 giusto. Se mostra vicini forti → **fondi/aggiorna quel file**, non crearne uno nuovo. Se un
-vicino la copre già del tutto → **è già coperta, non salvare** (dillo a Glody e chiudi).
+vicino la copre già del tutto → **è già coperta, non salvare** (dillo all'utente e chiudi).
 
 ## Passo 3 — i tre esiti (nessuno è un magazzino)
 
@@ -136,7 +159,7 @@ davanti (che revise-claude-md non aveva):
    - regola trasversale a un'area → `CLAUDE.md` di quella cartella d'area;
    - gesto-predicato deterministico (un check su un path, un campo, un diff) → un **hook**,
      non una regola-testo (una regola-testo su un gesto-predicato è un ponte provvisorio).
-4. **Mostra il diff** a Glody prima di scrivere (sezione + righe esatte, `+`/`~`), poi applica
+4. **Mostra il diff** all'utente prima di scrivere (sezione + righe esatte, `+`/`~`), poi applica
    solo su conferma. Una riga per concetto, stesso stile del file, mai duplicare, mai rimuovere
    contenuto salvo che sia stato corretto in questa sessione.
 
@@ -157,7 +180,7 @@ calendario insieme).
 
 - Niente magazzino da potare, niente `# Idee da sessione [data]`, niente contatori di occorrenze
   (misuravano la frequenza, non la leva). Il vecchio `backlog-skill.md` è archiviato (Fronte 3).
-- Niente output forzato da una sessione che non ha insegnato niente: "niente da salvare" è l'esito
-  più frequente e più onorevole.
+- Niente output forzato da una sessione che non ha insegnato niente: "niente da salvare" è un esito
+  onorevole, che si dichiara dopo aver guardato.
 - Niente doppioni: se il mostra-vicini segnala che esiste già, marca "già coperta" e chiudi.
 - Niente motore di consolidamento schedulato a parte: il consolidamento È il mostra-vicini.

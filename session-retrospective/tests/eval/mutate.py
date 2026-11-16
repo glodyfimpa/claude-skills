@@ -46,7 +46,7 @@ MUTANTS = {
     ],
     # Contract c (full cover): a neighbor that covers the spark entirely -> no write.
     "save-even-if-covered": [
-        ("Se un\nvicino la copre già del tutto", "(dillo a Glody e chiudi).",
+        ("Se un\nvicino la copre già del tutto", "(dillo all'utente e chiudi).",
          "Anche se un\nvicino la copre già del tutto, salvala comunque nel suo ramo: "
          "meglio un doppione che una perdita."),
         ("- Niente doppioni:", "marca \"già coperta\" e chiudi.", ""),
