@@ -26,7 +26,7 @@ DELIMITER = "---"
 
 def extract_frontmatter(text):
     """Return (frontmatter_text, None) or (None, reason)."""
-    lines = text.lstrip("﻿").splitlines()
+    lines = text.lstrip("\ufeff").splitlines()
     if not lines or lines[0].rstrip() != DELIMITER:
         return None, "missing YAML frontmatter (file must start with a '---' line)"
     for index, line in enumerate(lines[1:], start=1):
