@@ -21,7 +21,7 @@ the config wins and the mismatch is reported in Phase 3.
 | `prep_run_window_days` | the window for that count, in days | 21 |
 | `planning_max_hours` | the most this planning session may last | 2 |
 
-Every `*_path` key is absolute (a leading `~` expands to the home folder), else relative to
+The three `*_path` keys above are each absolute (a leading `~` expands to the home folder), else relative to
 `vault_path`; a relative path with no `vault_path` counts as missing.
 
 A default is a generic starting point, not a recommendation for a specific user: say in
@@ -31,7 +31,7 @@ Phase 3 which keys fell back to a default.
 
 Each gesture names the law it applies; change a gesture only after checking what the law loses.
 
-- **DoD and deliverable on every activity.** An activity with no DoD is not placed: propose
+- **DoD and deliverable on every activity** (study time excepted). An activity with no DoD is not placed: propose
   one and let the user approve it. The deliverable is written in the note as the artifact
   path, so a later drift check can see it. A calendar event whose DoD is already reached
   (check the source: git log on the path, the deliverable, the session that carried it) is
@@ -59,7 +59,7 @@ Each gesture names the law it applies; change a gesture only after checking what
 - **Study**: reserve `study_hours_week` per week with no deliverable, when the key is above 0;
   it sits inside the fasce and counts toward the planned capacity.
 - **Prep-run count** (YAGNI, vault only): count the prep-run prompts born in the window,
-  `git -C <vault_path> log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' | sort -u | wc -l`.
+  `git -C <vault_path> log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' | sort -u | grep -c .`.
   From `prep_run_threshold` up, propose one fixed evening routine that runs the prep-runs
   named in tomorrow's events; below it, propose nothing.
 - **Planning time** (Parkinson): this session lasts at most `planning_max_hours` and builds
@@ -67,5 +67,5 @@ Each gesture names the law it applies; change a gesture only after checking what
   "dedicated sessions" list, with a deliverable and a DoD.
 - **The note follows the focus**: a later session that closes or decides a focus item
   updates its line in the week's note before closing.
-- **Refusals**: an activity with no DoD is not placed; an activity outside every axis is
+- **Refusals**: besides the DoD rule above, an activity outside every axis is
   dropped only when it has neither urgency nor a deadline.

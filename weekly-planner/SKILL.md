@@ -215,7 +215,8 @@ unresolved captures from Phase 1a. An old open item is not high priority for bei
 `work_morning_block` and `work_afternoon_block` in the life-os config; the day's cap is
 `daily_work_cap_hours`, never the sum of the fasce; if a key is missing, ask the user.
 The time between and outside them is life, not "free holes to fill": **never place a work
-event outside these two fascia** (work hours as a fixed boundary).
+event outside these two fascia** (fixed boundary; the only exception is the same-day hard-deadline
+decision in gesture «Capacity», never planned).
 
 **Planning gestures and the user's policy (read both before weighing anything).** The
 generic gestures, each with its law and its config key, are in
@@ -233,7 +234,7 @@ deleted; deferrable meta-tooling moves to next week too.
 
 **Ordering** (the tiers of the gestures file, then the axes as tie-break inside a tier, as
 the user's policy adjusts them):
-- Inside tier 2, legal/economic deadlines lead.
+- Inside tier 2, legal/economic deadlines first, then the axis.
 - Then by the week's Golden Rule (the single "priority of priorities"; Keller, *The ONE Thing*:
   the one item that makes the others easier or unnecessary goes first).
 - Group by theme (gesture «Themes»). Fixed events that cannot move stay; say so and put
@@ -245,10 +246,10 @@ the user's policy adjusts them):
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (user-time + load type), respecting the rules above.
 
-**End-of-Phase-2 check (before Phase 3).** Re-read the gestures file and the user's policy
-file against the finished grid (tiers, themes, capacity, stop caps) and write ONE line of
-outcome in the note (the check passed, or the correction made). Reason: weighing errors
-recur on rules already written; a re-read against the grid catches them before the gate.
+**End-of-Phase-2 check (before Phase 3).** Against the finished grid, check each day: planned
+user-time within the «Capacity» limit, a stop cap on every cognitive and judgment block, one
+theme, the tier order; then re-read the user's policy file. Write ONE line of outcome in the
+note (passed, or the correction made): weighing errors recur on rules already written.
 
 ---
 
