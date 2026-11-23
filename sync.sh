@@ -81,6 +81,38 @@ remove_skill() {
     return 1
 }
 
+# ─── Publish guard ────────────────────────────────────────────────────
+
+# The runtime (~/.claude/skills, Cowork) gets only reviewed skills: the source
+# tree must be on branch main at a commit contained in origin/main. A feature
+# branch, a linked worktree on another branch, a detached HEAD, a local commit
+# not yet on origin/main, or a source outside git is skipped (fail closed).
+# Uses the local origin/main ref, no fetch: hooks must not hit the network.
+# Incident 2026-11-23: a commit on a feature branch in a worktree published an
+# unmerged, review-rejected weekly-planner through the post-commit hook.
+publish_allowed() {
+    local source_dir="$1" branch sha
+    if ! git -C "$source_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        warn "sync skipped: $source_dir is not a git work tree, nothing published"
+        return 1
+    fi
+    branch="$(git -C "$source_dir" rev-parse --abbrev-ref HEAD)"
+    sha="$(git -C "$source_dir" rev-parse --short HEAD)"
+    if [ "$branch" != "main" ]; then
+        warn "sync skipped: $branch@$sha is not branch main, nothing published (publish after merge + pull)"
+        return 1
+    fi
+    if ! git -C "$source_dir" rev-parse --verify -q refs/remotes/origin/main >/dev/null; then
+        warn "sync skipped: no origin/main ref in $source_dir, nothing published"
+        return 1
+    fi
+    if ! git -C "$source_dir" merge-base --is-ancestor HEAD refs/remotes/origin/main; then
+        warn "sync skipped: main@$sha is not on origin/main, nothing published (push and merge first)"
+        return 1
+    fi
+    return 0
+}
+
 # ─── Manifest ─────────────────────────────────────────────────────────
 
 read_manifest_skills() {
@@ -140,6 +172,9 @@ main() {
 
     log "${BOLD}Skill Sync${RESET}"
     log ""
+
+    # 0. Publish only reviewed skills (before any write or removal)
+    publish_allowed "$source_dir" || exit 0
 
     # 1. Find source skills
     local source_skills=()
