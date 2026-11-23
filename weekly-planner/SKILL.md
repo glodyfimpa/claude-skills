@@ -22,12 +22,12 @@ weekly plan as plain markdown. Its few helpers live in the vault
 **If a config file exists:** read from the frontmatter `task_tool`, `calendar_tool`,
 `notes_tool`, `email_tool` (MCP vs conversational fallback), `vault_path` when
 `notes_tool = vault_filesystem`, `work_morning_block` and `work_afternoon_block` (the only
-work fascia), and every key in `references/planning-parameters.md`, with its default when missing.
-Never hardcode a user's path, name or number in this skill: they come from the config.
+work fascia), `daily_work_cap_hours` (no default: ask if missing), and every key in
+`references/planning-parameters.md`, with its default when missing.
 
 **If NO config file exists:** run the same mini-setup as planning-review-system /
 time-energy-manager (auto-detect tools, ask language + tools + schedule, save to
-`~/.claude/life-os.local.md`). Never hardcode database IDs, field names, or schedule times
+`~/.claude/life-os.local.md`). Never hardcode database IDs, field names, schedule times, or a user's paths, names and numbers
 (dependency inversion: the flow depends on the tools named in the config, not on a concrete tool).
 
 ## Language
@@ -84,8 +84,8 @@ the steps below are self-contained enough to run directly.)
 ### Phase 1a — Consuntivo (runs first in Phase 1, before collecting anything new)
 
 Before gathering new material, reconcile the previous plan against what happened.
-Skipping this is how commitments quietly vanish (validated 2026-07-27: "prenota
-appuntamento INPS" sat as a reminder in the 2026-07-20 plan and was never done).
+Skipping this is how commitments quietly vanish (validated 2026-07-27: a booking
+reminder sat in the previous week's plan and was never done).
 
 1. **Read last week's plan**: `<vault_path>/.brain/weekly/<last-monday>-weekly.md`, its
    `## Focus settimana` first (older notes: Golden Rule and priorities): the commitment
@@ -135,7 +135,7 @@ appuntamento INPS" sat as a reminder in the 2026-07-20 plan and was never done).
 5. **Check predicted load vs actual load**: for each commitment marked DONE or PARTIAL,
    compare the load type it was weighed as (Phase 2, attribute 3) with what the session
    evidence shows it took. Flag a commitment predicted as light/handoff that turned out
-   cognitive-heavy with no deliverable (validated 2026-07-27: a cashflow session weighed as
+   cognitive-heavy with no deliverable (validated 2026-07-27: a session weighed as
    a build produced design reasoning but no code, and the user called it wasted time).
    One line per mismatch, feeding Phase 3's report; a mismatch repeated across weeks on the
    same recurring commitment is surfaced explicitly. Register each one as a learning-signal
@@ -222,7 +222,7 @@ generic gestures, each with its law and its config key, are in
 `references/planning-parameters.md`: DoD, tiers, themes, capacity, stop cap, durations,
 delegate cost, study, prep-run count, planning time, refusals. If `planning_rules_path` is set
 and the file exists, read it too: it holds the user's policy, the exceptions to those
-gestures and their why, and it wins over a gesture where they differ. The axes are the
+gestures and their why, and it wins over a gesture where they differ (numbers excepted: those come from the config). The axes are the
 ordered `## Priorità del mese` of the current monthly note (Phase 1b), not a separate list:
 the main axes, not the only ones.
 
@@ -233,7 +233,7 @@ deleted; deferrable meta-tooling moves to next week too.
 
 **Ordering** (the tiers of the gestures file, then the axes as tie-break inside a tier, as
 the user's policy adjusts them):
-- Sort by hard deadline first (legal/economic consequences lead).
+- Inside tier 2, legal/economic deadlines lead.
 - Then by the week's Golden Rule (the single "priority of priorities"; Keller, *The ONE Thing*:
   the one item that makes the others easier or unnecessary goes first).
 - Group by theme (gesture «Themes»). Fixed events that cannot move stay; say so and put
@@ -303,7 +303,7 @@ Structure of the report:
   answerable from mail, chats, logs or files is looked up, not asked.
 - **Actionable emails** (from Phase 1, with the action + date).
 - **Conflicts / notes** — anything that didn't fit, moved to next week, or needs a user
-  decision, plus the `review stato` signals from Phase 0.
+  decision, the `review stato` signals, planning keys on default, rules-vs-config number mismatches.
 - **Where the note is** — the path of the week's note just written.
 
 Then end with an explicit gate line:

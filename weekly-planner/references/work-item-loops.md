@@ -4,7 +4,7 @@ A multi-step work item in the plan (more than one session of work, or a human ga
 middle) does not wait for the user to launch it. It becomes a self-paced `/loop` run started by a
 one-shot scheduled task. Validated on five runs, 13-20 Oct 2026 (all fired, resumed from their
 state files, reached `main` with green suites, kept the dependency order); assessment in the
-vault at `areas/ai-automation/routines/state-review-routine-loop-pattern.md`.
+vault at `<vault_path>/areas/ai-automation/routines/state-review-routine-loop-pattern.md`.
 
 Scheduling rules (event vs run, shell plus versioned prompt, weekdays only for runs with a
 gate, allowlist and app-open checks, peak hours, closing protocol) live in
@@ -39,7 +39,7 @@ time, gates. Mark it `(L)` in the ASCII grid.
 4. **One-shot task.** `create_scheduled_task` with `fireAt` at the slot. The task file is a
    shell: it invokes the `loop` skill with "Read <prompt path> and execute one iteration as it
    describes", then reads and executes
-   `~/Documents/brain/areas/ai-automation/routines/routine-closing.md`. All
+   `<vault_path>/areas/ai-automation/routines/routine-closing.md`. All
    logic stays in the versioned prompt.
 5. **Event.** Create the task first, then `update_event` on the item's calendar block (created
    by the calendar export) to add the prompt path and the taskId to its description, so the user

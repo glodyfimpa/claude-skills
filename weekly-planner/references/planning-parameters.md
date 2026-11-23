@@ -10,16 +10,19 @@ the config wins and the mismatch is reported in Phase 3.
 
 | Key | Meaning | Default when missing |
 |---|---|---|
-| `planning_rules_path` | the user's planning policy file; absolute, or relative to `vault_path` | none: plan with the gestures below only |
+| `planning_rules_path` | the user's planning policy file | none: plan with the gestures below only |
 | `rhythm_review_path` | the procedure that owns the monthly and quarter levels | none: only name the drafts Phase 0 opened |
 | `future_directions_path` | the user's list of future directions (Phase 1b) | none: skip that source |
 | `capacity_pct` | share of `daily_work_cap_hours` that gets planned | 80 |
 | `buffer_hours` | hours per day left unplanned for the unexpected, inside the cap | 1 |
-| `hard_deadline_max_hours` | the most a day may reach, only for a hard deadline, never planned ahead | `daily_work_cap_hours` |
+| `hard_deadline_max_hours` | the most a day may reach, only for a hard deadline, never planned ahead | `daily_work_cap_hours` (no overrun allowed) |
 | `study_hours_week` | unstructured study or experiment time per week, no deliverable | 0 (off) |
 | `prep_run_threshold` | prep-runs in the window from which one fixed evening routine is proposed | 3 |
 | `prep_run_window_days` | the window for that count, in days | 21 |
 | `planning_max_hours` | the most this planning session may last | 2 |
+
+Every `*_path` key is absolute (a leading `~` expands to the home folder), else relative to
+`vault_path`; a relative path with no `vault_path` counts as missing.
 
 A default is a generic starting point, not a recommendation for a specific user: say in
 Phase 3 which keys fell back to a default.
@@ -35,13 +38,14 @@ Each gesture names the law it applies; change a gesture only after checking what
   deleted, not moved.
 - **Tiers** (Theory of Constraints, Eisenhower): 1 in progress and closable soon, or
   unblocking other work, takes the nearest slot; 2 urgent or with a deadline, done even
-  outside every axis and with no hour cap; 3 priorities, the axes choose; 4 delegable. Inside
+  outside every axis and with no per-axis hour budget (the daily cap still applies, see
+  Capacity); 3 priorities, the axes choose; 4 delegable. Inside
   a tier the lower-numbered axis wins.
 - **Themes** (deep work): one theme per day when possible; activities of the same axis form
   one continuous block; the priority of priorities gets a block every day, even when the
   theme is another axis (Pareto).
-- **Capacity** (time-boxing, Hofstadter): plan at most `capacity_pct` of the daily cap and
-  keep `buffer_hours` free; delegated agent work does not count, only the user's time. A day
+- **Capacity** (time-boxing, Hofstadter): plan at most the smaller of `capacity_pct` of the
+  daily cap and the cap minus `buffer_hours`, so both margins hold; delegated agent work does not count, only the user's time. A day
   goes above the cap only for a hard deadline, up to `hard_deadline_max_hours`, never planned
   ahead.
 - **Stop cap on every cognitive and judgment block** (Parkinson): each declares its maximum
@@ -51,8 +55,8 @@ Each gesture names the law it applies; change a gesture only after checking what
   basis; no fixed default duration, not even for a short judgment.
 - **Delegates cost checkpoints**: 10-15 minutes of the user's time each, never zero.
 - **Study**: reserve `study_hours_week` per week with no deliverable, when the key is above 0.
-- **Prep-run count** (YAGNI): count the prep-run prompts born in the window,
-  `git log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' | sort -u | wc -l`.
+- **Prep-run count** (YAGNI, vault only): count the prep-run prompts born in the window,
+  `git -C <vault_path> log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' | sort -u | wc -l`.
   From `prep_run_threshold` up, propose one fixed evening routine that runs the prep-runs
   named in tomorrow's events; below it, propose nothing.
 - **Planning time** (Parkinson): this session lasts at most `planning_max_hours` and builds
