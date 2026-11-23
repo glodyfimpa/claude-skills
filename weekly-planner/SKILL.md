@@ -9,7 +9,8 @@ description: |
 Forward-looking weekly planning in 4 phases. Collects the week's state, weighs every
 commitment, proposes a plan, gates on human approval, then applies it. A facade: it
 reuses planning-review-system's collect and time-energy-manager's calendar-export
-pattern, and writes the weekly plan as plain markdown. Its few helpers live in the vault
+pattern (DRY: a rule lives in one place and is called, never restated), and writes the
+weekly plan as plain markdown. Its few helpers live in the vault
 (`consuntivo-check`, `agent_activity`, `learning_signal`, `confirm_decision`).
 
 **Principle:** a full calendar is not a planned week. Weigh every event, or you are just
@@ -26,7 +27,8 @@ filling holes.
 
 **If NO config file exists:** run the same mini-setup as planning-review-system /
 time-energy-manager (auto-detect tools, ask language + tools + schedule, save to
-`~/.claude/life-os.local.md`). Never hardcode database IDs, field names, or schedule times.
+`~/.claude/life-os.local.md`). Never hardcode database IDs, field names, or schedule times
+(dependency inversion: the flow depends on the tools named in the config, not on a concrete tool).
 
 ## Language
 
@@ -199,7 +201,8 @@ is not automatically high priority just because it's old — weigh it like anyth
    Glody if it's assisted: he approves the design (~30min), the code is HANDOFF to a
    subagent (he approves output ~15min) → his real time ~1-1.5h scattered. Always separate
    machine-time (mine + subagent, runs while Glody does other things) from Glody-time
-   (checkpoints) and weigh the event ONLY on the second.
+   (checkpoints) and weigh the event ONLY on the second (Theory of Constraints: the plan's
+   capacity is the capacity of its constraint, Glody's attention).
 3. **Load type** — **delegated** (a person or an agent owns it end to end; Glody only
    spends the 10-15 minute checkpoint) vs **handoff** (an LLM carries it with little
    supervision: a message, an extraction, a routine to launch, the code part of an assisted
@@ -217,7 +220,8 @@ weight, ask Glody** instead of guessing. A targeted question beats a wrong class
 `daily_work_cap_hours`, read from the config, never the sum of the fasce. Read them in the Config Guard and use them everywhere below ("the
 morning fascia", "the afternoon fascia"); if a key is missing, ask Glody instead of assuming.
 The time between and outside them is NOT work time — it is life, not "free holes to fill".
-**Never place a work event outside these two fascia:** two separate islands, not one block.
+**Never place a work event outside these two fascia:** two separate islands, not one block
+(work hours as a fixed boundary: work does not spill into life time).
 
 **Planning rules file (read it before weighing anything).** If
 `<vault_path>/areas/glody/procedure/regole-di-pianificazione.md` exists, it overrides the
@@ -240,13 +244,14 @@ moves to next week too.
 **Ordering** (with the rules file: its tiers, then its axes as tie-break inside a tier;
 without it, the defaults here):
 - Sort by hard deadline first (legal/economic consequences lead).
-- Then by the week's Golden Rule (the single "priority of priorities").
+- Then by the week's Golden Rule (the single "priority of priorities"; Keller, *The ONE Thing*:
+  the one item that makes the others easier or unnecessary goes first).
 - Group by theme: one theme per day when possible, delegated runs included. Fixed events
   that cannot move (a loop with a dependency) stay; say so and put their checkpoint at the
   start of the fascia.
 - Never two COGNITIVE blocks back-to-back — alternate cognitive ↔ handoff/physical/light.
   Handoff work an LLM can carry doesn't compete for focus; cognitive work is isolated and
-  protected. With one theme per day the alternation happens inside the theme.
+  protected (deep work, Newport). With one theme per day the alternation happens inside the theme.
 
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (Glody-time + load type), respecting the rules above.
@@ -301,7 +306,8 @@ Structure of the report:
 - **Cognitive vs handoff count** — blocks per load type (Phase 2 attribute 3), as a plain
   number, to show whether the week leans cognitive or handoff.
 - **Prep-runs (always, proactive)** — for every cognitive block and every delegable
-  activity, the one-shot delegated run that prepares it the day before: what it produces,
+  activity, the one-shot delegated run that prepares it the day before (mise en place,
+  Charnas, *Work Clean*): what it produces,
   its DoD, when it fires (weekday, before the block). Mark them `(p)` in the ASCII grid, and
   each work-item loop (prompt path, fire time, gates; `references/work-item-loops.md`) `(L)`.
   Never stop at listing a problem: each one comes with a next action, and anything
