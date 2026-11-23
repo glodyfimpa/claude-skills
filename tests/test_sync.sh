@@ -537,6 +537,28 @@ test_install_hooks_ignores_caller_cwd() {
 }
 run_test test_install_hooks_ignores_caller_cwd
 
+# A branch cut before the guard existed carries an unguarded sync.sh: the
+# hook itself must refuse to run it from a non-main branch.
+test_hook_blocks_unguarded_sync_on_feature_branch() {
+    setup
+    local repo="$TEST_TMP/repo" wt="$TEST_TMP/old-wt"
+    mkdir -p "$repo" "$TEST_TMP/elsewhere"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    local g="git -c user.name=test -c user.email=test@example.invalid"
+    $g -C "$repo" init -q -b main
+    $g -C "$repo" add -A
+    $g -C "$repo" commit -q -m "initial"
+    $g -C "$repo" update-ref refs/remotes/origin/main HEAD
+    ( cd "$TEST_TMP/elsewhere" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) || return 1
+
+    $g -C "$repo" worktree add -q -b feat/old "$wt" main
+    printf '#!/bin/sh\ntouch "%s/unguarded-sync-ran"\n' "$TEST_TMP" > "$wt/sync.sh"
+    $g -C "$wt" commit -q -am "old branch with an unguarded sync.sh" 2>/dev/null
+    assert_not_exists "$TEST_TMP/unguarded-sync-ran" "hook must not run sync.sh from a feature branch" || return 1
+    teardown
+}
+run_test test_hook_blocks_unguarded_sync_on_feature_branch
+
 # End to end: the hooks written by install-hooks.sh, a linked worktree on a
 # feature branch (the 2026-11-23 incident), then a pull on main.
 test_e2e_worktree_feature_commit_does_not_publish_but_pull_does() {

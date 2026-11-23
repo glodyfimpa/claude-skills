@@ -88,8 +88,15 @@ write_sync_hook() {
 #!/bin/sh
 # Managed by install-hooks.sh — regenerate with: bash install-hooks.sh
 # Mirrors the skills in this repo into the Claude runtime. sync.sh itself
-# refuses to publish unless HEAD is branch main on origin/main.
+# refuses to publish unless HEAD is branch main on origin/main; the branch
+# check is repeated here because a branch cut before that guard carries an
+# unguarded sync.sh, and this hook is shared by every worktree.
 REPO_ROOT="$(git rev-parse --show-toplevel)"
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$BRANCH" != "main" ]; then
+    echo "$(basename "$0"): skills NOT synced: $BRANCH is not branch main" >&2
+    exit 0
+fi
 [ -x "$REPO_ROOT/sync.sh" ] || {
     echo "$(basename "$0"): sync.sh missing or not executable — skills NOT synced" >&2
     exit 0
