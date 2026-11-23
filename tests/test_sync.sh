@@ -74,6 +74,17 @@ setup() {
     export SYNC_CC_DEST="$TEST_TMP/cc_dest"
     export SYNC_COWORK_BASE="$TEST_TMP/cowork_base"
     export SYNC_MANIFEST="$TEST_TMP/.sync-manifest.json"
+    # The source is a git repo on main, published: origin/main == HEAD.
+    mkdir -p "$TEST_TMP/nohooks"
+    git_src init -q -b main
+    git_src commit -q --allow-empty -m "initial"
+    git_src update-ref refs/remotes/origin/main HEAD
+}
+
+# git on the tmp source repo, with a fixed identity and no hooks of its own.
+git_src() {
+    git -C "$TEST_TMP/source" -c user.name=test -c user.email=test@example.invalid \
+        -c core.hooksPath="$TEST_TMP/nohooks" "$@"
 }
 
 teardown() {
@@ -427,6 +438,178 @@ test_integration_rsync_deletes_removed_files() {
     teardown
 }
 run_test test_integration_rsync_deletes_removed_files
+
+# ─── Publish guard: only main at origin/main reaches the runtime ──────
+
+echo ""
+echo -e "${BOLD}Publish Guard Tests${RESET}"
+echo ""
+
+test_guard_feature_branch_does_not_sync() {
+    setup
+    create_source_skill "draft-skill" "# unreviewed"
+    git_src checkout -q -b feat/draft
+    git_src add -A
+    git_src commit -q -m "draft"
+
+    local stderr
+    stderr="$("$REPO_ROOT/sync.sh" --quiet 2>&1 >/dev/null)" || return 1
+    assert_not_exists "$TEST_TMP/cc_dest/draft-skill" "feature branch must not publish" || return 1
+    assert_not_exists "$TEST_TMP/.sync-manifest.json" "skipped sync writes no manifest" || return 1
+    echo "$stderr" | grep -q "feat/draft" || { echo "  FAIL: skip message must name the branch: $stderr" >&2; return 1; }
+    teardown
+}
+run_test test_guard_feature_branch_does_not_sync
+
+test_guard_feature_branch_does_not_remove() {
+    setup
+    mkdir -p "$TEST_TMP/cc_dest/old-skill"
+    echo "# installed" > "$TEST_TMP/cc_dest/old-skill/SKILL.md"
+    write_manifest "$SYNC_MANIFEST" "$TEST_TMP/cc_dest" "none" "old-skill"
+    git_src checkout -q -b feat/drop-old
+
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null || return 1
+    assert_file_exists "$TEST_TMP/cc_dest/old-skill/SKILL.md" "feature branch must not remove installed skills" || return 1
+    teardown
+}
+run_test test_guard_feature_branch_does_not_remove
+
+test_guard_main_ahead_of_origin_does_not_sync() {
+    setup
+    create_source_skill "unpushed" "# local only"
+    git_src add -A
+    git_src commit -q -m "local commit on main, not on origin/main"
+
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null || return 1
+    assert_not_exists "$TEST_TMP/cc_dest/unpushed" "main ahead of origin/main must not publish" || return 1
+    teardown
+}
+run_test test_guard_main_ahead_of_origin_does_not_sync
+
+test_guard_detached_head_does_not_sync() {
+    setup
+    create_source_skill "detached" "# x"
+    git_src checkout -q --detach
+
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null || return 1
+    assert_not_exists "$TEST_TMP/cc_dest/detached" "detached HEAD must not publish" || return 1
+    teardown
+}
+run_test test_guard_detached_head_does_not_sync
+
+test_guard_non_git_source_does_not_sync() {
+    setup
+    rm -rf "$TEST_TMP/source/.git"
+    create_source_skill "loose" "# x"
+
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null || return 1
+    assert_not_exists "$TEST_TMP/cc_dest/loose" "a source outside git must not publish" || return 1
+    teardown
+}
+run_test test_guard_non_git_source_does_not_sync
+
+test_guard_main_at_origin_syncs() {
+    setup
+    create_source_skill "reviewed" "# merged"
+    git_src add -A
+    git_src commit -q -m "merged"
+    git_src update-ref refs/remotes/origin/main HEAD
+
+    "$REPO_ROOT/sync.sh" --quiet || return 1
+    assert_file_exists "$TEST_TMP/cc_dest/reviewed/SKILL.md" "main at origin/main publishes" || return 1
+    teardown
+}
+run_test test_guard_main_at_origin_syncs
+
+# install-hooks.sh run from another directory must write into its own repo,
+# never into the caller's cwd (it used a cwd-relative .git/hooks path).
+test_install_hooks_ignores_caller_cwd() {
+    setup
+    local repo="$TEST_TMP/repo" other="$TEST_TMP/other"
+    mkdir -p "$repo" "$other/.git/hooks"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    git -C "$repo" init -q -b main
+    ( cd "$other" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) || { echo "  FAIL: install-hooks.sh failed" >&2; return 1; }
+    assert_file_exists "$repo/.git/hooks/post-commit" "hook lands in the repo of install-hooks.sh" || return 1
+    assert_file_exists "$repo/.git/hooks/post-merge" "post-merge hook installed too" || return 1
+    assert_not_exists "$other/.git/hooks/post-commit" "caller cwd untouched" || return 1
+    teardown
+}
+run_test test_install_hooks_ignores_caller_cwd
+
+# A branch cut before the guard existed carries an unguarded sync.sh: the
+# hook itself must refuse to run it from a non-main branch.
+test_hook_blocks_unguarded_sync_on_feature_branch() {
+    setup
+    local repo="$TEST_TMP/repo" wt="$TEST_TMP/old-wt"
+    mkdir -p "$repo" "$TEST_TMP/elsewhere"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    local g="git -c user.name=test -c user.email=test@example.invalid"
+    $g -C "$repo" init -q -b main
+    $g -C "$repo" add -A
+    $g -C "$repo" commit -q -m "initial"
+    $g -C "$repo" update-ref refs/remotes/origin/main HEAD
+    ( cd "$TEST_TMP/elsewhere" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) || return 1
+
+    $g -C "$repo" worktree add -q -b feat/old "$wt" main
+    printf '#!/bin/sh\ntouch "%s/unguarded-sync-ran"\n' "$TEST_TMP" > "$wt/sync.sh"
+    $g -C "$wt" commit -q -am "old branch with an unguarded sync.sh" 2>/dev/null
+    assert_not_exists "$TEST_TMP/unguarded-sync-ran" "hook must not run sync.sh from a feature branch" || return 1
+    teardown
+}
+run_test test_hook_blocks_unguarded_sync_on_feature_branch
+
+# With public-push-guard installed, core.hooksPath holds its shims, which
+# chain to pushguard.previoushooks: the sync hooks belong there, not over the shims.
+test_install_hooks_respects_push_guard_chain() {
+    setup
+    local repo="$TEST_TMP/repo"
+    mkdir -p "$repo" "$TEST_TMP/elsewhere"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    git -C "$repo" init -q -b main
+    mkdir -p "$repo/.git/guard-shims" "$repo/.git/hooks"
+    echo "# guard shim" > "$repo/.git/guard-shims/post-commit"
+    git -C "$repo" config core.hooksPath "$repo/.git/guard-shims"
+    git -C "$repo" config pushguard.previoushooks "$repo/.git/hooks"
+    ( cd "$TEST_TMP/elsewhere" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) || return 1
+    assert_eq "# guard shim" "$(cat "$repo/.git/guard-shims/post-commit")" "push-guard shim untouched" || return 1
+    assert_file_exists "$repo/.git/hooks/post-commit" "sync hook in the chained dir" || return 1
+    assert_file_exists "$repo/.git/hooks/post-merge" "post-merge in the chained dir" || return 1
+    teardown
+}
+run_test test_install_hooks_respects_push_guard_chain
+
+# End to end: the hooks written by install-hooks.sh, a linked worktree on a
+# feature branch (the 2026-11-23 incident), then a pull on main.
+test_e2e_worktree_feature_commit_does_not_publish_but_pull_does() {
+    setup
+    local repo="$TEST_TMP/repo" wt="$TEST_TMP/feature-wt"
+    mkdir -p "$repo"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    mkdir -p "$repo/stable-skill" && echo "# stable" > "$repo/stable-skill/SKILL.md"
+    local g="git -c user.name=test -c user.email=test@example.invalid"
+    $g -C "$repo" init -q -b main
+    $g -C "$repo" add -A
+    $g -C "$repo" commit -q -m "initial"
+    $g -C "$repo" update-ref refs/remotes/origin/main HEAD
+    mkdir -p "$TEST_TMP/elsewhere"
+    ( cd "$TEST_TMP/elsewhere" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) \
+        || { echo "  FAIL: install-hooks.sh failed" >&2; return 1; }
+
+    unset SYNC_SOURCE_DIR   # the hook must use the committing tree's own sync.sh
+    $g -C "$repo" worktree add -q -b feat/unreviewed "$wt" main
+    echo "# unreviewed rewrite" > "$wt/stable-skill/SKILL.md"
+    $g -C "$wt" commit -q -am "feature commit in a linked worktree" 2>/dev/null
+    assert_not_exists "$TEST_TMP/cc_dest/stable-skill" "feature commit in a worktree must not publish" || return 1
+
+    # Review done: origin/main now holds the change, main pulls it.
+    $g -C "$repo" update-ref refs/remotes/origin/main feat/unreviewed
+    $g -C "$repo" merge -q --ff-only origin/main 2>/dev/null
+    assert_file_exists "$TEST_TMP/cc_dest/stable-skill/SKILL.md" "pull on main publishes" || return 1
+    assert_eq "# unreviewed rewrite" "$(cat "$TEST_TMP/cc_dest/stable-skill/SKILL.md")" "published content is the merged one" || return 1
+    teardown
+}
+run_test test_e2e_worktree_feature_commit_does_not_publish_but_pull_does
 
 # ─── Results ──────────────────────────────────────────────────────────
 

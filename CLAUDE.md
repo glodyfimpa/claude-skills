@@ -3,8 +3,8 @@
 ## Repo Structure
 - Each subdirectory with a `SKILL.md` is a skill
 - `install.sh` — interactive installer (Claude Code or Desktop)
-- `sync.sh` — syncs all skills to Claude Code (`~/.claude/skills/`) and Cowork (auto-discovered path). Post-commit hook runs `sync.sh --quiet` automatically
-- `tests/test_sync.sh` — bash test suite (19 tests). Run: `bash tests/test_sync.sh`
+- `sync.sh` — syncs all skills to Claude Code (`~/.claude/skills/`) and Cowork (auto-discovered path). Post-commit and post-merge hooks (installed by `install-hooks.sh`) run `sync.sh --quiet`; `sync.sh` publishes only from branch `main` at a commit on `origin/main` and skips with a stderr line otherwise (feature branches and worktrees never reach the runtime)
+- `tests/test_sync.sh` — bash test suite (31 tests). Run: `bash tests/test_sync.sh`
 
 ## Bash Script Conventions
 - `set -euo pipefail` in all scripts
@@ -21,8 +21,8 @@
 
 ## Edit workflow — source of truth
 Consolidated 2026-07-15 from memory (Fronte 1 audit).
-- **Always edit skills in THIS repo (`areas/ai-automation/skills/claude-skills/<skill>/`), never in `~/.claude/skills/`.** The latter is a sync *destination*: the post-commit hook runs `sync.sh` and rsyncs over it, so a direct edit there is overwritten on the next commit. Flow: edit here → feature branch → commit → push → PR (update README in the same PR). If the skill is untracked, add it to the repo before editing.
-- **life-os plugin is also a destination, not a source.** `planning-review-system`, `time-energy-manager` and `weekly-planner` live downstream in `~/.claude/skills/` AND `areas/ai-automation/plugins/life-os/skills/`. Editing `life-os/skills/<skill>/SKILL.md` directly is the same mistake — the next `life-os/scripts/sync-skills.sh ../claude-skills` overwrites it. Correct fix: propagate the edit up to claude-skills (the source), commit (post-commit hook auto-syncs to `~/.claude/skills` + Cowork), then `sync-skills.sh` pulls it into life-os.
+- **Always edit skills in THIS repo (`areas/ai-automation/skills/claude-skills/<skill>/`), never in `~/.claude/skills/`.** The latter is a sync *destination*: the next sync from `main` rsyncs over it, so a direct edit there is overwritten. Flow: edit here → feature branch → commit → push → PR (update README in the same PR). If the skill is untracked, add it to the repo before editing.
+- **life-os plugin is also a destination, not a source.** `planning-review-system`, `time-energy-manager` and `weekly-planner` live downstream in `~/.claude/skills/` AND `areas/ai-automation/plugins/life-os/skills/`. Editing `life-os/skills/<skill>/SKILL.md` directly is the same mistake — the next `life-os/scripts/sync-skills.sh ../claude-skills` overwrites it. Correct fix: propagate the edit up to claude-skills (the source), merge the PR and pull `main` (post-merge hook syncs to `~/.claude/skills` + Cowork), then `sync-skills.sh` pulls it into life-os.
 
 ## README sync (this repo is a public showcase)
 - The README must reflect exactly what is on `origin/main` — no local-only, feature-branch, or untracked skills. Listing an unpublished skill sends visitors to a 404; listing a published one late makes it invisible.
