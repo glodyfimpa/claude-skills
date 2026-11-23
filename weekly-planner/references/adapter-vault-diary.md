@@ -1,4 +1,6 @@
-# Phase 1a — reading the week's diary
+# Vault adapter: reading the week's diary (Phase 1a)
+
+Part of the vault adapter (`adapter-vault.md` next to this file); applies under the same condition.
 
 The evening close writes one line per working day in
 `<vault_path>/.brain/weekly/<monday>-diario.md` (format and rules: the daily cycle design spec,
@@ -9,7 +11,7 @@ DiaryLine). For last week:
 2. Do not trust the line: recompute each day with
    `PYTHONPATH=<vault>/.brain/system <vault>/.brain/system/.venv/bin/python -m day_cycle.activity --vault <vault> --date <day>`
    and flag in `## Consuntivo` every day whose `active_minutes` differs from the line by more
-   than 15 minutes, and every line that ends with `· corretta` (Glody's edit wins, say so).
+   than 15 minutes, and every line that ends with `· corretta` (the user's edit wins, say so).
 3. Read the sessions (step 2 of Phase 1a) only for: days without a line, days flagged in 2,
    and commitments of `## Focus settimana` that no line covers.
 4. Report days over the cap (`daily_work_cap_hours`) and inbound requests marked `aggiunta`
