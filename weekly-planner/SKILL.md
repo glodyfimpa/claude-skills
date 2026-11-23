@@ -227,8 +227,9 @@ after the OK (Guard 2).
 **The two work fascia — ONLY two, distinct, read from the config, never typed here:**
 `work_morning_block` and `work_afternoon_block` in the life-os config; the day's cap is
 `daily_work_cap_hours`, never the sum of the fasce; if a key is missing, ask the user.
-The time between and outside them is life, not "free holes to fill": **never place a work
-event outside these two fascia** (fixed boundary; the only exception is the same-day hard-deadline
+The time between and outside them is life, not "free holes to fill": **never place a block of
+the user's time outside these two fascia; a delegated agent run may run outside, its checkpoint
+sits inside** (fixed boundary for the user's time; the only exception is the same-day hard-deadline
 decision in gesture «Capacity», never planned).
 
 **Planning gestures and the user's policy (read both before weighing anything).** The
@@ -236,7 +237,7 @@ generic gestures, each with its law and its config key, are in
 `references/planning-parameters.md`: DoD, tiers, themes, capacity, stop cap, durations,
 delegate cost, study, prep-run count, planning time, refusals. If `planning_rules_path` is set
 and the file exists, read it too: it holds the user's policy, the exceptions to those
-gestures and their why, and it wins over a gesture where they differ (numbers excepted: those come from the config). The axes are the
+gestures and their why, and it wins over a gesture not marked invariant where they differ (numbers excepted: those come from the config). An invariant gesture holds even when the policy file says otherwise: report the difference in Phase 3. The axes are the
 ordered month priorities (Phase 1b), not a separate list: the main axes, not the only ones.
 
 **Capacity, with or without the rules file:** the daily cap is a ceiling, never a target
@@ -516,7 +517,7 @@ that carries two requests.
 
 - `adatta` (same place and class at least 3 times): read those rows' original text and
   apply the correction in that phase during this run; say it in ONE line in the report.
-- `adatta` empty: change nothing and say nothing about the signal. `adatta` never changes the Guards.
+- `adatta` empty: change nothing and say nothing about the signal. `adatta` never changes the Guards, nor an invariant gesture.
 - `promuovi` (at least 5 times over at least 14 days): propose to the user, in the Phase 3
   report, the edit that would make the correction permanent, where it belongs: a generic
   gesture in this skill, a number in the config, an exception of this user in the policy

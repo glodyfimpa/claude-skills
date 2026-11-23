@@ -33,8 +33,10 @@ Phase 3 which keys fell back to a default.
 ## Gestures (Phase 2)
 
 Each gesture names the law it applies; change a gesture only after checking what the law loses.
+A gesture marked **(invariant)** cannot be overridden by the policy file nor by the learning
+signal's `adatta`; the policy wins over every other gesture where they differ.
 
-- **DoD and deliverable on every activity** (study time excepted). An activity with no DoD is not placed: propose
+- **DoD and deliverable on every activity** (invariant; study time excepted). An activity with no DoD is not placed: propose
   one and let the user approve it. The deliverable is written in the note as the artifact
   path, so a later drift check can see it. A calendar event whose DoD is already reached
   (check the source: git log on the path, the deliverable, the session that carried it) is
@@ -48,7 +50,7 @@ Each gesture names the law it applies; change a gesture only after checking what
 - **Themes** (deep work): one theme per day when possible; activities of the same axis form
   one continuous block; the priority of priorities gets a block every day, even when the
   theme is another axis (Pareto).
-- **Capacity** (time-boxing, Hofstadter): on every day, deadline days included, plan at most
+- **Capacity** (invariant; time-boxing, Hofstadter): on every day, deadline days included, plan at most
   the smaller of `capacity_pct` of the daily cap and the cap minus `buffer_hours`, inside the
   fasce; delegated agent work does not count, only the user's time. A known hard deadline
   that needs more is started on earlier days, or listed as a conflict for the user. Only on
