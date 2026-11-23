@@ -1,4 +1,6 @@
-# Phase 1a — reading the week's diary
+# Vault adapter: reading the week's diary (Phase 1a)
+
+Part of the vault adapter (`vault.md` next to this file); applies under the same condition.
 
 The evening close writes one line per working day in
 `<vault_path>/.brain/weekly/<monday>-diario.md` (format and rules: the daily cycle design spec,

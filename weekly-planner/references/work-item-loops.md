@@ -3,13 +3,13 @@
 A multi-step work item in the plan (more than one session of work, or a human gate in the
 middle) does not wait for the user to launch it. It becomes a self-paced `/loop` run started by a
 one-shot scheduled task. Validated on five runs, 13-20 Oct 2026 (all fired, resumed from their
-state files, reached `main` with green suites, kept the dependency order); assessment in the
-vault at `<vault_path>/areas/ai-automation/routines/state-review-routine-loop-pattern.md`.
+state files, reached `main` with green suites, kept the dependency order).
 
 Scheduling rules (event vs run, shell plus versioned prompt, weekdays only for runs with a
-gate, allowlist and app-open checks, peak hours, closing protocol) live in
-`gotcha-routine-scheduling`. Read it before creating the task; do not restate its rules in the
-prompt.
+gate, allowlist and app-open checks, peak hours, closing protocol) live in the user's scheduling
+gotchas skill, when one is installed (for example `gotcha-routine-scheduling`). Read it before
+creating the task; do not restate its rules in the prompt. Vault paths and helper commands below
+are operations of the vault adapter (`adapters/vault.md`).
 
 ## In the Phase 3 report
 
@@ -19,8 +19,8 @@ time, gates. Mark it `(L)` in the ASCII grid.
 ## Per work item (Phase 4, after the OK)
 
 1. **Prompt.** Reuse the item's versioned prompt if one exists, otherwise write
-   `areas/<domain>/routines/<slug>.prompt.md` (the gotcha's standard), with the state file
-   `state-<slug>.md` next to it (created on the first iteration, versioned). The prompt holds:
+   `<slug>.prompt.md` in the adapter's `loop-prompt-dir` (the gotcha's standard), with the state
+   file `state-<slug>.md` next to it (created on the first iteration, versioned). The prompt holds:
    - goal in one sentence, and why it matters this week;
    - the iteration protocol: pull, read state, do the next step, update state, commit, push;
    - the numbered steps, each with its done condition and its planned end date;
@@ -32,15 +32,13 @@ time, gates. Mark it `(L)` in the ASCII grid.
    last step it waits for, and checks that step is done in the other state file before starting.
 3. **Slot.** Pick the time from the user's real fasce for that day (calendar and
    `life-os.local.md`), not a fixed hour: a gate fired while the user is away waits for them anyway.
-   Never fire in peak hours. The window is defined once, in Pacific time, in
-   `.brain/system/vault_lint/peak_hours.py`; check the slot with
-   `python -m vault_lint.peak_hours check <ISO datetime>`. If it is peak, fire before 13:00
-   the same day and let the loop stop at its gate; the user answers at the block.
+   Never fire in peak hours: check the slot with the adapter's `peak-hours` operation. If it is
+   peak, fire before 13:00 the same day and let the loop stop at its gate; the user answers at
+   the block.
 4. **One-shot task.** `create_scheduled_task` with `fireAt` at the slot. The task file is a
    shell: it invokes the `loop` skill with "Read <prompt path> and execute one iteration as it
-   describes", then reads and executes
-   `<vault_path>/areas/ai-automation/routines/routine-closing.md`. All
-   logic stays in the versioned prompt.
+   describes", then, when `routine_closing_path` is set in the config, reads and executes that
+   closing protocol. All logic stays in the versioned prompt.
 5. **Event.** Create the task first, then `update_event` on the item's calendar block (created
    by the calendar export) to add the prompt path and the taskId to its description, so the user
    sees what runs and can relaunch it by hand.
@@ -57,4 +55,4 @@ time, gates. Mark it `(L)` in the ASCII grid.
 - **Read the state file before asking.** The gate may have been answered in another session
   (for example the day's orchestrator) and written there.
 - **Closing retrospective:** reversible diffs are applied and reported; only irreversible or
-  outward-facing ones wait for a yes (`routine-closing.md`, section 1).
+  outward-facing ones wait for a yes (the closing protocol at `routine_closing_path`, if set).
