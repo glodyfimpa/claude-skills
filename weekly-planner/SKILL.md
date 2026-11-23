@@ -9,8 +9,8 @@ description: |
 Forward-looking weekly planning in 4 phases. Collects the week's state, weighs every
 commitment, proposes a plan, gates on human approval, then applies it. A facade: it
 reuses planning-review-system's collect and time-energy-manager's calendar-export
-pattern, and writes the weekly plan as plain markdown (DRY: a rule lives in one place and is
-called, never restated). Its few helpers live in the vault
+pattern (DRY: a rule lives in one place and is called, never restated), and writes the
+weekly plan as plain markdown. Its few helpers live in the vault
 (`consuntivo-check`, `agent_activity`, `learning_signal`, `confirm_decision`).
 
 **Principle:** a full calendar is not a planned week. Weigh every event, or you are just
@@ -221,7 +221,7 @@ weight, ask Glody** instead of guessing. A targeted question beats a wrong class
 morning fascia", "the afternoon fascia"); if a key is missing, ask Glody instead of assuming.
 The time between and outside them is NOT work time — it is life, not "free holes to fill".
 **Never place a work event outside these two fascia:** two separate islands, not one block
-(time-boxing: every work block has a fixed start and end before it begins).
+(work hours as a fixed boundary: work does not spill into life time).
 
 **Planning rules file (read it before weighing anything).** If
 `<vault_path>/areas/glody/procedure/regole-di-pianificazione.md` exists, it overrides the
@@ -244,15 +244,14 @@ moves to next week too.
 **Ordering** (with the rules file: its tiers, then its axes as tie-break inside a tier;
 without it, the defaults here):
 - Sort by hard deadline first (legal/economic consequences lead).
-- Then by the week's Golden Rule (the single "priority of priorities"; Pareto: the few items
-  that move the result go first).
+- Then by the week's Golden Rule (the single "priority of priorities"; Keller, *The ONE Thing*:
+  the one item that makes the others easier or unnecessary goes first).
 - Group by theme: one theme per day when possible, delegated runs included. Fixed events
   that cannot move (a loop with a dependency) stay; say so and put their checkpoint at the
   start of the fascia.
 - Never two COGNITIVE blocks back-to-back — alternate cognitive ↔ handoff/physical/light.
   Handoff work an LLM can carry doesn't compete for focus; cognitive work is isolated and
-  protected. With one theme per day the alternation happens inside the theme (deep work,
-  Newport: focused work is isolated from the other loads).
+  protected (deep work, Newport). With one theme per day the alternation happens inside the theme.
 
 Produce, for the whole Mon-Fri grid: which event goes in which fascia on which day, each
 with a one-line weighing (Glody-time + load type), respecting the rules above.
