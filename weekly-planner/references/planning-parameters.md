@@ -44,17 +44,20 @@ Each gesture names the law it applies; change a gesture only after checking what
 - **Themes** (deep work): one theme per day when possible; activities of the same axis form
   one continuous block; the priority of priorities gets a block every day, even when the
   theme is another axis (Pareto).
-- **Capacity** (time-boxing, Hofstadter): plan at most the smaller of `capacity_pct` of the
-  daily cap and the cap minus `buffer_hours`, so both margins hold; delegated agent work does not count, only the user's time. A day
-  goes above the cap only for a hard deadline, up to `hard_deadline_max_hours`, never planned
-  ahead.
+- **Capacity** (time-boxing, Hofstadter): on every day, deadline days included, plan at most
+  the smaller of `capacity_pct` of the daily cap and the cap minus `buffer_hours`, inside the
+  fasce; delegated agent work does not count, only the user's time. A known hard deadline
+  that needs more is started on earlier days, or listed as a conflict for the user. Only on
+  the day itself, for that hard deadline, may the user's time reach `hard_deadline_max_hours`,
+  outside the fasce if needed: a decision of that day, never written into the weekly plan.
 - **Stop cap on every cognitive and judgment block** (Parkinson): each declares its maximum
   duration and what is delivered at the stop. At the stop the rest is closed or re-dated,
   never extended. Time saved is not refilled with more cognitive or judgment work.
 - **Durations** (Hofstadter): estimate from similar blocks already measured and state the
   basis; no fixed default duration, not even for a short judgment.
 - **Delegates cost checkpoints**: 10-15 minutes of the user's time each, never zero.
-- **Study**: reserve `study_hours_week` per week with no deliverable, when the key is above 0.
+- **Study**: reserve `study_hours_week` per week with no deliverable, when the key is above 0;
+  it sits inside the fasce and counts toward the planned capacity.
 - **Prep-run count** (YAGNI, vault only): count the prep-run prompts born in the window,
   `git -C <vault_path> log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' | sort -u | wc -l`.
   From `prep_run_threshold` up, propose one fixed evening routine that runs the prep-runs
