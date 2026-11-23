@@ -50,7 +50,8 @@ time, gates. Mark it `(L)` in the ASCII grid.
 - **Commit scoped:** `git commit -m ... -- <paths>` with only the files this run wrote; other
   sessions share the checkout.
 - **Ask once, at the end.** Reversible steps (vault text, code with tests, git) are done and
-  reported, not asked. A follow-up of a class Glody already approved is covered by that
+  reported, not asked (Nielsen: undo over up-front confirmation; Bezos: two-way doors are
+  delegated, one-way doors are deliberated). A follow-up of a class Glody already approved is covered by that
   approval. Questions that really need him (irreversible, outward-facing, money, data to third
   parties) are collected and asked once, with a recommendation, not one per turn.
 - **Read the state file before asking.** The gate may have been answered in another session
