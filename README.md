@@ -53,6 +53,8 @@ The installer asks where to install (Claude Code or Claude Desktop), lets you pi
 
 Requires Code execution enabled in **Settings > Capabilities**. Skills added on Claude.ai are automatically available in Cowork.
 
+`sync.sh` (the repo's post-commit/post-merge hook) publishes only to `~/.claude/skills`. It does not write to the Cowork skills folder: the desktop app re-syncs that folder from the account's server-side skill set every 20 minutes and on window focus, and deletes everything else. For Cowork, upload the ZIP as above or install the skills as a plugin ([guide](https://claude.com/docs/cowork/guide/plugins)).
+
 ---
 
 On first use, the skill auto-detects available MCP tools (Notion, Google Calendar, Gmail) and configures itself. No tools detected? It asks what you use. No tools at all? Chat-only mode.

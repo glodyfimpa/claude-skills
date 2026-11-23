@@ -144,28 +144,6 @@ test_find_source_skills_multiple() {
 }
 run_test test_find_source_skills_multiple
 
-test_discover_cowork_path_found() {
-    setup
-    seed_cowork_skill "some-skill"
-
-    local path
-    path="$(discover_cowork_path "$TEST_TMP/cowork_base")"
-    assert_dir_exists "$path" "discovered cowork path should exist" || return 1
-    teardown
-}
-run_test test_discover_cowork_path_found
-
-test_discover_cowork_path_not_found() {
-    setup
-    if discover_cowork_path "$TEST_TMP/nonexistent" 2>/dev/null; then
-        echo -e "  ${RED}FAIL${RESET}: should fail when base doesn't exist" >&2
-        teardown
-        return 1
-    fi
-    teardown
-}
-run_test test_discover_cowork_path_not_found
-
 test_sync_skill_copies_files() {
     setup
     create_source_skill "my-skill" "---\nname: my-skill\n---"
@@ -251,7 +229,7 @@ run_test test_remove_skill_keeps_symlinked_dest
 
 test_write_manifest_creates_valid_json() {
     setup
-    write_manifest "$TEST_TMP/manifest.json" "/dest/cc" "/dest/cowork" "skill-a" "skill-b"
+    write_manifest "$TEST_TMP/manifest.json" "/dest/cc" "skill-a" "skill-b"
 
     assert_file_exists "$TEST_TMP/manifest.json" "manifest should be created" || return 1
     grep -q '"skill-a"' "$TEST_TMP/manifest.json" || { echo "  FAIL: missing skill-a"; teardown; return 1; }
@@ -263,7 +241,7 @@ run_test test_write_manifest_creates_valid_json
 
 test_read_manifest_skills_parses_correctly() {
     setup
-    write_manifest "$TEST_TMP/manifest.json" "/cc" "/cowork" "alpha" "beta" "gamma"
+    write_manifest "$TEST_TMP/manifest.json" "/cc" "alpha" "beta" "gamma"
 
     local skills
     skills="$(read_manifest_skills "$TEST_TMP/manifest.json")"
@@ -297,16 +275,11 @@ test_integration_full_sync() {
     setup
     create_source_skill "skill-a" "# Skill A"
     create_source_skill "skill-b" "# Skill B"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
 
     assert_file_exists "$TEST_TMP/cc_dest/skill-a/SKILL.md" "skill-a in Claude Code" || return 1
     assert_file_exists "$TEST_TMP/cc_dest/skill-b/SKILL.md" "skill-b in Claude Code" || return 1
-
-    local cowork_path="$TEST_TMP/cowork_base/uuid1/uuid2/skills"
-    assert_file_exists "$cowork_path/skill-a/SKILL.md" "skill-a in Cowork" || return 1
-    assert_file_exists "$cowork_path/skill-b/SKILL.md" "skill-b in Cowork" || return 1
 
     assert_file_exists "$TEST_TMP/.sync-manifest.json" "manifest created" || return 1
     teardown
@@ -316,7 +289,6 @@ run_test test_integration_full_sync
 test_integration_idempotent() {
     setup
     create_source_skill "skill-x" "# content"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
     local first_content
@@ -334,7 +306,6 @@ run_test test_integration_idempotent
 test_integration_add_new_skill() {
     setup
     create_source_skill "initial"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
     assert_file_exists "$TEST_TMP/cc_dest/initial/SKILL.md" "initial synced" || return 1
@@ -352,7 +323,6 @@ test_integration_remove_skill_cleanup() {
     setup
     create_source_skill "keep-me"
     create_source_skill "remove-me"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
     assert_file_exists "$TEST_TMP/cc_dest/remove-me/SKILL.md" "remove-me exists after first sync" || return 1
@@ -372,7 +342,6 @@ test_integration_external_skills_preserved() {
     echo "# external" > "$TEST_TMP/cc_dest/deploy-check/SKILL.md"
 
     create_source_skill "my-skill"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
 
@@ -388,19 +357,63 @@ test_integration_external_skills_preserved() {
 }
 run_test test_integration_external_skills_preserved
 
-test_integration_cowork_absent() {
+# The desktop app re-syncs the Cowork skills folder from the account's
+# server-side set and deletes everything else: writing there is futile.
+test_integration_never_writes_cowork() {
     setup
-    create_source_skill "lonely-skill"
-    export SYNC_COWORK_BASE="$TEST_TMP/no-cowork-here"
+    create_source_skill "skill-a" "# Skill A"
+    local cowork_skills="$TEST_TMP/cowork_base/uuid1/uuid2/skills"
+    mkdir -p "$cowork_skills/existing"
+    echo "# seed" > "$cowork_skills/existing/SKILL.md"
 
-    "$REPO_ROOT/sync.sh" --quiet
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null
 
-    assert_file_exists "$TEST_TMP/cc_dest/lonely-skill/SKILL.md" "skill synced to Claude Code" || return 1
-    assert_not_exists "$TEST_TMP/no-cowork-here" "cowork path not created" || return 1
-    assert_file_exists "$TEST_TMP/.sync-manifest.json" "manifest still created" || return 1
+    assert_file_exists "$TEST_TMP/cc_dest/skill-a/SKILL.md" "skill-a in Claude Code" || return 1
+    assert_not_exists "$cowork_skills/skill-a" "sync must not write under a Cowork path" || return 1
+    assert_file_exists "$cowork_skills/existing/SKILL.md" "Cowork folder left untouched" || return 1
     teardown
 }
-run_test test_integration_cowork_absent
+run_test test_integration_never_writes_cowork
+
+test_integration_cowork_removal_not_touched() {
+    setup
+    create_source_skill "keep-me"
+    create_source_skill "remove-me"
+    local cowork_skills="$TEST_TMP/cowork_base/uuid1/uuid2/skills"
+    mkdir -p "$cowork_skills/remove-me"
+    echo "# seed" > "$cowork_skills/remove-me/SKILL.md"
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null
+    rm -rf "$TEST_TMP/source/remove-me"
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null
+
+    assert_not_exists "$TEST_TMP/cc_dest/remove-me" "removed from Claude Code" || return 1
+    assert_file_exists "$cowork_skills/remove-me/SKILL.md" "cleanup must not reach Cowork" || return 1
+    teardown
+}
+run_test test_integration_cowork_removal_not_touched
+
+test_integration_notes_supported_cowork_channels() {
+    setup
+    create_source_skill "skill-a"
+    local stderr
+    stderr="$("$REPO_ROOT/sync.sh" --quiet 2>&1 >/dev/null)" || return 1
+    echo "$stderr" | grep -q "Cowork" || { echo "  FAIL: stderr must mention Cowork: $stderr" >&2; return 1; }
+    echo "$stderr" | grep -q "claude.ai" || { echo "  FAIL: stderr must point to claude.ai Skills upload: $stderr" >&2; return 1; }
+    echo "$stderr" | grep -qi "plugin" || { echo "  FAIL: stderr must point to the plugin channel: $stderr" >&2; return 1; }
+    teardown
+}
+run_test test_integration_notes_supported_cowork_channels
+
+test_integration_manifest_has_no_cowork_destination() {
+    setup
+    create_source_skill "skill-a"
+    "$REPO_ROOT/sync.sh" --quiet 2>/dev/null
+    if grep -q '"cowork"' "$TEST_TMP/.sync-manifest.json"; then
+        echo "  FAIL: manifest still lists a cowork destination" >&2; return 1
+    fi
+    teardown
+}
+run_test test_integration_manifest_has_no_cowork_destination
 
 test_integration_skill_with_subdirs() {
     setup
@@ -409,7 +422,6 @@ test_integration_skill_with_subdirs() {
     echo "ref data" > "$TEST_TMP/source/complex-skill/references/data.md"
     mkdir -p "$TEST_TMP/source/complex-skill/scripts"
     echo "#!/bin/bash" > "$TEST_TMP/source/complex-skill/scripts/run.sh"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
 
@@ -424,7 +436,6 @@ test_integration_rsync_deletes_removed_files() {
     setup
     create_source_skill "evolving"
     echo "old file" > "$TEST_TMP/source/evolving/old-ref.md"
-    seed_cowork_skill "existing"
 
     "$REPO_ROOT/sync.sh" --quiet
     assert_file_exists "$TEST_TMP/cc_dest/evolving/old-ref.md" "old file synced" || return 1
@@ -465,7 +476,7 @@ test_guard_feature_branch_does_not_remove() {
     setup
     mkdir -p "$TEST_TMP/cc_dest/old-skill"
     echo "# installed" > "$TEST_TMP/cc_dest/old-skill/SKILL.md"
-    write_manifest "$SYNC_MANIFEST" "$TEST_TMP/cc_dest" "none" "old-skill"
+    write_manifest "$SYNC_MANIFEST" "$TEST_TMP/cc_dest" "old-skill"
     git_src checkout -q -b feat/drop-old
 
     "$REPO_ROOT/sync.sh" --quiet 2>/dev/null || return 1
