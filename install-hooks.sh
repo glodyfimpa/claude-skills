@@ -42,9 +42,11 @@ assert_in_repo() {
     }
 }
 
-# Returns the directory git will actually look in for hooks.
+# Returns the directory git will actually look in for hooks, as an absolute
+# path: a bare --git-path is relative to the caller's cwd, so running this
+# script from another repo used to overwrite THAT repo's hook.
 effective_hooks_dir() {
-    git -C "$REPO_ROOT" rev-parse --git-path hooks
+    git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-path hooks
 }
 
 
@@ -72,37 +74,40 @@ reconcile_hooks_path() {
 }
 
 
-# Writes the post-commit hook that mirrors skills into the runtime.
-# Uses $0-relative resolution so it works regardless of git's cwd.
-write_post_commit_hook() {
-    local hooks_dir hook
+# Writes the hooks that mirror skills into the runtime: post-commit (a commit
+# on main) and post-merge (a pull that brings main to origin/main, the usual
+# way a reviewed change arrives). Both call sync.sh, which publishes only
+# from branch main at a commit on origin/main and skips loudly otherwise.
+write_sync_hook() {
+    local name="$1" hooks_dir hook
     hooks_dir="$(effective_hooks_dir)"
     mkdir -p "$hooks_dir"
-    hook="$hooks_dir/post-commit"
+    hook="$hooks_dir/$name"
 
     cat > "$hook" <<'HOOK'
 #!/bin/sh
 # Managed by install-hooks.sh — regenerate with: bash install-hooks.sh
-# Mirrors the skills in this repo into the Claude runtime after every commit.
-set -e
+# Mirrors the skills in this repo into the Claude runtime. sync.sh itself
+# refuses to publish unless HEAD is branch main on origin/main.
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 [ -x "$REPO_ROOT/sync.sh" ] || {
-    echo "post-commit: sync.sh missing or not executable — skills NOT synced" >&2
+    echo "$(basename "$0"): sync.sh missing or not executable — skills NOT synced" >&2
     exit 0
 }
 "$REPO_ROOT/sync.sh" --quiet || \
-    echo "post-commit: sync.sh failed — skills may be stale in the runtime" >&2
+    echo "$(basename "$0"): sync.sh failed — skills may be stale in the runtime" >&2
 HOOK
 
     chmod +x "$hook"
-    ok "post-commit hook installed at $hook"
+    ok "$name hook installed at $hook"
 }
 
 main() {
     assert_in_repo
     reconcile_hooks_path
-    write_post_commit_hook
-    ok "done — commit a skill change and it will sync to the runtime automatically"
+    write_sync_hook post-commit
+    write_sync_hook post-merge
+    ok "done — skills reach the runtime when main is at origin/main (after merge + pull)"
 }
 
 main "$@"
