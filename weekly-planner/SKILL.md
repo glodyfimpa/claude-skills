@@ -33,9 +33,10 @@ guards are the skill's flow, not planning gestures: the user's policy file does 
 **Config lookup:** open and follow `_shared-refs/config-lookup.md` (or `../_shared-refs/config-lookup.md` when running from the synced plugin copy).
 
 **If a config file exists:** read from the frontmatter `task_tool`, `calendar_tool`,
-`notes_tool`, `email_tool` (MCP vs conversational fallback), `vault_path` when
+`notes_tool`, `email_tool` (MCP vs conversational fallback), `calendar_id`, `vault_path` when
 `notes_tool = vault_filesystem`, `work_morning_block` and `work_afternoon_block` (the only
-work fascia), `daily_work_cap_hours` (no default: ask if missing), and every key in
+work fascia), `daily_work_cap_hours` (no default: ask if missing; in a run with nobody
+present, write the note anyway and list the missing key first under conflicts), and every key in
 `references/planning-parameters.md`, with its default when missing.
 
 **Policy file:** if `planning_rules_path` is set and the file exists, read it (Phase 2). If the
@@ -48,7 +49,7 @@ time-energy-manager (auto-detect tools, ask language + tools + schedule, save to
 `~/.claude/life-os.local.md`). Never hardcode database IDs, field names, schedule times, or a user's paths, names and numbers
 (dependency inversion: the flow depends on the tools named in the config, not on a concrete tool).
 
-**Notes adapter:** when `notes_tool = vault_filesystem`, open `references/adapters/vault.md`.
+**Notes adapter:** when `notes_tool = vault_filesystem`, open `references/adapter-vault.md`.
 It holds every vault path, helper command and section name this skill uses; below they are
 named by operation (`open-week`, `sessions`, `consuntivo-check`, ...) and by section (the
 focus section, the reconciliation section, ...). If the adapter's condition is not met, every
@@ -103,7 +104,7 @@ reminder sat in the previous week's plan and was never done).
 1. **Read last week's plan**: the focus section of last week's note first: the commitment
    list to check against reality. If last week has no note, take the most recent one and
    say how many weeks are missing.
-2. **Read last week's diary first** when the adapter has one (`references/adapters/vault-diary.md`):
+2. **Read last week's diary first** when the adapter has one (`references/adapter-vault-diary.md`):
    the session read below is then needed only for the days it leaves open. **Then read the
    week's agent sessions** through the adapter's `sessions` operation (all agents it indexes:
    local, editor, and cloud adapters), never by guessing from file dates. It returns per
@@ -246,7 +247,8 @@ meta-tooling moves to next week too.
 
 **Ordering** (the tiers of the gestures file, then the axes as tie-break inside a tier, as
 the user's policy adjusts them):
-- Inside tier 2, legal/economic deadlines first, then the axis.
+- A hard deadline of the week is placed on a day before its date, whatever its tier
+  (legal/economic consequences lead). Inside tier 2, legal/economic deadlines first, then the axis.
 - Then by the week's Golden Rule (the single "priority of priorities"; Keller, *The ONE Thing*:
   the one item that makes the others easier or unnecessary goes first).
 - Group by theme (gesture «Themes»). Fixed events that cannot move stay; say so and put
@@ -271,8 +273,9 @@ rules already written.
 First write the week's note (see "Writing into the note" below): the collected state and
 the proposed focus, marked as a proposal. This is local and reversible, and it is what
 survives if the gate is never answered. Then, when the adapter has it, run
-`consuntivo-check` for the target Monday: on a failing exit, Phase 1a step 2 was not done:
-go back and do it, then rewrite the reconciliation section. Do not present the gate until
+`consuntivo-check` for the target Monday: on a failing exit, read its output. A missing or
+unknown session citation means Phase 1a step 2 was not done: go back and do it, then rewrite
+the reconciliation section; any other reason is fixed or reported as is. Do not present the gate until
 the check passes.
 
 Then commit + push only the note, plus the learning-signal files if they changed (the adapter's
@@ -299,8 +302,11 @@ Structure of the report:
   `[=]` already on the calendar (not touched), `[+]` Phase 4 will create it, `[~]` an
   existing event Phase 4 would change (say what changes and why), `[-]` an existing event
   Phase 4 would delete, and `.` free. Under the grid list every `[+]`, `[~]` and `[-]` with
-  title, day, start-end, `busy`/`free`; each `[-]` also carries its reason and proof, and
-  whether Phase 4 will delete it or only list it (`calendar_delete_mode`). Show it also
+  title, day, start-end, `busy`/`free`; each `[-]` also carries the event id, its reason and
+  proof, and whether Phase 4 will delete it or only list it (`calendar_delete_mode`). The same
+  `[-]` rows, with their ids, go into the note's events-to-delete section before the gate, each
+  with a number (D1, D2, …) and state `proposto`, so a later session resumes them by id (row states: "Row states" in
+  Phase 4). Show it also
   when the gate is re-presented by "Resume the gate", after re-reading the calendar.
 - **Cognitive vs handoff count** — blocks per load type (Phase 2 attribute 3), as a plain
   number, to show whether the week leans cognitive or handoff.
@@ -312,6 +318,8 @@ Structure of the report:
   Never stop at listing a problem: each one comes with a next action, and anything
   answerable from mail, chats, logs or files is looked up, not asked.
 - **Scheduled tasks to delete (your OK)** — the Phase 1b housekeeping list, one line each,
+  written in the note's conflicts section before the gate with a number (T1, T2, …) and state
+  `proposto`,
   and the count of un-archived old sessions with the reminder «archivia, non cancellare».
 - **Actionable emails** (from Phase 1, with the action + date).
 - **Conflicts / notes** — anything that didn't fit, moved to next week, or needs a user
@@ -327,7 +335,8 @@ Then end with an explicit gate line:
 **Wait for explicit approval.** Do NOT proceed to Phase 4 on anything less than a clear OK.
 If the user asks for changes, revise Phase 2/3 and re-present the gate. An OK covers the
 `[-]` cells and the housekeeping lines only as shown; the user may approve them apart
-("ok tranne il [-] di giovedì", "ok tutte / ok tranne N").
+("ok tranne il [-] di giovedì", "ok tutte / ok tranne N"). The first step of Phase 4 writes
+that answer into the note (see "Row states").
 
 Each change the user asks for at the gate, and each answer to the optional question, is
 feedback: classify it and register it with origin gate before revising (see
@@ -357,25 +366,47 @@ Only after explicit approval:
 
 If `calendar_tool = none`: skip calendar export.
 
-### Calendar deletions
-Only the `[-]` cells the user approved, and only by event id (never by title search).
+### Row states (first step of Phase 4)
+Every `[-]` row and every housekeeping line in the note carries one state, and only the step
+named here writes it:
 
-- **`calendar_delete_mode: propose`** (the default): delete nothing. Write each approved `[-]`
-  in the note's events-to-delete section (id, title, start-end, reason) and say «[N] eventi
-  da cancellare a mano: elenco nella weekly». This is the dry-run: keep it until the user has
-  seen the proposals be right and sets `apply`.
-- **`calendar_delete_mode: apply`**: first write the backup of each approved event (id, title,
-  start-end, description, calendar) in the note's events-to-delete section and commit it, so
-  the event can be recreated from the note. Then delete each one with `sendUpdates: none`,
-  re-list the week, and confirm each id is gone. An id already missing counts as done (a
-  resumed gate is safe). Report «[N] eventi cancellati, backup nella weekly».
+| State | Written by | Meaning |
+|---|---|---|
+| `proposto` | Phase 3, before the gate | shown at the gate, no answer yet |
+| `approvato` / `escluso` | this step, right after the OK | the user's answer for that row: a plain "ok" or "ok tutte" approves every `proposto` row, "ok tranne D2, T1" excludes those; until a row's action has run, a later answer may still turn `approvato` into `escluso` |
+| `elencato` | "Calendar deletions", propose mode | listed for the user to delete by hand |
+| `fatto` | "Calendar deletions", apply mode; "Scheduled-task housekeeping" | deleted (or already gone) |
+
+`escluso`, `elencato` and `fatto` are final: no later step or resume changes them or acts on
+them. This step runs first in Phase 4, before the calendar export. Commit the note after writing the answers, before any deletion. Phase 4 acts only on
+rows in state `approvato`; a row still `proposto` is never acted on.
+
+### Calendar deletions
+Only rows in state `approvato`, and only by event id (never by title search). The
+note's events-to-delete section holds one row per event id: update that row, never
+append a second one, so a resumed gate is safe.
+
+- **`calendar_delete_mode: propose`** (the default): delete nothing. Set each `approvato` row to
+  `elencato` (da cancellare a mano) and say «[N] eventi da cancellare
+  a mano: elenco nella weekly». This is the dry-run: keep it until the user has seen the
+  proposals be right and sets `apply`.
+- **`calendar_delete_mode: apply`**: for each `approvato` id, first get the event. If it is
+  already gone, mark the row `fatto` and move on. If its title, start or end differ from the
+  row, set the row back to `proposto` and ask again: the proof was about another event. Else write its backup in the row (id, title,
+  start-end, description, calendar, attendees, organizer, recurrence; for a recurring event
+  delete only that instance) and commit the note, so the event can be recreated from
+  it. Then delete it with `sendUpdates: none`, re-list the week, confirm the id is gone, and
+  mark the row `fatto`. Report «[N] eventi cancellati, backup nella weekly».
 
 ### Scheduled-task housekeeping
 Only in a session the user opened (an unattended scheduled run cannot delete a scheduled
-task and must not try), and only the lines the user approved: make a `tar` backup of
+task and must not try), and only the lines in state `approvato`, after re-listing the tasks
+(a task already gone is `fatto`; one no longer disabled or no longer older than
+`scheduled_task_stale_days` goes back to `proposto`): make a `tar` backup of
 `~/.claude/scheduled-tasks` first, then delete the approved tasks and remove the approved
-orphan folders. Sessions are archived, never deleted. In an unattended run, leave the list
-in the note: the session that resumes the gate does it.
+orphan folders, and set each line to `fatto` in the note. Sessions are archived, never
+deleted. In an unattended run, leave those lines `approvato`: the session that resumes the
+gate does them (see "Resume the gate").
 
 ### Prep-runs and work-item loops
 The OK covers the prep-runs and the `(L)` loops in the report: each loop is a one-shot weekday
@@ -407,11 +438,16 @@ or closed session. A later session resumes it from the note, without redoing Pha
 
 - **Trigger**: "ok weekly", "applica la weekly", "riprendi la weekly", or the briefing
   signal `focus della settimana non confermato`.
-- Read the target week's note. If its focus section still carries the proposal marker,
+- Read the most recent week note whose focus section still carries the proposal marker, or
+  that still has rows in state `approvato` or `proposto` (normally the current week, not the
+  next Monday's). If its focus still carries the marker,
   re-present the Phase 3 report from the note (re-read the calendar for the week first: it
-  may have changed, and say what changed; every `[-]` and every housekeeping line is shown
-  again), wait for the OK, then run Phase 4. Phase 4 is idempotent, so a repeated resume is safe.
-- If the focus is already confirmed (the Decision record says so), do nothing and say so.
+  may have changed, and say what changed; the rows still `proposto` are asked again, the rows
+  in a final state are shown with their state and not asked), wait for the OK, then run Phase 4.
+  Phase 4 is idempotent, so a repeated resume is safe.
+- If the focus is already confirmed (the Decision record says so) but the note still has rows
+  in state `approvato`, run only the Phase 4 steps for those rows; rows still `proposto` are
+  shown and asked once more. Otherwise do nothing and say so.
 
 ---
 
@@ -447,8 +483,12 @@ written only in the focus section, never in an extra section.
 No external send happens here: email and messages stay drafts.
 
 **If `notes_tool = vault_filesystem` but `open-week` is not available** (Phase 0 skipped):
-create the note with the Write tool, frontmatter `doc_type: log`, `created`/`updated` = today,
+the note path and section names still come from the adapter; create the note with the Write tool, frontmatter `doc_type: log`, `created`/`updated` = today,
 `week: <ISO week>`, then the same five fixed sections and the extras.
+
+**Without the vault adapter** the five fixed sections are, in order: `## Reconciliation`,
+`## Calendar`, `## Captures`, `## Projects`, `## Focus` (the proposal marker is the words
+"to be confirmed"), in the user's language.
 
 **If `notes_tool = notion`:** create/update the week's page under `output_page_url` with
 the same sections. **If `notes_tool = none`:** present the plan in chat as formatted markdown.
@@ -476,7 +516,7 @@ that carries two requests.
 
 - `adatta` (same place and class at least 3 times): read those rows' original text and
   apply the correction in that phase during this run; say it in ONE line in the report.
-- `adatta` empty: change nothing and say nothing about the signal.
+- `adatta` empty: change nothing and say nothing about the signal. `adatta` never changes the Guards.
 - `promuovi` (at least 5 times over at least 14 days): propose to the user, in the Phase 3
   report, the edit that would make the correction permanent, where it belongs: a generic
   gesture in this skill, a number in the config, an exception of this user in the policy

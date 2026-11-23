@@ -9,7 +9,7 @@ Scheduling rules (event vs run, shell plus versioned prompt, weekdays only for r
 gate, allowlist and app-open checks, peak hours, closing protocol) live in the user's scheduling
 gotchas skill, when one is installed (for example `gotcha-routine-scheduling`). Read it before
 creating the task; do not restate its rules in the prompt. Vault paths and helper commands below
-are operations of the vault adapter (`adapters/vault.md`).
+are operations of the vault adapter (`adapter-vault.md`).
 
 ## In the Phase 3 report
 
@@ -38,7 +38,8 @@ time, gates. Mark it `(L)` in the ASCII grid.
 4. **One-shot task.** `create_scheduled_task` with `fireAt` at the slot. The task file is a
    shell: it invokes the `loop` skill with "Read <prompt path> and execute one iteration as it
    describes", then, when `routine_closing_path` is set in the config, reads and executes that
-   closing protocol. All logic stays in the versioned prompt.
+   closing protocol; when it is not set, the loop's last line says «nessun protocollo di
+   chiusura: routine_closing_path non impostata». All logic stays in the versioned prompt.
 5. **Event.** Create the task first, then `update_event` on the item's calendar block (created
    by the calendar export) to add the prompt path and the taskId to its description, so the user
    sees what runs and can relaunch it by hand.

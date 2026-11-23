@@ -4,10 +4,11 @@ The only file of this skill that knows a vault's layout. `SKILL.md` names an ope
 (`open-week`, `consuntivo-check`, ...); this file says how the vault runs it. Swap this
 file to plug the skill into a different notes system; the core does not change.
 
-**Applies when** `notes_tool = vault_filesystem`, `vault_path` is set, and the directory
-`<vault_path>/.brain/system/vault_lint/review/` exists (the vault's rhythm chain; contract in
-`<vault_path>/.brain/system/schema/ritmi.md`). Otherwise every operation below is
-"not available" and `SKILL.md` takes its fallback branch.
+**Applies when** `notes_tool = vault_filesystem` and `vault_path` is set. The note paths and
+section names below then always hold. The helper operations need more: each is available only
+when its module exists under `<vault_path>/.brain/system/` (the rhythm chain: `vault_lint/review/`;
+contract in `<vault_path>/.brain/system/schema/ritmi.md`), else it is "not available" and
+`SKILL.md` takes its fallback branch.
 
 All Python helpers run with the vault's venv:
 
@@ -35,7 +36,7 @@ If the venv is missing, every helper operation fails: report it, never emulate t
 | proposal marker | the line `review apri` pre-fills ("Proposta dalle priorità del mese …, da confermare …"), or `Proposta del <date>, da confermare:`; the marker is the words `da confermare` |
 | extra sections | `## Griglia Lun-Ven`, `## Bilancio cognitive/handoff`, `## Email azionabili`, `## Segnalazioni / conflitti`, `## Eventi da cancellare` |
 | deliverable citation | the artifact path in backticks or a `[[wikilink]]`: the vault's `weekly_drift` check watches only cited artifacts |
-| diary | `references/adapters/vault-diary.md` |
+| diary | `references/adapter-vault-diary.md` |
 
 The five fixed sections are, in order: reconciliation, calendar, captures, projects, focus.
 Write the focus items as `N. <focus> — serve: <priorità del mese>`.
@@ -45,15 +46,22 @@ Write the focus items as `N. <focus> — serve: <priorità del mese>`.
 | Operation | Command | Exit codes and output |
 |---|---|---|
 | `open-week` | `$PY -m vault_lint.review apri $V --date <Monday>` | 0: created the levels that were due (week note, and monthly or quarter drafts if missing), prints their paths. 2: the week note exists and nothing else is due. Other: stop and report; never create the note by hand. |
-| `state` | `$PY -m vault_lint.review stato $V` | read-only signals for the report; says whether the week's focus is confirmed |
+| `state` | `$PY -m vault_lint.review stato $V --date <Monday>` | read-only signals for the report; says whether that week's focus is confirmed (without `--date` it looks at the current week) |
 | `deadlines` | `$PY -m vault_lint.review scadenze $V --date <Monday> --giorni 21 --json` | rows in `scadenze` (overdue included) are hard-deadline candidates; report every `problemi` entry. 2: bad arguments |
-| `consuntivo-check` | `$PY -m vault_lint.review consuntivo-check $V --date <Monday>` | 0: the reconciliation section cites at least one real session as `sessione:<first 8 chars of session_id>`. Other: Phase 1a step 2 was skipped. When the aggregator has no session in the window the section may carry the token `sessioni:nessuna` |
+| `consuntivo-check` | `$PY -m vault_lint.review consuntivo-check $V --date <Monday>` | 0: the reconciliation section cites at least one real session as `sessione:<first 8 chars of session_id>`. Other: read the output; a missing or unknown citation means Phase 1a step 2 was skipped, any other reason is reported as is. When the aggregator has no session in the window the section may carry the token `sessioni:nessuna` |
 | `sessions` | `$PY -m agent_activity.collect --vault $V`, then `$PY -m agent_activity.query --vault $V --since <ISO UTC>` | run `collect` first (its scheduled run is daily). Returns `sessions` (id, agent, project, title, turns, `closing_excerpt`, `source_path`), `collector_staleness_days`, `warnings`. Not available when `$V/.brain/system/agent_activity/` is missing |
 | `confirm-focus` | see "Record the Decision" below | writes `$V/.brain/system/decisions/focus-week-<ISO week>.yaml` with `status: confirmed` |
-| `count-prep-runs` | `git -C $V log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only --pretty=format: -- '*prompt-prep-*.md' \| sort -u \| grep -c .` | the number of prep-run prompts born in the window (prep-run prompts are named `prompt-prep-*.md`; their events carry `Prep:` in the title) |
+| `count-prep-runs` | the command under the table | the number of prep-run prompts born in the window (prep-run prompts are named `prompt-prep-*.md`; their events carry `Prep:` in the title); 0 is a valid answer |
 | `peak-hours` | `$PY -m vault_lint.peak_hours check <ISO datetime>` | says whether a slot is in the peak window (defined once, in Pacific time, in that module) |
 | `loop-prompt-dir` | `$V/areas/<domain>/routines/` | where a work-item loop's prompt `<slug>.prompt.md` and its `state-<slug>.md` live |
 | `commit` | scoped commit on the vault's default branch: `git -C $V commit -m ... -- <paths>`, then push | other sessions share the checkout |
+
+`count-prep-runs` (copy it as is; the count is 0 when no prompt was born):
+
+```bash
+git -C $V log --since="<prep_run_window_days> days ago" --diff-filter=A --name-only \
+  --pretty=format: -- '*prompt-prep-*.md' | sort -u | sed '/^$/d' | wc -l
+```
 
 ### Record the Decision (`confirm-focus`)
 

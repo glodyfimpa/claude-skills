@@ -2,7 +2,8 @@
 
 The core is generic: it never names a user, a home folder, or the layout of one vault.
 Everything vault-specific (paths, helper commands, section names of the note contract)
-lives in the vault adapter under weekly-planner/references/adapters/, which the skill
+lives in the vault adapter files weekly-planner/references/adapter-*.md (flat, because the
+plugin sync copies references/ without subfolders), which the skill
 loads only when the config says the notes live in a vault. Every other file of the
 skill must be free of those markers.
 
@@ -14,7 +15,8 @@ import re
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent / "weekly-planner"
-ADAPTER_DIR = SKILL_DIR / "references" / "adapters"
+REFERENCES_DIR = SKILL_DIR / "references"
+ADAPTER_GLOB = "adapter-*.md"
 
 # Vault layout, vault helper package, a home folder, and the section headings of the
 # vault's note contract. Matching any of them outside the adapter is a violation.
@@ -31,9 +33,20 @@ FORBIDDEN = [
 ]
 
 
+# Only the skill's own text and code: caches, .DS_Store and other local files are not the core.
+SCANNED_SUFFIXES = {".md", ".py", ".sh", ".yaml", ".yml", ".json"}
+
+
+def is_adapter(path):
+    return path.parent == REFERENCES_DIR and path.match(ADAPTER_GLOB)
+
+
 def core_files():
     for path in sorted(SKILL_DIR.rglob("*")):
-        if path.is_file() and ADAPTER_DIR not in path.parents:
+        relative = path.relative_to(SKILL_DIR)
+        if any(part.startswith(".") for part in relative.parts):
+            continue
+        if path.is_file() and path.suffix in SCANNED_SUFFIXES and not is_adapter(path):
             yield path
 
 
@@ -47,8 +60,10 @@ def violations():
     return found
 
 
-def test_adapter_directory_exists():
-    assert ADAPTER_DIR.is_dir(), "the vault adapter must live in references/adapters/"
+def test_adapter_files_exist_flat_in_references():
+    assert sorted(p.name for p in REFERENCES_DIR.glob(ADAPTER_GLOB)), "no references/adapter-*.md"
+    subfolders = [p.name for p in REFERENCES_DIR.iterdir() if p.is_dir()]
+    assert not subfolders, f"the plugin sync skips subfolders of references/: {subfolders}"
 
 
 def test_core_names_no_vault_path_user_or_home():
@@ -58,5 +73,5 @@ def test_core_names_no_vault_path_user_or_home():
 
 def test_skill_loads_the_adapter_conditionally():
     skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
-    assert "references/adapters/vault.md" in skill
+    assert "references/adapter-vault.md" in skill
     assert "notes_tool = vault_filesystem" in skill
