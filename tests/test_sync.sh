@@ -559,6 +559,26 @@ test_hook_blocks_unguarded_sync_on_feature_branch() {
 }
 run_test test_hook_blocks_unguarded_sync_on_feature_branch
 
+# With public-push-guard installed, core.hooksPath holds its shims, which
+# chain to pushguard.previoushooks: the sync hooks belong there, not over the shims.
+test_install_hooks_respects_push_guard_chain() {
+    setup
+    local repo="$TEST_TMP/repo"
+    mkdir -p "$repo" "$TEST_TMP/elsewhere"
+    cp "$REPO_ROOT/sync.sh" "$REPO_ROOT/install-hooks.sh" "$repo/"
+    git -C "$repo" init -q -b main
+    mkdir -p "$repo/.git/guard-shims" "$repo/.git/hooks"
+    echo "# guard shim" > "$repo/.git/guard-shims/post-commit"
+    git -C "$repo" config core.hooksPath "$repo/.git/guard-shims"
+    git -C "$repo" config pushguard.previoushooks "$repo/.git/hooks"
+    ( cd "$TEST_TMP/elsewhere" && bash "$repo/install-hooks.sh" >/dev/null 2>&1 ) || return 1
+    assert_eq "# guard shim" "$(cat "$repo/.git/guard-shims/post-commit")" "push-guard shim untouched" || return 1
+    assert_file_exists "$repo/.git/hooks/post-commit" "sync hook in the chained dir" || return 1
+    assert_file_exists "$repo/.git/hooks/post-merge" "post-merge in the chained dir" || return 1
+    teardown
+}
+run_test test_install_hooks_respects_push_guard_chain
+
 # End to end: the hooks written by install-hooks.sh, a linked worktree on a
 # feature branch (the 2026-11-23 incident), then a pull on main.
 test_e2e_worktree_feature_commit_does_not_publish_but_pull_does() {

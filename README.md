@@ -106,13 +106,13 @@ claude-skills/
 │   └── validate-skills.py                           skill structure validator (frontmatter name/description), run in CI
 ├── tests/
 │   ├── test_bureaucratic_research_assistant.sh      test suite BRA (20 test, bats)
-│   ├── test_sync.sh                                 test suite sync.sh (30 test, bash)
+│   ├── test_sync.sh                                 test suite sync.sh (31 test, bash)
 │   └── test_validate_skills.py                      validator fixture tests (21, pytest)
 ├── install.sh                                       interactive skill installer
 └── README.md
 ```
 
-13 skills, 14 automation scripts, 6 reference files, 1 template, 1 installer, 19 + 20 + 13 bats tests, 30 sync.sh tests, 15 + 19 + 21 pytest. No plugin infrastructure.
+13 skills, 14 automation scripts, 6 reference files, 1 template, 1 installer, 19 + 20 + 13 bats tests, 31 sync.sh tests, 15 + 19 + 21 pytest. No plugin infrastructure.
 
 CI also runs `scripts/validate-skills.py` on every pull request: each top-level folder with a `SKILL.md` must open with YAML frontmatter whose `name` is a string equal to the folder name and whose `description` is a non-empty string, with no duplicate keys. Its 21 fixture tests live in `tests/test_validate_skills.py` (pytest).
 

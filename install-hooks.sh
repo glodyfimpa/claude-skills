@@ -45,7 +45,15 @@ assert_in_repo() {
 # Returns the directory git will actually look in for hooks, as an absolute
 # path: a bare --git-path is relative to the caller's cwd, so running this
 # script from another repo used to overwrite THAT repo's hook.
+# With public-push-guard installed, core.hooksPath holds its shims and they
+# chain to pushguard.previoushooks: the sync hooks go there, never over a shim.
 effective_hooks_dir() {
+    local chained
+    chained="$(git -C "$REPO_ROOT" config --get pushguard.previoushooks || true)"
+    if [ -n "$chained" ]; then
+        echo "$chained"
+        return 0
+    fi
     git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-path hooks
 }
 
@@ -65,7 +73,8 @@ reconcile_hooks_path() {
     [ -n "$configured" ] || return 0                 # unset: git uses .git/hooks
 
     if [ -d "$configured" ]; then
-        warn "core.hooksPath is set to $configured — installing the hook there, not in .git/hooks"
+        git -C "$REPO_ROOT" config --get pushguard.previoushooks >/dev/null \
+            || warn "core.hooksPath is set to $configured — installing the hook there, not in .git/hooks"
         return 0
     fi
 

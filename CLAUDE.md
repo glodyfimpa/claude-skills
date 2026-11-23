@@ -4,7 +4,7 @@
 - Each subdirectory with a `SKILL.md` is a skill
 - `install.sh` — interactive installer (Claude Code or Desktop)
 - `sync.sh` — syncs all skills to Claude Code (`~/.claude/skills/`) and Cowork (auto-discovered path). Post-commit and post-merge hooks (installed by `install-hooks.sh`) run `sync.sh --quiet`; `sync.sh` publishes only from branch `main` at a commit on `origin/main` and skips with a stderr line otherwise (feature branches and worktrees never reach the runtime)
-- `tests/test_sync.sh` — bash test suite (30 tests). Run: `bash tests/test_sync.sh`
+- `tests/test_sync.sh` — bash test suite (31 tests). Run: `bash tests/test_sync.sh`
 
 ## Bash Script Conventions
 - `set -euo pipefail` in all scripts
