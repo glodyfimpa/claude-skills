@@ -5,7 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST_FILE="$SCRIPT_DIR/.sync-manifest.json"
 CLAUDE_CODE_SKILLS="$HOME/.claude/skills"
-COWORK_BASE="$HOME/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin"
 
 QUIET=false
 [[ "${1:-}" == "--quiet" ]] && QUIET=true
@@ -14,7 +13,6 @@ QUIET=false
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
-CYAN='\033[0;36m'
 BOLD='\033[1m'
 RESET='\033[0m'
 
@@ -29,20 +27,6 @@ find_source_skills() {
     for d in "$source_dir"/*/; do
         [ -f "$d/SKILL.md" ] && basename "$d"
     done
-}
-
-discover_cowork_path() {
-    local base="${1:-$COWORK_BASE}"
-    if [ ! -d "$base" ]; then
-        return 1
-    fi
-    local match
-    match="$(find "$base" -name "SKILL.md" -maxdepth 5 2>/dev/null | head -1)"
-    if [ -z "$match" ]; then
-        return 1
-    fi
-    # Go up from .../skills/some-skill/SKILL.md to .../skills/
-    dirname "$(dirname "$match")"
 }
 
 sync_skill() {
@@ -83,7 +67,7 @@ remove_skill() {
 
 # ─── Publish guard ────────────────────────────────────────────────────
 
-# The runtime (~/.claude/skills, Cowork) gets only reviewed skills: the source
+# The runtime (~/.claude/skills) gets only reviewed skills: the source
 # tree must be on branch main at a commit contained in origin/main. A feature
 # branch, a linked worktree on another branch, a detached HEAD, a local commit
 # not yet on origin/main, or a source outside git is skipped (fail closed).
@@ -132,8 +116,6 @@ write_manifest() {
     shift
     local claude_code_dest="$1"
     shift
-    local cowork_dest="$1"
-    shift
     local skills=("$@")
 
     local now
@@ -155,8 +137,7 @@ write_manifest() {
   "managed_skills": [
 $skills_json  ],
   "destinations": {
-    "claude_code": "$claude_code_dest",
-    "cowork": "$cowork_dest"
+    "claude_code": "$claude_code_dest"
   }
 }
 MANIFEST_EOF
@@ -167,7 +148,6 @@ MANIFEST_EOF
 main() {
     local source_dir="${SYNC_SOURCE_DIR:-$SCRIPT_DIR}"
     local cc_dest="${SYNC_CC_DEST:-$CLAUDE_CODE_SKILLS}"
-    local cowork_base="${SYNC_COWORK_BASE:-$COWORK_BASE}"
     local manifest="${SYNC_MANIFEST:-$MANIFEST_FILE}"
 
     log "${BOLD}Skill Sync${RESET}"
@@ -175,6 +155,11 @@ main() {
 
     # 0. Publish only reviewed skills (before any write or removal)
     publish_allowed "$source_dir" || exit 0
+
+    # Cowork is not a destination: the desktop app re-syncs its skills folder
+    # every 20 minutes and on window focus, deleting whatever is not in the
+    # account's server-side skill set (verified in main.log, 2026-11-23).
+    warn "Cowork is not synced (the app deletes local copies within 20 min): upload a skill ZIP in claude.ai Customize > Skills, or install as a plugin in Cowork"
 
     # 1. Find source skills
     local source_skills=()
@@ -189,16 +174,8 @@ main() {
 
     log "  Found ${#source_skills[@]} skill(s) in source"
 
-    # 2. Discover destinations
+    # 2. Destination: Claude Code only
     mkdir -p "$cc_dest"
-
-    local cowork_dest=""
-    if cowork_dest="$(discover_cowork_path "$cowork_base")" 2>/dev/null; then
-        log "  Cowork path: ${CYAN}$cowork_dest${RESET}"
-    else
-        cowork_dest=""
-        log "  ${YELLOW}Cowork not found, syncing only to Claude Code${RESET}"
-    fi
 
     log ""
 
@@ -210,15 +187,6 @@ main() {
             log "  ${GREEN}✓${RESET} $skill → Claude Code"
         else
             err "$skill → Claude Code failed"
-        fi
-
-        # Cowork
-        if [ -n "$cowork_dest" ]; then
-            if sync_skill "$skill" "$source_dir" "$cowork_dest"; then
-                log "  ${GREEN}✓${RESET} $skill → Cowork"
-            else
-                err "$skill → Cowork failed"
-            fi
         fi
 
         synced_skills+=("$skill")
@@ -245,14 +213,11 @@ main() {
                 log "  ${YELLOW}✗${RESET} $old_skill removed from Claude Code"
                 removed=$((removed + 1))
             fi
-            if [ -n "$cowork_dest" ] && remove_skill "$old_skill" "$cowork_dest"; then
-                log "  ${YELLOW}✗${RESET} $old_skill removed from Cowork"
-            fi
         fi
     done
 
     # 5. Write manifest
-    write_manifest "$manifest" "$cc_dest" "${cowork_dest:-none}" "${synced_skills[@]+"${synced_skills[@]}"}"
+    write_manifest "$manifest" "$cc_dest" "${synced_skills[@]+"${synced_skills[@]}"}"
 
     log ""
     log "${GREEN}${BOLD}Synced ${#synced_skills[@]} skill(s)${RESET}${removed:+, removed $removed}"
