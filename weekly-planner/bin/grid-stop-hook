@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""grid-stop-hook: Claude Code Stop hook for the weekly-planner gate.
+
+SKILL.md (Phase 3) requires the ASCII calendar proposal with every presentation of
+the plan. Session bc9dc60c showed a gate at 09:38 without it, and Glody had to ask
+for the grid again (09:56). This hook catches that before the turn ends.
+
+It blocks the stop only when all three hold:
+  1. the transcript loaded the weekly-planner skill (Skill tool call, or the
+     /weekly-planner slash command);
+  2. the last assistant message presents the gate ("come proposto", or asks the OK
+     to apply the plan / the calendar);
+  3. that message has no fenced block (``` or ~~~) with at least 3 distinct day
+     headings among LUN/MAR/MER/GIO/VEN.
+
+Input: the Stop hook JSON on stdin (transcript_path, stop_hook_active, and
+last_assistant_message when the Claude Code version provides it).
+Output: {"decision": "block", "reason": ...} on stdout to block; nothing to allow.
+Exit 0 always. Any error (bad stdin, missing transcript) lets the stop through:
+a planning hook must never trap a session.
+
+Wiring (~/.claude/settings.json, global config, needs Glody's OK):
+  "hooks": {"Stop": [{"hooks": [{"type": "command",
+    "command": "python3 ~/.claude/skills/weekly-planner/bin/grid-stop-hook"}]}]}
+"""
+import json
+import re
+import sys
+
+SKILL = "weekly-planner"
+MIN_DAYS = 3
+
+GATE_RE = re.compile(
+    r"come\s+proposto"
+    r"|applic\w*[^.\n]{0,60}?\b(?:piano|calendario)\b"
+    r"|\b(?:piano|calendario)\b[^.\n]{0,60}?\bapplic\w*",
+    re.IGNORECASE,
+)
+FENCE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})[^\n]*\n(.*?)^[ \t]*\1[ \t]*$",
+                      re.MULTILINE | re.DOTALL)
+DAY_RE = re.compile(
+    r"(?<!\w)(lun|mar|mer|gio|ven)(?:ed[iì]|ted[iì]|coled[iì]|ved[iì]|erd[iì])?(?!\w)",
+    re.IGNORECASE,
+)
+SLASH_RE = re.compile(r"<command-name>/?(?:[\w-]+:)?" + SKILL + r"</command-name>")
+
+REASON = (
+    "Il messaggio presenta il gate della weekly-planner senza la proposta di calendario "
+    "in ASCII. SKILL.md, Phase 3: la griglia Lun-Ven va mostrata con ogni presentazione "
+    "del piano. Ripresenta il gate includendo un blocco ``` con le colonne "
+    "LUN MAR MER GIO VEN, le due fasce della config come righe, le celle marcate "
+    "[=] [+] [~] . e sotto l'elenco di ogni [+] e [~] (titolo, giorno, inizio-fine, "
+    "busy/free)."
+)
+
+
+def _blocks(entry):
+    content = (entry.get("message") or {}).get("content")
+    if isinstance(content, str):
+        return [{"type": "text", "text": content}]
+    if isinstance(content, list):
+        return [b for b in content if isinstance(b, dict)]
+    return []
+
+
+def _is_skill_name(name):
+    return isinstance(name, str) and (name == SKILL or name.endswith(":" + SKILL))
+
+
+def skill_loaded(entries):
+    for e in entries:
+        for b in _blocks(e):
+            if (e.get("type") == "assistant" and b.get("type") == "tool_use"
+                    and b.get("name") == "Skill"
+                    and _is_skill_name((b.get("input") or {}).get("skill"))):
+                return True
+            if (e.get("type") == "user" and b.get("type") == "text"
+                    and SLASH_RE.search(b.get("text") or "")):
+                return True
+    return False
+
+
+def _is_human_turn(entry):
+    if entry.get("type") != "user" or entry.get("isMeta"):
+        return False
+    return not any(b.get("type") == "tool_result" for b in _blocks(entry))
+
+
+def last_assistant_text(entries):
+    """Text of the assistant turn after the last human message.
+
+    Claude Code writes one transcript entry per content block, so a single reply
+    may span several assistant entries: join their text blocks.
+    """
+    parts = []
+    for e in entries:
+        if _is_human_turn(e):
+            parts = []
+        elif e.get("type") == "assistant":
+            parts.extend(b.get("text") or "" for b in _blocks(e) if b.get("type") == "text")
+    return "\n".join(parts)
+
+
+def is_gate(text):
+    return bool(GATE_RE.search(text))
+
+
+def has_grid(text):
+    for m in FENCE_RE.finditer(text):
+        days = {d.lower() for d in DAY_RE.findall(m.group(2))}
+        if len(days) >= MIN_DAYS:
+            return True
+    return False
+
+
+def read_transcript(path):
+    entries = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(e, dict):
+                entries.append(e)
+    return entries
+
+
+def decide(hook_input):
+    """Return the block reason, or None to let the stop through."""
+    if hook_input.get("stop_hook_active"):
+        return None
+    path = hook_input.get("transcript_path")
+    if not path:
+        return None
+    entries = read_transcript(path)
+    if not skill_loaded(entries):
+        return None
+    text = hook_input.get("last_assistant_message")
+    if not isinstance(text, str) or not text.strip():
+        text = last_assistant_text(entries)
+    if is_gate(text) and not has_grid(text):
+        return REASON
+    return None
+
+
+def main():
+    try:
+        hook_input = json.load(sys.stdin)
+        reason = decide(hook_input) if isinstance(hook_input, dict) else None
+    except Exception:  # fail open: never trap the session on a hook bug
+        return 0
+    if reason:
+        print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
